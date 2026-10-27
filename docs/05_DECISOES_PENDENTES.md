@@ -34,25 +34,48 @@ Pedido do dono do jogo: o jogador escolhe uma direção, mas quem tiver tempo e 
 - Mantém o respec ("Replantar") como forma de testar outra build sem recomeçar.
 - Substitui a regra "uma Raiz-mestra por partida" da revisão §4.3.
 
-## D5 · Chefe e duração da demo — ❓ Em aberto
-**O que é chefe nesse gênero:**
-- **Nodebuster:** inimigo roxo grande no fim de cada fase; derrotá-lo dá um *core* (moeda rara) e libera a fase seguinte. É um **portão de progresso**, não um combate elaborado. Crítica comum: dá pouca recompensa.
+## D5 · Chefes como portão de estágio — ✅ Aprovado (conceito) · 🟡 implementação proposta
+**Aprovado:** cada estágio (área) termina num **chefe**; derrotá-lo libera o estágio seguinte. É o modelo do GDD §10 (Chave da Cripta) e o mesmo papel do chefe no Nodebuster e no SuperReap.
+
+**Referências do gênero:**
+- **Nodebuster:** inimigo roxo grande no fim de cada fase; derrotá-lo dá um *core* (moeda rara) e libera a fase seguinte. É um **portão de progresso**, não um combate elaborado. Crítica comum: dá pouca recompensa (lição: a recompensa do nosso chefe tem que ser grande e visível).
 - **SuperReap:** chefe ao fim de cada estágio, liberando pontos especiais e o próximo nível (fonte: [00_PESQUISA_SUPERREAP.md](00_PESQUISA_SUPERREAP.md)).
 - **Legion Breaker** (mesmo nicho): demo de 30–60 min com 3 chefes pequenos, para dar ritmo de marcos.
 
-**O nosso (GDD §10):** **o Caixão Fujão.** A Inquietação sobe a cada cova aberta; em 100% surge um caixão 2×2 com barra de vida que a cada 4 s afunda e reaparece em outro lugar (o jogador o persegue com a pá). Derrotado: Chave da Cripta (abre a próxima área) e Almas.
+**Chefe do estágio 1 (GDD §10): o Caixão Fujão.** Caixão 2×2 com barra de vida; a cada 4 s afunda e reaparece em outro lugar (o jogador o persegue com a pá). Derrotado: Chave da Cripta (abre o estágio 2), Almas e a liberação dos nós do estágio seguinte.
 
-**Opções para a demo:**
-| Opção | Como funciona | Prós | Contras |
-|---|---|---|---|
-| A. Chefe automático (como no GDD) | Inquietação em 100% → o chefe aparece no meio da noite | Surpresa, tensão | Pode chegar com o jogador fraco e frustrar |
-| **B. Noite do Chefe** (recomendada) | Com 100% de Inquietação aparece "Enfrentar o Caixão Fujão" na Árvore; o jogador escolhe quando ir; se perder, volta mais forte | Jogador controla o momento; meta clara | Menos surpresa |
-| C. Sem chefe na demo | Só marcos ("abrir 100 covas" etc.) | Mais simples | Sem clímax nem fim claro |
+**Implementação recomendada pelo designer-chefe: opção B, "Noite do Chefe".**
+1. A **Inquietação** sobe a cada cova aberta e persiste entre noites (já existe no código; hoje não faz nada em 100%).
+2. Em 100%, a Árvore mostra o botão **"Enfrentar o Caixão Fujão"** (com a caveira tremendo e a frase "A terra treme…"). O jogador escolhe **quando** ir.
+3. A Noite do Chefe é uma noite normal com o chefe no campo desde o início (as covas comuns continuam pagando). Se o óleo acabar com o chefe vivo, ele foge, o HP dele **volta cheio**, e o botão continua lá: o jogador volta mais forte e tenta de novo, sem perder nada.
+4. Vitória: diálogo curto (2–4 balões), Resumo especial com a Chave, e na Árvore se revela a segunda metade dos nós + o estágio 2 no seletor de estágios (D12).
+5. Repetir o chefe depois dá só Almas (farm opcional), como no GDD.
 
-**Duração (depende da escolha acima).** Com a opção B:
-- 0–30 min: crescer pá, campo e build.
-- 30–40 min: o chefe vira a meta.
-- 40–60 min: a recompensa libera a segunda metade da árvore; fim da demo com a Dona Ceifa mostrando as próximas áreas.
+Alternativas descartadas por ora: **A** (chefe aparece sozinho no meio da noite: pode frustrar quando o jogador está fraco) e **C** (sem chefe: a demo fica sem clímax).
+
+**Duração da demo com a opção B** (alvo, a confirmar no balanceamento):
+- 0–30 min: crescer pá, campo e build no estágio 1.
+- 30–40 min: o Caixão Fujão vira a meta.
+- 40–60 min: a recompensa libera a segunda metade da árvore; fim da demo (D12 define se o estágio 2 entra na demo).
+
+## D12 · Mais estágios (outros dioramas) — ✅ Aprovado (direção) · ❓ escopo da demo em aberto
+**Estado atual:** o jogo tem **um único estágio**, o campo da Área 1 (Cemitério da Paróquia). Não existe seletor de estágios nem outro diorama.
+
+**Pedido do dono do jogo:** outros dioramas, **com outras cores e outros elementos aparecendo**, liberados pelos chefes (D5).
+
+**O que o GDD já prevê** (GDD §10 e Direção de Arte §6), cada um com paleta, camadas, props e chefe próprios:
+| # | Estágio | Cara do diorama | Novidade de jogo | Chefe |
+|---|---|---|---|---|
+| 1 | Cemitério da Paróquia | Grama verde, terra, lápides, velas (o atual) | Base: covas, rochas | Caixão Fujão |
+| 2 | Campo dos Indigentes | Grama rala, névoa baixa, lama esverdeada, cruzes sem nome | Lama, fantasmas travessos, Enxadão | Seu Damião (coveiro fantasma) |
+| 3 | Catacumbas de Pedra | Mais escuro, pedra, raízes, nichos com crânios | A luz da lanterna importa de verdade | A Raiz-Mãe |
+| 4 | Necrópole dos Barões | Mármore, ouro, mausoléus, vitrais | Baús ricos, Pá Fantasma | O Mausoléu Vivo |
+| 5 | Jardim das Almas | Ecto/ciano, flores luminosas, lápides flutuantes | Névoa (tiles somem e reaparecem) | A Cova da Dona Ceifa (final) |
+
+**Propostas a decidir:**
+- **Escopo da demo:** (a) só o estágio 1 + o chefe, com os outros estágios aparecendo como silhuetas trancadas no final (como na revisão §5.5); ou (b) estágio 1 + **estágio 2 jogável** como prêmio do chefe, para o jogador ver um diorama novo antes da demo acabar. Recomendação: **(b)**, se couber no prazo; é o que melhor mostra a promessa "cada chefe abre um mundo novo".
+- **Como trocar de estágio:** um seletor simples na Árvore (ao lado de "Cavar ▶"), com os estágios liberados e os trancados em silhueta; dá para voltar a qualquer estágio liberado (útil para farm, como no GDD §10).
+- **Produção por estágio:** tileset + atlas `_lit`, bloco do diorama, fundo próprio (como o fundo da mata escura do estágio 1), props com efeito, chefe e música da área.
 
 ## D6–D11 · Ainda não discutidas (não bloqueiam o M0.5)
 Da §7 da revisão; ficam para o M0.6 em diante:
@@ -66,6 +89,6 @@ Da §7 da revisão; ficam para o M0.6 em diante:
 ---
 
 ## Próximo passo
-1. Escolher a opção do chefe (D5) e confirmar a duração.
-2. Dar o "ok" em D3.
-3. Bater o martelo: passar D1–D5 para o GDD e abrir o **M0.5 · Economia nova** (revisão §6) numa branch separada.
+1. Dar o "ok" na implementação do chefe (D5, opção B) e em D3.
+2. Decidir o escopo de estágios da demo (D12: só o estágio 1 ou estágio 1 + 2).
+3. Bater o martelo: passar D1–D5 e D12 para o GDD e abrir o **M0.5 · Economia nova** (revisão §6) numa branch separada.
