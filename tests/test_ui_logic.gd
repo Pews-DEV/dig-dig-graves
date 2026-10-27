@@ -10,6 +10,7 @@ func _initialize() -> void:
 	_test_tree_camera()
 	_test_anim_timing()
 	_test_tree_layout()
+	_test_run_clearing()
 	finish()
 
 
@@ -234,3 +235,27 @@ func _test_tree_layout() -> void:
 		min_x = minf(min_x, d.tree_position.x)
 		max_x = maxf(max_x, d.tree_position.x)
 	check(absf((min_x + max_x) * 0.5 - 320.0) <= TreeLayout.COLUMN * 0.5, "ramos distribuídos dos dois lados do tronco")
+
+
+## Fundo do Turno v2 (UI/UX §5 rev. 1.1, MANIFEST "Turno — fundo v2"): parallax e arte.
+func _test_run_clearing() -> void:
+	check_eq(RunClearing.parallax_offset(Vector2.ZERO, RunClearing.PARALLAX_WOODS), Vector2.ZERO, "mouse no centro = sem deslocamento")
+	check_eq(RunClearing.parallax_offset(Vector2(320, 0), RunClearing.PARALLAX_GROUND), Vector2(-3, 0), "chão anda contra o mouse (0,010)")
+	check_eq(RunClearing.parallax_offset(Vector2(-320, 180), RunClearing.PARALLAX_WOODS), Vector2(7, -4), "mata anda mais (0,022), em px inteiros")
+	check_eq(RunClearing.parallax_offset(Vector2(5000, -5000), 0.022), Vector2(-16, 16), "deslocamento limitado a ±16 px")
+	check(RunClearing.PARALLAX_GROUND < RunClearing.PARALLAX_PROPS and RunClearing.PARALLAX_PROPS < RunClearing.PARALLAX_WOODS, "chão < props < mata")
+	for f: String in ["bg_a1_chao", "bg_a1_props", "bg_a1_mata"]:
+		var path := "res://assets/sprites/bg/a1/%s.png" % f
+		check(AssetManifest.is_listed(path), "%s no MANIFEST" % f)
+		var tex := AssetManifest.texture(path)
+		check(tex != null, "%s carrega (rode --import antes)" % f)
+		if tex != null:
+			check_eq(tex.get_height(), 392, "%s com 392 px de altura (tela + 2 × 16)" % f)
+	var mata := AsepriteSheet.load_sheet("res://assets/sprites/bg/a1/bg_a1_mata.png")
+	check(mata != null, "bg_a1_mata com JSON")
+	if mata != null:
+		check_eq(mata.frame_size(), RunClearing.V2_FRAME, "frame da mata 672×392")
+		check(mata.has_tag(&"idle") and is_equal_approx(mata.tag_duration(&"idle"), 1.6), "mata: idle 2 × 800 ms")
+	var tips := RunClearing.flame_tips(AssetManifest.texture("res://assets/sprites/bg/a1/bg_a1_props.png"), RunClearing.CANDLE_CENTERS)
+	check_eq(tips.size(), 6, "3 chamas em cada grupo de velas do fundo")
+	check(RunClearing.flame_tips(null, RunClearing.CANDLE_CENTERS).is_empty(), "sem arte = sem chamas (fallback)")

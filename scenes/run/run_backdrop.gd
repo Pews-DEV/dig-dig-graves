@@ -1,8 +1,9 @@
 class_name RunBackdrop
 extends Node2D
-## Ambientação do Turno (UI/UX §5), placeholder por código até a cena do turno entrar no MANIFEST.
-## `front = false`: céu 02→03 com xadrez, estrelas que cintilam, lua com halo, nuvens finas,
-## silhueta distante (muro caiado, portão, cruzes, ipê) e chão escuro.
+## Ambientação do Turno (UI/UX §5, revisão 1.1). `front = false`: clareira de cemitério na mata
+## escura (MANIFEST "Turno — fundo v2": bg_a1_chao < bg_a1_props < bg_a1_mata), com parallax
+## pelo mouse e as chamas das velas do fundo tremulando. Sem essa arte, cai no fundo antigo
+## (céu bg_a1_sky/estrelas/nuvens/muro) e, sem nenhuma arte, no placeholder por código.
 ## `front = true`: névoa baixa em faixas de xadrez 04/05 e vinheta em xadrez 01.
 ## Parallax lento pela posição do mouse; "reduzir movimento" corta para 25%.
 
@@ -35,6 +36,14 @@ var _art_clouds: Texture2D = AssetManifest.texture(ART_DIR + "bg_a1_clouds.png")
 var _art_far: Texture2D = AssetManifest.texture(ART_DIR + "bg_a1_far.png")
 var _art_fog: Texture2D = AssetManifest.texture(ART_DIR + "nevoa_a1.png")
 var _art_vignette: Texture2D = AssetManifest.texture(ART_DIR + "vinheta.png")
+## Fundo v2: medidas, parallax e chamas em RunClearing (puro, testável).
+const CANDLE_FRAMES: Array[float] = [0.125, 0.125, 0.125]  # 8 fps, como o sprite `vela`
+var _art_ground: Texture2D = AssetManifest.texture(ART_DIR + "bg_a1_chao.png")
+var _art_props: Texture2D = AssetManifest.texture(ART_DIR + "bg_a1_props.png")
+var _art_woods: Texture2D = AssetManifest.texture(ART_DIR + "bg_a1_mata.png")
+var _woods_sheet: AsepriteSheet = AsepriteSheet.load_sheet(ART_DIR + "bg_a1_mata.png")
+## Pontas das chamas das velas do fundo (px da tela no enquadramento sem parallax).
+var _flame_tips: Array[Vector2i] = []
 
 var _sky: ImageTexture
 var _moon: ImageTexture
@@ -54,12 +63,14 @@ func _ready() -> void:
 		if _art_fog == null or _art_vignette == null:
 			_fog = _cached("fog", _fog_image)
 			_vignette = _cached("vignette", _vignette_image)
+	elif _art_ground != null:
+		_flame_tips = RunClearing.flame_tips(_art_props, RunClearing.CANDLE_CENTERS)
 	elif _art_sky == null:
 		_sky = _cached("sky", _sky_image)
 		_moon = _cached("moon", _moon_image)
 		_far = _cached("far", _far_image)
 		_cloud = _cached("cloud", _cloud_image)
-	if not front:
+	if not front and _art_ground == null:
 		var moon := ART_MOON if _art_sky != null else MOON
 		var max_y := 118 if _art_sky != null else HORIZON - 44
 		for i: int in STAR_COUNT:
@@ -94,6 +105,9 @@ func _draw() -> void:
 	if front:
 		_draw_front()
 		return
+	if _art_ground != null:
+		_draw_clearing()
+		return
 	if _art_sky != null:
 		_draw_art_back()
 		return
@@ -107,6 +121,41 @@ func _draw() -> void:
 		var x := fmod(c.x + drift, float(W + cloud_w)) - cloud_w
 		draw_texture(_cloud, Vector2(roundf(x), c.y) + _off(PARALLAX_CLOUDS))
 	draw_texture(_far, Vector2(-20, HORIZON - 56) + _off(PARALLAX_FAR))
+
+
+## Deslocamento do fundo v2: contra o mouse, em px inteiros, limitado a ±16 px (MANIFEST).
+func _off_v2(factor: float) -> Vector2:
+	return RunClearing.parallax_offset(_parallax, factor)
+
+
+## Clareira na mata escura: chão < props (+ chamas tremulando) < mata (balanço de 2 frames).
+func _draw_clearing() -> void:
+	draw_texture(_art_ground, RunClearing.V2_ORIGIN + _off_v2(RunClearing.PARALLAX_GROUND))
+	if _art_props != null:
+		var po := _off_v2(RunClearing.PARALLAX_PROPS)
+		draw_texture(_art_props, RunClearing.V2_ORIGIN + po)
+		_draw_flames(po)
+	if _art_woods != null:
+		var wo := RunClearing.V2_ORIGIN + _off_v2(RunClearing.PARALLAX_WOODS)
+		if _woods_sheet != null:
+			_woods_sheet.draw_frame(self, _woods_sheet.frame_at(&"idle", _t, true), wo, Vector2.ZERO)
+		else:
+			draw_texture_rect_region(_art_woods, Rect2(wo, RunClearing.V2_FRAME), Rect2(Vector2.ZERO, RunClearing.V2_FRAME))
+
+
+## As chamas de bg_a1_props são estáticas: por cima de cada ponta, 1 px que acende e apaga
+## em 3 tempos (8 fps, defasado por vela), como o sprite `vela`. "Reduzir movimento" desliga.
+func _draw_flames(offset: Vector2) -> void:
+	if Juice.reduce_motion():
+		return
+	for i: int in _flame_tips.size():
+		var tip := Vector2(_flame_tips[i]) + offset
+		match TreeArt.frame_at(_t + i * 0.15, CANDLE_FRAMES):
+			0:
+				draw_rect(Rect2(tip + Vector2(0, -1), Vector2.ONE), Palette.color(Palette.LANTERN_BRIGHT))
+			1:
+				draw_rect(Rect2(tip + Vector2(0, -1), Vector2.ONE), Palette.color(Palette.LANTERN))
+				draw_rect(Rect2(tip + Vector2(0, -2), Vector2.ONE), Palette.color(Palette.LANTERN_BRIGHT))
 
 
 func _draw_art_back() -> void:
