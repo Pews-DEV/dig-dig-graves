@@ -7,6 +7,11 @@ Legenda de status: ✅ **Aprovado** (o dono do jogo concordou) · 🟡 **Propost
 
 ---
 
+## D0 · Rumo do projeto: jogo completo, não só a demo — ✅ Aprovado
+- O desenvolvimento segue mirando o **jogo completo**, sem esperar uma demo "fechada" antes.
+- A versão atual (tela-título, Área 1, Árvore, fundo da mata escura) foi congelada na branch **`demo`** (commit `ccb1c14`), para publicar no **itch.io**. Ela **não** é mergeada na `main`; correções pontuais da demo são feitas nela e, se servirem, portadas para a `main`.
+- Onde este documento fala em "demo de ~60 min", leia como o **arco do primeiro estágio** (estágio 1 + chefe), que continua sendo a meta de ritmo do início do jogo. O escopo de estágios (D12) passa a ser pensado para o jogo completo.
+
 ## D1 · Pá e campo começam pequenos — ✅ Aprovado
 - **Pá:** começa em **1×1** e cresce com melhorias da árvore.
 - **Campo:** também começa **menor** (proposta: **5×5**) e cresce com nós próprios até 18×18.
