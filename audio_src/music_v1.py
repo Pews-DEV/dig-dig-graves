@@ -782,6 +782,66 @@ def build_stage_unlock():
     return out
 
 
+def build_chapter_end():
+    """Fim do Capitulo 1 (~8 s, 88 BPM com ritardando): M do mus_title em La menor na caixinha
+    (Mi-Re-Do pontuado-La, mesma altura do tema), cadencia C (Fa-Re-Si-Sol#) sobre Rem -> Mi7 e
+    resolucao em La MAIOR (picardia): arpejo La-Do#-Mi-La, sino, coro 'aah', orgao."""
+    from dsp import VOWEL_AH
+    s = Song3(bpm=88, beats_per_bar=4, bars=3, tail=6, seed=1111)
+
+    def warp(b):  # ritardando do tempo 6 ao 8 (fator 1 -> 1,35), depois fica largo
+        if b <= 6:
+            return b * s.beat
+        u = b - 6
+        if u <= 2:
+            return (6 + u + 0.0875 * u * u) * s.beat
+        return (6 + 2.35 + 1.35 * (u - 2)) * s.beat
+    s.warp = warp
+
+    def seresta(bar, beat0, ch, nbeats, vel):
+        bass, alt, up, _ = CHORDS[ch]
+        s.pluck(bar, beat0, bass, s.dur(bar, beat0, 2) * 1.1, vel, bright=0.35)
+        if nbeats > 2:
+            s.pluck(bar, beat0 + 2, alt, s.dur(bar, beat0 + 2, 2) * 1.1, vel * 0.8, bright=0.35)
+        for bt, idx, v in ((0.5, 1, 0.45), (1.0, 2, 0.5), (1.5, 3, 0.42), (2.5, 2, 0.45), (3.0, 3, 0.48), (3.5, 1, 0.4)):
+            if bt < nbeats:
+                s.pluck(bar, beat0 + bt, up[idx], s.dur(bar, beat0 + bt, 1.4), vel * v)
+
+    def org_chord(bar, beat, notes, nbeats, vel=0.13):
+        d = s.dur(bar, beat, nbeats)
+        for k, m in enumerate(notes):
+            s.org.add(organ(midi_hz(m), d + 0.05, s.rng, vel=vel if m >= 52 else vel * 0.4, att=0.3, rel=1.0),
+                      s.t(bar, beat), pan=(-0.45, 0.0, 0.45, 0.0)[k % 4])
+
+    seresta(0, 0, "Am", 4, 0.66)
+    seresta(1, 0, "Dm", 2, 0.66)
+    seresta(1, 2, "E7", 2, 0.64)
+    org_chord(0, 0, [57, 60, 64, 45], 4, vel=0.11)
+    org_chord(1, 0, [57, 62, 65, 50], 2, vel=0.12)
+    org_chord(1, 2, [56, 62, 64, 40], 2, vel=0.13)
+    m0 = mel("E6:1.5 D6:.5 C6:1 A5:1  F6:1 D6:1 B5:1 G#5:1")
+    s.box_line(0, m0, vel=0.55)
+    s.whistle(0, m0, vel=0.3, transpose=-12, pan=-0.12)
+    # resolucao em La maior
+    s.roll(2, 0, [45, 52, 57, 61, 64, 69], 5.0, 0.78, spread=0.04)
+    s.box_line(2, mel("A5:.33 C#6:.33 E6:.34 A6:3"), vel=0.58)
+    s.whistle(2, mel("A5:.33 C#6:.33 E6:2.5"), vel=0.32, transpose=-12, pan=-0.12)
+    org_chord(2, 0, [57, 61, 64, 45], 3.2, vel=0.15)
+    s.choir.add(bell(midi_hz(69), 5.0, s.rng, vel=0.42), s.t(2, 0), pan=-0.2)
+    for mm in (57, 61, 64, 69):
+        for v in range(2):
+            x = choir_voice(midi_hz(mm), 2.6, s.rng, att=0.35, rel=1.6, vowel=VOWEL_AH)
+            s.choir.add(x, s.t(2, 0) + 0.03 * v, pan=s.rng.uniform(-0.5, 0.5), gain=0.075)
+    for k, mm in enumerate([93, 97, 100, 105]):
+        s.box.add(musicbox(midi_hz(mm), 2.2, s.rng, vel=0.16 + 0.03 * k), s.t(2, 1.5) + 0.09 * k, pan=0.4)
+    out = s.mix({"gtr": 0.7, "box": 0.68, "org": 0.55, "wh": 0.4, "choir": 1.0},
+                rev_mix=0.32, t60=2.6, loop=False)
+    out = out[:, :secs(8.0)]
+    kf = secs(2.0)
+    out[:, -kf:] *= np.linspace(1, 0, kf) ** 2
+    return out
+
+
 def _prev_oneshot(id_):
     import os
     import shutil
@@ -800,4 +860,6 @@ JOBS = {
     "jingle_boss_win": lambda: render_oneshot("jingle_boss_win", build_boss_win, lufs=-15.0),
     "stinger_boss_appear": lambda: render_oneshot("stinger_boss_appear", build_boss_appear, peak_db=-5.0),
     "stinger_stage_unlock": lambda: render_oneshot("stinger_stage_unlock", build_stage_unlock, peak_db=-5.0),
+    "jingle_chapter_end": lambda: (render_oneshot("jingle_chapter_end", build_chapter_end, lufs=-15.0),
+                                   _prev_oneshot("jingle_chapter_end")),
 }

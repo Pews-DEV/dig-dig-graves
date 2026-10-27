@@ -29,6 +29,7 @@ Fonte: tudo sintetizado em `audio_src/` (`music.py`, `sfx.py`, núcleo em `dsp.p
 | jingle_boss_win | jingle_boss_win.ogg | 5,6 s | não | Vitória sobre o chefe: ~0,3 s depois do `boss_defeat`, com a `mus_boss` em fade-out | M em Ré menor que vira Ré **maior** na resposta (Fá → Fá♯), surdo, sino, coro "aah", caixinha subindo. −15 LUFS (igual ao `jingle_summary`). Se o Resumo especial vier logo depois, não tocar o `jingle_summary` por cima (ou esperar o fim deste). |
 | stinger_boss_appear | stinger_boss_appear.ogg | 2,3 s | não | O chefe surge (1ª aparição na noite; junto com `boss_emerge`) | Surdo + gongo grave, órgão com Ré–Mi♭–Lá (bII), cabeça de M descendo rápido na caixinha, sino grave. Pico −5 dBTP (abaixo do `grave_open`). Ducking da música ~4 dB por 2 s, como no `stinger_grave`. |
 | stinger_stage_unlock | stinger_stage_unlock.ogg | 2,3 s | não | Novo estágio liberado (quando o estágio aparece/destrava no seletor de estágios ou a Chave da Cripta é usada) | Sino + resposta de M em Lá maior (Si–Dó♯–Ré–Mi–Lá) na caixinha + coro "aah" + violão rolado. Pico −5 dBTP. |
+| jingle_chapter_end | jingle_chapter_end.ogg | 8,0 s | não | **Fim do Capítulo 1** (UI/UX §19.1): quando o cartão "FIM DO CAPÍTULO 1 · O Cemitério da Paróquia" entra depois da cortina; ao terminar, `mus_tree` entra baixinho (fade-in ~1 s, pode começar em ~7 s, durante a cauda) | Cita o motivo **M do `mus_title`** na caixinha, na mesma altura do tema (Mi–Ré–Dó pontuado–Lá, Lá menor), cadência C (Fá–Ré–Si–Sol♯) sobre Rém → Mi7 com ritardando e resolve em **Lá maior** (picardia) em ~5,7 s: arpejo Lá–Dó♯–Mi–Lá, violão rolado, sino, coro "aah", órgão; assovio dobrando uma oitava abaixo. 88 BPM, fade final de 2 s embutido. −15 LUFS (igual aos outros jingles). Bus Music. |
 
 ## SFX (`assets/sfx/`)
 
@@ -98,6 +99,14 @@ Fonte: tudo sintetizado em `audio_src/` (`music.py`, `sfx.py`, núcleo em `dsp.p
 | dialog_blip_mascate | dialog_blip_mascate_1..3.ogg | 0,06 s | não | Voz do **Mascate** | Média, anasalada, subindo (jeito de vendedor). Pico −19 dBFS. |
 | unrest_warning | unrest_warning_1..2.ogg | 1,59 s | não | "A terra treme": aviso de Inquietação alta (ex.: ao cruzar 90%) ou evento que sacode o campo; junto com o tremor de tela | Rumor grave tremido + 3 baques subgraves + pedrinhas chacoalhando. Pico −6 dBFS. Bus SFX. |
 | build_complete | build_complete_1..2.ogg | 1,52–1,54 s | não | Construção restaurada no hub | 3 marteladas, a peça assenta, acorde de sinos em Lá maior (1 sobe, 2 desce) + faíscas, com capela. Pico −7 dBFS. |
+| stomp_ready | stomp_ready_1..3.ogg | 0,30 s | não | **Pisão recarregado**: no frame em que o ícone do Pisão acende (UI/UX §13.1, estado "Pronto"); 1 disparo por recarga, nunca em loop | Toque abafado de bota na terra (~250 Hz) + sininho grave e macio (Mi5/Ré5), sem agudos nem cauda. Pico −17 dBFS, RMS −28,5 (abaixo do `ui_click`). Sortear variação + ±6%. **Bus UI** (desligável no volume de UI). Não tocar se o auto-pisão for disparar no mesmo frame. |
+| flare_ready | flare_ready_1..3.ogg | 0,29 s | não | **Clarão recarregado** (Marco B, adiantado): mesmo momento/regra do `stomp_ready` | "Tsk" curtinho de fósforo + sininho de vidro (Lá5/Si5) — par do `stomp_ready`, uma quinta acima, para distinguir os dois de ouvido. Pico −17 dBFS. Bus UI. |
+| second_wind | second_wind_1..2.ogg | 1,50 s | não | **Segundo Fôlego** (L06): no instante em que o óleo zera e a lanterna volta com 5 s — **no lugar do `oil_out`** nesse turno | Brasa quase apagada → sopro subindo → chama reacende ("fuump") em **~0,42 s** (sincronizar o reacender da luz com esse ponto) → chama viva crepitando + brilho em Lá maior subindo, com capela. Pico −5,5 dBFS. Bus SFX. |
+| constellation | constellation_1..2.ogg | 2,10–2,12 s | não | **Constelação** (LX): ao fechar o 3º fogo-fátuo em < 6 s, quando o FX `fx_constellation` liga as estrelas e o óleo para por 8 s (toca uma vez, no início da pausa) | 3 estrelas tilintando (1: Mi6–Lá6–Dó♯7; 2: Lá6–Dó♯7–Mi7, 100 ms entre elas) + relógio que desacelera até parar (5 tiques, cada vez mais graves) + acorde de vidro suspenso tremulando, com capela. Pico −8 dBFS. O `wisp_collect` do 3º fogo-fátuo pode tocar junto. Sugestão (opcional, no motor): low-pass suave no bus Music durante os 8 s de "tempo parado". Bus SFX. |
+| boss_flee | boss_flee_1..2.ogg | 1,59 s | não | **Chefe foge** (óleo acabou com ele vivo, UI/UX §13.2): junto com a barra se esvaziando ao contrário e o sumiço do chefe; logo depois do `oil_out`, antes do Resumo | Caixão se solta rangendo → 4–5 saltos de fuga se afastando (cada vez mais baixos e abafados) → "toc-toc" de deboche na tampa (~0,95 s) → afunda com "glup" (~1,3 s). Simpático, não punitivo. Pico −6 dBFS (como `boss_sink`). Variação 1 = 4 saltos, 2 = 5 saltos. Bus SFX. |
+| key_get | key_get_1..2.ogg | 1,09 / 1,15 s | não | **Chave da Cripta** — **não sortear**: `_1` = a Chave pousa no Resumo especial (UI/UX §15: no pop do pouso, junto com o `jingle_boss_win` se ainda não tocou); `_2` = a Chave entra na fechadura da placa do seletor (UI/UX §10.3, "Estágio liberado": no frame em que encaixa, antes da lanterna acender e do `stinger_stage_unlock`) | 1: "pop" + tilintar de chave de ferro + 2 quiques + sinos Lá–Mi. 2: chave deslizando no metal + "tlec-tlac" da tranca (0,15 / 0,25 s) + sinos Lá–Mi em ~0,3 s. Pico −8 dBFS. Bus SFX. |
+| stage_select | stage_select_1..3.ogg | 0,14 s | não | **Trocar estágio** no seletor (setas `◀ ▶` da plaqueta "Cavar ▶" e troca de estágio na placa, UI/UX §10.3) — no lugar do `ui_click` | Placa de madeira balançando ("toc" + rangidinho) + correntinha da lanterna tilintando. Pico −14 dBFS, RMS −30 (nível do `ui_click`). Sortear variação + ±6%. Bus UI. |
+| splash_briba | splash_briba_1.ogg | 1,59 s | não | **Splash do Briba Studio** (antes da tela-título): no frame em que o logo aparece (ou quando a lagartixa do logo se mexe); o `mus_title` entra depois do splash, com o fade normal de 0,6 s | Três "tchic" de lagartixa (pio curtinho caindo de altura, 0 / 75 / 145 ms) + acorde leve de caixinha (Lá maior add9, rolado a partir de ~0,27 s) com capela. Discreto: pico −12 dBFS, −26,5 LUFS (≈ 12 dB abaixo do `mus_title`), no mesmo tom do tema (Lá) para emendar sem choque. Bus SFX (ou UI). |
 
 ### Tela-título — onde cada som entra (UI/UX §9.3–§9.5)
 | Momento | Sons |
@@ -131,6 +140,19 @@ Fonte: tudo sintetizado em `audio_src/` (`music.py`, `sfx.py`, núcleo em `dsp.p
 | Hub / Árvore | `mus_tree` | `build_complete` (construção restaurada), `seal` (raiz selada), `respec` (Replantar), `milestone` (marco) |
 | Loja do Mascate | `mus_shop` enquanto aberta (crossfade ~0,5 s com a do hub) | `shop_bell` ao abrir, `shop_buy`, `shop_deny` |
 | Final | `mus_ending` (sem loop, 78,7 s) → créditos | — |
+
+### Capítulo 1 — faltantes (SND-A) — onde cada som entra
+| Momento | Música | SFX |
+|---|---|---|
+| Splash do estúdio (antes do título) | — (o `mus_title` só entra depois, fade 0,6 s) | `splash_briba` quando o logo aparece |
+| Pisão / Clarão recarregam (ícone acende) | — | `stomp_ready` / `flare_ready` (bus UI) |
+| Óleo zera com Segundo Fôlego disponível | — | `second_wind` no lugar do `oil_out`; luz reacende em ~0,42 s |
+| 3 fogos-fátuos em < 6 s (LX) | (opcional: low-pass no bus Music por 8 s) | `wisp_collect` do 3º + `constellation` |
+| Óleo acaba com o chefe vivo | `mus_boss` com fade-out normal | `oil_out` → `boss_flee` (barra se esvazia ao contrário) |
+| Resumo especial: a Chave pousa | `jingle_boss_win` (se ainda não tocou) | `key_get_1` |
+| Seletor: Chave entra na fechadura | `stinger_stage_unlock` logo depois (lanterna acende) | `key_get_2` |
+| Seletor: setas `◀ ▶` | — | `stage_select` |
+| Cartão "FIM DO CAPÍTULO 1" | `jingle_chapter_end` → `mus_tree` baixinho | — |
 
 ## Medições (do OGG final, `python audio_src/verify.py`)
 
@@ -212,5 +234,14 @@ Fonte: tudo sintetizado em `audio_src/` (`music.py`, `sfx.py`, núcleo em `dsp.p
 | dialog_blip (todos os 5 ids) | curto* | −18,7 a −19,5 | −30,3 a −36,2 | ≤ 0,3 ms | — |
 | helper_cat | −28,5 / curto* | −19,9 / −20,0 | −23,3 / −25,3 | 0,6 ms | — |
 | soul_wander | −30,3 / −30,5 | −19,9 / −20,0 | −26,8 / −27,2 | 2,2 ms | — |
+| jingle_chapter_end | −15,0 | −3,9 | −13,3 | 0 ms | — |
+| second_wind | −24,7 / −24,4 | −5,4 / −5,3 | −16,4 / −15,4 | 0 ms | — |
+| boss_flee | −28,7 / −28,9 | −5,9 | −16,6 / −16,7 | 0 ms | — |
+| constellation | −22,9 / −22,1 | −8,1 | −17,7 / −18,3 | 0 ms | — |
+| key_get | −28,0 / −26,5 | −8,0 / −7,1 | −22,1 / −21,7 | 0 ms | — |
+| splash_briba | −26,5 | −12,1 | −23,3 | 0 ms | — |
+| stage_select | curto* | −13,9 a −14,1 | −29,3 a −30,4 | 0 ms | — |
+| stomp_ready | curto* | −17,0 a −17,1 | −28,2 a −28,8 | 0 ms | — |
+| flare_ready | curto* | −16,9 a −17,0 | −24,7 a −25,0 | 0 ms | — |
 
 \* "curto": abaixo de 400 ms o LUFS integrado (BS.1770) não é definido; use pico e RMS de 50 ms para comparar.

@@ -1200,6 +1200,210 @@ def build_complete(rng, i):
     return chapel(x, mix=0.2, max_len=1.7)
 
 
+# ------------------------------------------------------------------ SND-A (faltantes do capitulo 1)
+
+def _glass(f, d, t60, att=0.004, h2=0.25):
+    """Tom de vidro/sininho com ataque arredondado (sem 'tic' de palheta)."""
+    n = secs(d)
+    t = np.arange(n) / SR
+    x = np.sin(2 * np.pi * f * t) + h2 * np.sin(2 * np.pi * f * 2 * t + 0.3)
+    return x * np.minimum(t / att, 1) * exp_decay(n, t60)
+
+
+def stomp_ready(rng, i):
+    """Pisao recarregado: toque abafado de bota na terra + sininho grave e macio (Mi5/Re5).
+    Tique discreto de UI; pensado para nao cansar (sem agudos, sem cauda longa)."""
+    d = 0.5
+    x = buf(d)
+    f = [255, 240, 270][i % 3] * rng.uniform(0.98, 1.02)
+    put(x, modal(rng, [f, f * 2.3, f * 3.9], [1, 0.25, 0.08], [0.07, 0.035, 0.02], 0.15) * 0.8, 0)
+    put(x, lp(noise(rng, 0.04), 700) * perc_env(secs(0.04), 0.001, 0.02) * 0.25, 0)
+    fc = [659.3, 587.3, 659.3][i % 3]
+    put(x, _glass(fc, 0.45, 0.32) * 0.32, 0.025)
+    put(x, _glass(fc * 1.5, 0.3, 0.18) * 0.08, 0.03)
+    return x
+
+
+def flare_ready(rng, i):
+    """Clarao recarregado: 'tsk' de fosforo bem curto + sininho de vidro (La5/Si5). Par do stomp_ready."""
+    d = 0.45
+    x = buf(d)
+    put(x, bp(noise(rng, 0.018), 2800, 6500) * perc_env(secs(0.018), 0.0005, 0.012) * 0.35, 0)
+    put(x, lp(noise(rng, 0.06), 900) * perc_env(secs(0.06), 0.002, 0.04) * 0.15, 0.004)
+    fc = [880.0, 987.8, 880.0][i % 3]
+    put(x, _glass(fc, 0.42, 0.28) * 0.3, 0.012)
+    put(x, _glass(fc * 2, 0.25, 0.12, h2=0.0) * 0.06, 0.016)
+    return x
+
+
+def second_wind(rng, i):
+    """Segundo Folego: brasa quase apagada -> sopro subindo -> chama reacende ('fuump' em ~0,42 s)
+    -> chama viva crepitando + brilho em La maior subindo."""
+    d = 1.7
+    x = buf(d)
+    put(x, click(rng, 0.0015, 2000) * 0.25, 0)
+    for _ in range(rng.integers(3, 6)):
+        put(x, click(rng, 0.0015, 2000) * rng.uniform(0.08, 0.18), rng.uniform(0.02, 0.3))
+    n = secs(0.44)
+    t = np.arange(n) / SR
+    put(x, sweep_bp(noise(rng, 0.44), 300, 1700, q=1.5) * (t / 0.44) ** 2 * 0.45, 0)
+    ti = 0.42
+    n2 = secs(0.75)
+    t2 = np.arange(n2) / SR
+    env2 = np.minimum(t2 / 0.025, 1) * np.exp(-6.9 * np.maximum(t2 - 0.025, 0) / 0.55)
+    put(x, sweep_bp(noise(rng, 0.75), 380, 1900, q=1.3) * env2, ti)
+    put(x, thump(115, 55, 0.3, 0.15) * 0.45, ti)
+    nf = secs(1.2)
+    tf = np.arange(nf) / SR
+    flick = 1 + 0.6 * onepole(rng.normal(0, 1, nf), 18) * 8
+    put(x, lp(noise(rng, 1.2), 650) * np.clip(flick, 0.2, 2) * np.minimum(tf / 0.05, 1) * np.exp(-6.9 * tf / 1.1) * 0.3, ti + 0.05)
+    for _ in range(rng.integers(8, 13)):
+        tt = rng.uniform(ti + 0.05, 1.4)
+        put(x, click(rng, 0.0015, 2500) * rng.uniform(0.1, 0.3) * (1.5 - tt), tt)
+    notes = [(440.0, 554.4, 659.3), (440.0, 659.3, 880.0)][i % 2]
+    for k, f in enumerate(notes):
+        ng = secs(1.0)
+        tg = np.arange(ng) / SR
+        g = (np.sin(2 * np.pi * f * tg) + 0.3 * np.sin(2 * np.pi * f * 2 * tg)) * np.minimum(tg / 0.08, 1) * np.exp(-6.9 * tg / 0.9)
+        put(x, g * 0.11, ti + 0.04 + 0.07 * k)
+    put(x, sparkle(rng, 0.7, 6, 4000, 8500, 0.08), ti + 0.1)
+    return chapel(x, mix=0.22, max_len=1.7)
+
+
+def constellation(rng, i):
+    """Constelacao (LX): tres estrelas tilintando (Mi6-La6-Do#7) e o tempo 'para': relogio que
+    desacelera ate parar + acorde de vidro suspenso, tremulando."""
+    d = 2.6
+    x = buf(d)
+    stars = [(1318.5, 1760.0, 2217.5), (1760.0, 2217.5, 2637.0)][i % 2]
+    for k, f in enumerate(stars):
+        put(x, chime(rng, f, 1.3, 0.7, t60=1.0), 0.1 * k)
+        put(x, chime(rng, f * 2.0, 0.5, 0.12, t60=0.35), 0.1 * k + 0.003)
+        put(x, sparkle(rng, 0.25, 3, 5000, 9500, 0.07), 0.1 * k + 0.01)
+    # o tempo para: tique-taque desacelerando, cada vez mais grave e baixo
+    tt, gap = 0.3, 0.13
+    for k in range(5):
+        f = 2600 * 0.9 ** k
+        put(x, modal(rng, [f, f * 1.6], [1, 0.4], [0.02, 0.01], 0.06) * 0.28 * 0.8 ** k, tt)
+        tt += gap
+        gap *= 1.45
+    # 'ar' sendo sugado e congelando (0,2 -> 0,45 s)
+    n = secs(0.3)
+    t = np.arange(n) / SR
+    put(x, sweep_bp(noise(rng, 0.3), 3000, 900, q=2.0) * np.sin(np.pi * t / 0.3) ** 2 * 0.1, 0.18)
+    # acorde de vidro suspenso (La5-Mi6-La6), tremolo lento
+    ns = secs(2.2)
+    ts = np.arange(ns) / SR
+    env = np.minimum(ts / 0.35, 1) * np.exp(-6.9 * np.maximum(ts - 0.6, 0) / 1.8)
+    trem = 1 + 0.25 * np.sin(2 * np.pi * 5.5 * ts)
+    pad = sum(a * np.sin(2 * np.pi * f * (1 + 0.0015 * np.sin(2 * np.pi * 0.7 * ts + k)) * ts)
+              for k, (f, a) in enumerate([(880.0, 1.0), (1318.5, 0.6), (1760.0, 0.4)]))
+    put(x, pad * env * trem * 0.07, 0.3)
+    return chapel(x, mix=0.4, max_len=2.6)
+
+
+def boss_flee(rng, i):
+    """Chefe foge (oleo acabou com ele vivo): caixao se solta rangendo, saltos de fuga se afastando
+    (cada vez mais baixos e abafados), 'toc-toc' de deboche na tampa e afunda com um 'glup'."""
+    d = 1.75
+    x = buf(d)
+    put(x, thump(160, 80, 0.12, 0.06) * 0.5, 0)
+    put(x, click(rng, 0.002, 2000) * 0.3, 0)
+    n = secs(0.26)
+    t = np.arange(n) / SR
+    cr = creak(rng, 0.26, 35, 110, [(380, 6, 1.0), (720, 8, 0.6), (1150, 9, 0.3)], lpf=1400)
+    put(x, cr * np.sin(np.pi * t / 0.26) * 0.4, 0.01)
+    hops = [0.2, 0.38, 0.54, 0.68] if i == 0 else [0.18, 0.33, 0.47, 0.6, 0.71]
+    for k, th in enumerate(hops):
+        g = 0.75 ** k
+        h = buf(0.25)
+        put(h, thump(150 * rng.uniform(0.95, 1.05), 70, 0.22, 0.09), 0)
+        put(h, modal(rng, [300, 620], [1, 0.4], [0.06, 0.03], 0.15) * 0.4, 0)
+        put(h, lp(noise(rng, 0.12), 1500) * perc_env(secs(0.12), 0.001, 0.06) * 0.4, 0)
+        put(x, lp(h, 3000 * 0.6 ** k) * g, th)
+    tk = 0.95 if i == 0 else 0.92
+    for k in range(2):
+        put(x, modal(rng, [420, 980, 1650], [1, 0.4, 0.15], [0.05, 0.03, 0.015], 0.12) * 0.3, tk + 0.12 * k)
+    tg = tk + 0.33
+    ng = secs(0.35)
+    put(x, sweep_tone(220, 70, 0.35, t60=0.25) * np.minimum(np.arange(ng) / SR / 0.01, 1) * 0.5, tg)
+    nt = secs(0.4)
+    put(x, lp(noise(rng, 0.4), 700) * perc_env(nt, 0.01, 0.25) * 0.2, tg + 0.03)
+    return chapel(x, mix=0.15, max_len=1.75)
+
+
+def _key_clink(rng, amp=1.0):
+    """Chave de ferro antiga tocando superficie: parciais metalicos inarmonicos."""
+    f = 2900 * rng.uniform(0.97, 1.03)
+    return modal(rng, [f, f * 1.43, f * 1.93, f * 2.52], [1, 0.7, 0.4, 0.2],
+                 [0.22, 0.15, 0.09, 0.06], 0.3, jitter=0.01) * amp
+
+
+def key_get(rng, i):
+    """Chave da Cripta. 1 = pousa no Resumo (pop + tilintar de chave + quique + sinos La-Mi);
+    2 = entra na fechadura do seletor (desliza no metal + 'tlec-tlac' da tranca + sinos)."""
+    d = 1.3
+    x = buf(d)
+    if i == 0:
+        ng = secs(0.06)
+        tg = np.arange(ng) / SR
+        put(x, np.sin(np.cumsum(2 * np.pi * (380 + 700 * tg / 0.06) / SR)) * exp_decay(ng, 0.04) * 0.45, 0)
+        put(x, _key_clink(rng, 0.6), 0.005)
+        put(x, click(rng, 0.002, 3000) * 0.4, 0.005)
+        put(x, _key_clink(rng, 0.3), 0.1)
+        put(x, _key_clink(rng, 0.12), 0.16)
+        tb = 0.05
+    else:
+        n = secs(0.13)
+        t = np.arange(n) / SR
+        put(x, sweep_bp(noise(rng, 0.13), 2500, 5500, q=3.0) * np.minimum(t / 0.01, 1) * (1 - t / 0.13) * 0.3, 0)
+        put(x, _key_clink(rng, 0.3), 0)
+        for k, tt in enumerate((0.15, 0.25)):
+            put(x, modal(rng, [1800, 3100, 4400], [1, 0.5, 0.25], [0.04, 0.025, 0.015], 0.08) * 0.6, tt)
+            put(x, thump(260 - 60 * k, 130, 0.06, 0.03) * 0.4, tt)
+            put(x, click(rng, 0.0015, 3500) * 0.4, tt)
+        tb = 0.28
+    for k, f in enumerate((880.0, 1318.5)):
+        put(x, chime(rng, f, 0.95, 0.4, t60=0.8), tb + 0.05 * k)
+    put(x, sparkle(rng, 0.6, 6, 4500, 9500, 0.08), tb + 0.05)
+    return chapel(x, mix=0.2, max_len=1.3)
+
+
+def stage_select(rng, i):
+    """Trocar estagio no seletor (setas da plaqueta): placa de madeira balancando
+    (rangidinho + 'toc') + correntinha da lanterna tilintando."""
+    d = 0.32
+    x = buf(d)
+    f = [520, 470, 580][i % 3] * rng.uniform(0.98, 1.02)
+    put(x, modal(rng, [f, f * 2.4, f * 4.1], [1, 0.3, 0.1], [0.05, 0.025, 0.012], 0.1) * 0.7, 0)
+    put(x, click(rng, 0.0015, 3000) * 0.25, 0)
+    cr = creak(rng, 0.09, 120, 60, [(900, 8, 1.0), (1500, 9, 0.5)], lpf=2200)
+    put(x, cr * np.sin(np.pi * np.arange(secs(0.09)) / secs(0.09)) * 0.12, 0.02)
+    for k in range(2):
+        fc = rng.uniform(4200, 5600)
+        put(x, modal(rng, [fc, fc * 1.37], [1, 0.4], [0.03, 0.02], 0.06) * 0.08 * (1 - 0.4 * k), 0.05 + 0.045 * k + rng.uniform(0, 0.01))
+    return x
+
+
+def splash_briba(rng, i):
+    """Assinatura do Briba Studio (~1,6 s): tres 'tchic' de lagartixa (pio curtinho caindo de altura)
+    + acorde leve de caixinha (La maior add9, rolado) com capela."""
+    from dsp import musicbox
+    d = 1.7
+    x = buf(d)
+    for k, (tc, f0, a) in enumerate([(0.0, 4300, 1.0), (0.075, 4000, 0.8), (0.145, 3700, 0.62)]):
+        n = secs(0.022)
+        t = np.arange(n) / SR
+        f = f0 * (1 - 0.32 * t / 0.022)
+        ch = np.sin(np.cumsum(2 * np.pi * f / SR)) * np.minimum(t / 0.0015, 1) * exp_decay(n, 0.016)
+        ch *= 1 + 0.5 * np.sin(2 * np.pi * 180 * t)
+        put(x, ch * a * 1.6, tc)
+        put(x, click(rng, 0.0012, 3500) * a * 0.5, tc)
+    for k, m in enumerate([69, 73, 76, 83]):
+        put(x, musicbox(midi_hz(m + 12), 1.4, rng, vel=0.3 + 0.02 * k), 0.27 + 0.045 * k)
+    return chapel(x, mix=0.3, max_len=1.7)
+
+
 # ------------------------------------------------------------------ registro
 
 # id: (gerador, n_variacoes, pico alvo dBFS)
@@ -1268,6 +1472,15 @@ SPEC = {
     "dialog_blip_mascate": (dialog_blip("mascate"), 3, -19.0),
     "unrest_warning": (unrest_warning, 2, -6.0),
     "build_complete": (build_complete, 2, -7.0),
+    # SND-A (faltantes do capitulo 1)
+    "stomp_ready": (stomp_ready, 3, -17.0),
+    "flare_ready": (flare_ready, 3, -17.0),
+    "second_wind": (second_wind, 2, -5.5),
+    "constellation": (constellation, 2, -8.0),
+    "boss_flee": (boss_flee, 2, -6.0),
+    "key_get": (key_get, 2, -8.0),
+    "stage_select": (stage_select, 3, -14.0),
+    "splash_briba": (splash_briba, 1, -12.0),
 }
 
 AMBIENT = {"amb_night": (lambda: amb_night(), -30.0), "amb_souls_choir": (lambda: amb_souls_choir(), -35.0)}
