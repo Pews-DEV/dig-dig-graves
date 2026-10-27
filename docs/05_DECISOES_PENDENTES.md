@@ -22,7 +22,7 @@ Legenda de status: ✅ **Aprovado** (o dono do jogo concordou) · 🟡 **Propost
 - Sequência proposta: 1×1 → 1×2 → 2×2 → 2×3 → 3×3 → … → 5×5.
 - Impacto técnico (para depois): `ToolData` passa de raio para largura × altura; o contorno da área e a rotação do Enxadão precisam aceitar retângulos.
 
-## D3 · Valor do Cobre — 🟡 Proposto (o dono do jogo delegou ao designer-chefe)
+## D3 · Valor do Cobre — ✅ Aprovado
 Preocupação do dono do jogo: o jogo não pode ficar monótono nem "travado".
 - **Não** usar "1 Cobre por ponto de dano" igual para tudo (deixa o jogo plano).
 - **Cada camada vale mais quanto mais funda:** grama paga pouco, terra mais, barro mais ainda; a camada nova **Ossada** paga Ossos. Cavar fundo vira o objetivo, não um custo.
@@ -39,7 +39,7 @@ Pedido do dono do jogo: o jogador escolhe uma direção, mas quem tiver tempo e 
 - Mantém o respec ("Replantar") como forma de testar outra build sem recomeçar.
 - Substitui a regra "uma Raiz-mestra por partida" da revisão §4.3.
 
-## D5 · Chefes como portão de estágio — ✅ Aprovado (conceito) · 🟡 implementação proposta
+## D5 · Chefes como portão de estágio — ✅ Aprovado (conceito e implementação: "Noite do Chefe")
 **Aprovado:** cada estágio (área) termina num **chefe**; derrotá-lo libera o estágio seguinte. É o modelo do GDD §10 (Chave da Cripta) e o mesmo papel do chefe no Nodebuster e no SuperReap.
 
 **Referências do gênero:**
@@ -63,7 +63,7 @@ Alternativas descartadas por ora: **A** (chefe aparece sozinho no meio da noite:
 - 30–40 min: o Caixão Fujão vira a meta.
 - 40–60 min: a recompensa libera a segunda metade da árvore; fim da demo (D12 define se o estágio 2 entra na demo).
 
-## D12 · Mais estágios (outros dioramas) — ✅ Aprovado (direção) · ❓ escopo da demo em aberto
+## D12 · Mais estágios (outros dioramas) — ✅ Aprovado: o estágio 2 vem logo depois do estágio 1 + chefe
 **Estado atual:** o jogo tem **um único estágio**, o campo da Área 1 (Cemitério da Paróquia). Não existe seletor de estágios nem outro diorama.
 
 **Pedido do dono do jogo:** outros dioramas, **com outras cores e outros elementos aparecendo**, liberados pelos chefes (D5).
@@ -78,22 +78,25 @@ Alternativas descartadas por ora: **A** (chefe aparece sozinho no meio da noite:
 | 5 | Jardim das Almas | Ecto/ciano, flores luminosas, lápides flutuantes | Névoa (tiles somem e reaparecem) | A Cova da Dona Ceifa (final) |
 
 **Propostas a decidir:**
-- **Escopo da demo:** (a) só o estágio 1 + o chefe, com os outros estágios aparecendo como silhuetas trancadas no final (como na revisão §5.5); ou (b) estágio 1 + **estágio 2 jogável** como prêmio do chefe, para o jogador ver um diorama novo antes da demo acabar. Recomendação: **(b)**, se couber no prazo; é o que melhor mostra a promessa "cada chefe abre um mundo novo".
+- **Decidido (D0 + resposta do dono do jogo):** o próximo estágio a construir é o **2 · Campo dos Indigentes**, logo depois de fechar o estágio 1 com o Caixão Fujão. Opções originais, para registro: (a) só o estágio 1 + o chefe, com os outros estágios aparecendo como silhuetas trancadas no final (como na revisão §5.5); ou (b) estágio 1 + **estágio 2 jogável** como prêmio do chefe, para o jogador ver um diorama novo antes da demo acabar. Recomendação: **(b)**, se couber no prazo; é o que melhor mostra a promessa "cada chefe abre um mundo novo".
 - **Como trocar de estágio:** um seletor simples na Árvore (ao lado de "Cavar ▶"), com os estágios liberados e os trancados em silhueta; dá para voltar a qualquer estágio liberado (útil para farm, como no GDD §10).
 - **Produção por estágio:** tileset + atlas `_lit`, bloco do diorama, fundo próprio (como o fundo da mata escura do estágio 1), props com efeito, chefe e música da área.
 
-## D6–D11 · Ainda não discutidas (não bloqueiam o M0.5)
+## D11 · Elementos de tabuleiro: começar pelas lápides com efeito — ✅ Aprovado
+- Primeiro elemento novo do campo: **lápides com efeito por tipo** (cada tipo de lápide tem uma regra própria; ex.: com foto dá Almas, rachada quebra e solta Ossos, cruz bloqueia mas dá bônus ao redor). Lista final de tipos e números a definir.
+- Velas, ossário, baú e alminhas errantes ficam para depois (não descartados).
+
+## D6–D10 · Ainda não discutidas (não bloqueiam o M0.5)
 Da §7 da revisão; ficam para o M0.6 em diante:
-- **D6** Uma loja só na demo (Mascate: pás e amuletos em 2 espaços) e se os amuletos viram as Relíquias do jogo completo.
-- **D7** Hub fora da demo; no jogo completo, como superfície da Árvore em vez de cena separada.
+- **D6** Loja (Mascate: pás e amuletos em 2 espaços) e se os amuletos viram as Relíquias do jogo completo.
+- **D7** Hub: cena separada ou superfície da Árvore.
 - **D8** Respec ("Replantar"): grátis (100%) ou com custo (ex.: devolve 80%).
 - **D9** Nó de regra "Cava-Funda" (o dano que sobra passa para a camada de baixo).
 - **D10** Fogo-fátuo com retorno decrescente (cada um da mesma noite vale 80% do anterior), para evitar noite infinita.
-- **D11** Quais elementos de tabuleiro entram na demo (lápides com efeito, vela, cruz, ossário, baú, alminhas) ou cortar para 4.
 
 ---
 
 ## Próximo passo
-1. Dar o "ok" na implementação do chefe (D5, opção B) e em D3.
-2. Decidir o escopo de estágios da demo (D12: só o estágio 1 ou estágio 1 + 2).
-3. Bater o martelo: passar D1–D5 e D12 para o GDD e abrir o **M0.5 · Economia nova** (revisão §6) numa branch separada.
+1. **Bater o martelo:** passar D0–D5, D11 e D12 para o GDD (§4, §7, §10, §14, §19) e reescrever os marcos: M0.5 Economia nova → M0.6 Ativos e regras → estágio 1 completo (lápides com efeito + Noite do Chefe) → estágio 2.
+2. Discutir D6–D10 antes do M0.6.
+3. Abrir o **M0.5 · Economia nova** (revisão §6) numa branch separada.
