@@ -28,4 +28,9 @@ Godot (console): `C:\Users\pedro\Documents\Godot_v4.7.2-stable_win64.exe\Godot_v
 - Testes: `<godot> --headless --path . -s res://tests/<arquivo>.gd`
 
 ## Marco atual
-**M0 · Protótipo cinza** (GDD §19): campo iso, cursor, pulso, 3 camadas, óleo, resumo, 10 nós, save. Critério: "cavar já é gostoso" com placeholders; 1º turno = 50–60 Cobre. Em paralelo, a arte começa pelo item 1 do M1 (tileset da Área 1).
+**Marco A · "Capítulo 1: O Cemitério da Paróquia"** (GDD 2.0 §19, plano em `docs/06_PLANO_V1.md` §3). Jogável do título (com splash do Briba Studio) ao "Fim do Capítulo 1": economia nova, árvore com 44 nós, Pisão, Cava-Funda, lápides com efeito, Noite do Chefe com o Caixão Fujão. Decisões de design: `docs/05_DECISOES_PENDENTES.md`. Ao fechar o marco: `devlog/devlog01.md` e parar para revisão.
+
+## Armadilhas do GDScript (já escaparam antes)
+- Nunca inferir com `:=` a partir de `Dictionary`, `Array` sem tipo, `Variant` ou comparação com esses valores: declare o tipo.
+- Nenhuma `class`/`class_name` com nome de classe nativa do Godot (`Sky`, `Path`, `Marker`, `Line`…).
+- Neste ambiente de nuvem não há Godot executável: valide com `gdparse` e revisão; os testes rodam no Windows.
