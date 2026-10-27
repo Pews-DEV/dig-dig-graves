@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="BalanceData" format=3]
+
+[ext_resource type="Script" path="res://data/types/balance_data.gd" id="1_2gprt"]
+
+[resource]
+script = ExtResource("1_2gprt")
+light_thresholds = PackedFloat32Array(0.75, 0.5, 0.25)
+light_radii = PackedInt32Array(4, 3, 2, 1)
+coffin_hp_mult = 2.0

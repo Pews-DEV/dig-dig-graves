@@ -1,0 +1,8 @@
+m6x11 e m6x11plus — fontes pixel por Daniel Linssen
+Fonte oficial: https://managore.itch.io/m6x11 (baixado em 26/10/2026 pelo fluxo de download gratuito do itch.io)
+Termos declarados na página: "free to use with attribution"
+  (gratuita, inclusive em projetos comerciais, desde que o autor seja creditado)
+Arquivos: m6x11.ttf (tamanho nativo 16) e m6x11plus.ttf (mais caracteres, inclui acentos; tamanho nativo 18).
+Uso no Dig Dig Graves: m6x11plus em títulos, números do HUD, botões e números flutuantes
+(a m6x11 original não tem Ç/Ã/É etc., obrigatórios em PT-BR).
+Crédito incluído em CREDITS.md na raiz do projeto.

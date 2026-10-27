@@ -1,0 +1,13 @@
+{ "frames": [
+  { "filename": "torrao_grama_1px", "frame": { "x": 0, "y": 0, "w": 3, "h": 3 }, "duration": 100 },
+  { "filename": "torrao_grama_2px", "frame": { "x": 3, "y": 0, "w": 3, "h": 3 }, "duration": 100 },
+  { "filename": "torrao_grama_3px", "frame": { "x": 6, "y": 0, "w": 3, "h": 3 }, "duration": 100 },
+  { "filename": "torrao_terra_1px", "frame": { "x": 0, "y": 3, "w": 3, "h": 3 }, "duration": 100 },
+  { "filename": "torrao_terra_2px", "frame": { "x": 3, "y": 3, "w": 3, "h": 3 }, "duration": 100 },
+  { "filename": "torrao_terra_3px", "frame": { "x": 6, "y": 3, "w": 3, "h": 3 }, "duration": 100 },
+  { "filename": "torrao_barro_1px", "frame": { "x": 0, "y": 6, "w": 3, "h": 3 }, "duration": 100 },
+  { "filename": "torrao_barro_2px", "frame": { "x": 3, "y": 6, "w": 3, "h": 3 }, "duration": 100 },
+  { "filename": "torrao_barro_3px", "frame": { "x": 6, "y": 6, "w": 3, "h": 3 }, "duration": 100 }
+ ],
+ "meta": { "image": "torroes.png", "size": { "w": 9, "h": 9 }, "frameTags": [] }
+}

@@ -1,0 +1,228 @@
+class_name FieldModel
+extends RefCounted
+## Modelo puro do campo (GDD §4.2, §4.3, §4.6–4.8, §18.2). Sem nós, sem desenho.
+## Cada tile tem um tipo, uma pilha de camadas (topo → fundo), o índice da camada do
+## topo, o HP dessa camada e um timer de regeneração.
+
+## TOMBSTONE = tile da lápide: bloqueado (sem dano, sem rachadura, fora do CAMPO LIMPO).
+enum Kind { SOIL, GRAVE, ROCK, TOMBSTONE }
+
+const HOLE_COLUMN := 3  # coluna S3 do atlas
+const ROCK_COLUMN := 4  # desenhado pelo atlas de rochas
+
+var size: int
+var area: AreaData
+## Camadas especiais com HP já calculado pelas regras (§4.6, §4.8). Podem ser null.
+var coffin_layer: LayerData
+var rock_layer: LayerData
+var stacks: Array = []  # por tile: Array[LayerData] (topo → fundo)
+var depth: PackedInt32Array  # índice da camada do topo na pilha; == stack.size() → Buraco
+var hp: PackedFloat32Array  # HP restante da camada do topo
+var kind: PackedInt32Array
+var regen_timer: PackedFloat32Array  # só conta em Buracos (GDD §4.7)
+
+
+func _init(p_area: AreaData, p_size: int, p_coffin: LayerData = null, p_rock: LayerData = null) -> void:
+	area = p_area
+	size = p_size
+	coffin_layer = p_coffin
+	rock_layer = p_rock
+	var n := size * size
+	stacks.resize(n)
+	depth.resize(n)
+	hp.resize(n)
+	kind.resize(n)
+	regen_timer.resize(n)
+	for i: int in n:
+		kind[i] = Kind.SOIL
+		_restore_index(i)
+
+
+## Camada especial a partir do modelo da área, com HP calculado (o .tres traz só o resto).
+static func make_special_layer(template: LayerData, hp_value: float) -> LayerData:
+	if template == null:
+		return null
+	var l := template.duplicate() as LayerData
+	l.hp = hp_value
+	return l
+
+
+func in_bounds(cell: Vector2i) -> bool:
+	return cell.x >= 0 and cell.y >= 0 and cell.x < size and cell.y < size
+
+
+func index_of(cell: Vector2i) -> int:
+	return cell.y * size + cell.x
+
+
+func cell_of(i: int) -> Vector2i:
+	return Vector2i(i % size, int(i / float(size)))
+
+
+func tile_count() -> int:
+	return size * size
+
+
+func clip(cells: Array[Vector2i]) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for c: Vector2i in cells:
+		if in_bounds(c):
+			out.append(c)
+	return out
+
+
+func kind_of(cell: Vector2i) -> int:
+	return kind[index_of(cell)]
+
+
+## GDD §4.6: o tile da lápide não é cavável e a área de escavação o ignora.
+func is_blocked(cell: Vector2i) -> bool:
+	return kind[index_of(cell)] == Kind.TOMBSTONE
+
+
+func is_hole(cell: Vector2i) -> bool:
+	var i := index_of(cell)
+	return kind[i] != Kind.TOMBSTONE and depth[i] >= (stacks[i] as Array).size()
+
+
+func is_intact(cell: Vector2i) -> bool:
+	return depth[index_of(cell)] == 0
+
+
+func top_layer(cell: Vector2i) -> LayerData:
+	var i := index_of(cell)
+	if kind[i] == Kind.TOMBSTONE:
+		return null
+	var stack: Array = stacks[i]
+	if depth[i] >= stack.size():
+		return null
+	return stack[depth[i]] as LayerData
+
+
+func layer_max_hp(layer: LayerData) -> float:
+	return layer.hp * area.hp_mult
+
+
+func hp_ratio(cell: Vector2i) -> float:
+	var layer := top_layer(cell)
+	if layer == null:
+		return 0.0
+	return hp[index_of(cell)] / layer_max_hp(layer)
+
+
+## Coluna do atlas a desenhar (S0..S2 pela camada do topo, S3 = Buraco/Caixão, 4 = Rocha).
+func stage_column(cell: Vector2i) -> int:
+	if is_blocked(cell):
+		return 0  # solo intacto sob a lápide
+	var layer := top_layer(cell)
+	return HOLE_COLUMN if layer == null else layer.stage_column
+
+
+## Cobre pago por ponto de dano na camada (GDD §4.3 v1.1): Cobre ÷ HP, já com os
+## multiplicadores da área. O total por camada continua sendo Cobre × recompensa.
+func copper_per_point(layer: LayerData) -> float:
+	return layer.copper * area.reward_mult / layer_max_hp(layer)
+
+
+## GDD §4.3: o dano atinge só a camada do topo; o excedente NÃO passa para baixo.
+## Retorna {"useful": dano efetivo (≤ HP restante), "layer": camada atingida,
+## "broken": bool}. Buraco/fora do campo → useful 0 e layer null.
+func apply_damage(cell: Vector2i, amount: float, regen_time: float) -> Dictionary:
+	var out := {"useful": 0.0, "layer": null, "broken": false}
+	if not in_bounds(cell) or amount <= 0.0:
+		return out
+	var i := index_of(cell)
+	var layer := top_layer(cell)
+	if layer == null:
+		return out
+	out.layer = layer
+	out.useful = minf(amount, hp[i])
+	hp[i] -= amount
+	if hp[i] > 0.0:
+		return out
+	out.broken = true
+	depth[i] += 1
+	var next := top_layer(cell)
+	if next == null:
+		hp[i] = 0.0
+		regen_timer[i] = regen_time
+		if kind[i] == Kind.ROCK:
+			kind[i] = Kind.SOIL  # rocha quebrada vira solo comum ao regenerar
+	else:
+		hp[i] = layer_max_hp(next)
+	return out
+
+
+## GDD §4.7: só Buracos regeneram; tiles de cova esperam a cova abrir/fechar.
+## Retorna as células regeneradas.
+func tick_regen(delta: float) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for i: int in tile_count():
+		if kind[i] == Kind.GRAVE or kind[i] == Kind.TOMBSTONE or depth[i] < (stacks[i] as Array).size():
+			continue
+		regen_timer[i] -= delta
+		if regen_timer[i] <= 0.0:
+			_restore_index(i)
+			out.append(cell_of(i))
+	return out
+
+
+## Muda o tipo do tile. `restore` = refaz a pilha inteira; senão só acrescenta/remove
+## a camada especial mantendo o que já foi cavado (usado ao surgir uma cova em tile intacto).
+func set_kind(cell: Vector2i, new_kind: int, restore: bool = true) -> void:
+	var i := index_of(cell)
+	kind[i] = new_kind
+	if restore:
+		_restore_index(i)
+
+
+## Fecha um tile de cova: vira solo, Buraco, regenerando normalmente (GDD §4.6).
+func close_grave_tile(cell: Vector2i, regen_time: float) -> void:
+	var i := index_of(cell)
+	kind[i] = Kind.SOIL
+	stacks[i] = area.layers.duplicate()
+	depth[i] = (stacks[i] as Array).size()
+	hp[i] = 0.0
+	regen_timer[i] = regen_time
+
+
+func restore(cell: Vector2i) -> void:
+	_restore_index(index_of(cell))
+
+
+func restore_all() -> void:
+	for i: int in tile_count():
+		_restore_index(i)
+
+
+## CAMPO LIMPO: tiles de lápide ficam fora do denominador.
+func is_all_holes() -> bool:
+	for i: int in tile_count():
+		if kind[i] != Kind.TOMBSTONE and depth[i] < (stacks[i] as Array).size():
+			return false
+	return true
+
+
+func hole_count() -> int:
+	var n := 0
+	for i: int in tile_count():
+		if kind[i] != Kind.TOMBSTONE and depth[i] >= (stacks[i] as Array).size():
+			n += 1
+	return n
+
+
+func _restore_index(i: int) -> void:
+	var stack: Array
+	match kind[i]:
+		Kind.ROCK:
+			stack = [rock_layer] if rock_layer != null else area.layers.duplicate()
+		Kind.GRAVE:
+			stack = area.layers.duplicate()
+			if coffin_layer != null:
+				stack.append(coffin_layer)
+		_:
+			stack = area.layers.duplicate()
+	stacks[i] = stack
+	depth[i] = 0
+	regen_timer[i] = 0.0
+	hp[i] = layer_max_hp(stack[0] as LayerData) if not stack.is_empty() else 0.0

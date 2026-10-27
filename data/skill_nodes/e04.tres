@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3]
+
+[ext_resource type="Script" path="res://data/types/stat_modifier.gd" id="1_qiwf4"]
+[ext_resource type="Script" path="res://data/types/skill_node_data.gd" id="2_3256s"]
+
+[sub_resource type="Resource" id="Resource_8fogu"]
+script = ExtResource("1_qiwf4")
+stat = &"crit_chance"
+value = 0.05
+
+[resource]
+script = ExtResource("2_3256s")
+id = &"E04"
+display_name = "Golpe Certeiro"
+description = "+5% de chance de crítico por nível."
+branch = 1
+max_level = 6
+base_cost = 60.0
+cost_growth = 1.6
+modifiers_per_level = Array[ExtResource("1_qiwf4")]([SubResource("Resource_8fogu")])
+children = Array[StringName]([&"E05"])
+tree_position = Vector2(256, 314)
+icon_cell = Vector2i(6, 0)

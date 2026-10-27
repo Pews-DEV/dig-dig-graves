@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3]
+
+[ext_resource type="Script" path="res://data/types/stat_modifier.gd" id="1_60kjm"]
+[ext_resource type="Script" path="res://data/types/skill_node_data.gd" id="2_6qhb5"]
+
+[sub_resource type="Resource" id="Resource_i40vm"]
+script = ExtResource("1_60kjm")
+stat = &"damage"
+value = 1.0
+
+[resource]
+script = ExtResource("2_6qhb5")
+id = &"E01"
+display_name = "Lâmina Afiada"
+description = "+1 de dano por nível."
+branch = 1
+max_level = 10
+base_cost = 10.0
+cost_growth = 1.45
+modifiers_per_level = Array[ExtResource("1_60kjm")]([SubResource("Resource_i40vm")])
+children = Array[StringName]([&"E02", &"E04"])
+tree_position = Vector2(232, 242)
+icon_cell = Vector2i(3, 0)

@@ -1,0 +1,7 @@
+m5x7 — fonte pixel 5×7 por Daniel Linssen
+Fonte oficial: https://managore.itch.io/m5x7 (baixado em 26/10/2026 pelo fluxo de download gratuito do itch.io)
+Licença declarada na página: Creative Commons Zero v1.0 Universal (CC0 1.0)
+  "free to use but attribution appreciated"
+  Texto da licença: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+Uso no Dig Dig Graves: texto corrido e rótulos. Tamanho nativo: 16 (1 px de fonte = 1 px de tela).
+Crédito incluído em CREDITS.md na raiz do projeto.

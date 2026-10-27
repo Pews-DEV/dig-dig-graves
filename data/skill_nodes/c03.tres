@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3]
+
+[ext_resource type="Script" path="res://data/types/stat_modifier.gd" id="1_e6rsx"]
+[ext_resource type="Script" path="res://data/types/skill_node_data.gd" id="2_qvltb"]
+
+[sub_resource type="Resource" id="Resource_dm4ck"]
+script = ExtResource("1_e6rsx")
+stat = &"field_size"
+value = 2.0
+
+[resource]
+script = ExtResource("2_qvltb")
+id = &"C03"
+display_name = "Campo Maior"
+description = "+2 de lado no campo por nível (12 → 18)."
+branch = 4
+max_level = 3
+base_cost = 30.0
+cost_growth = 5.0
+currency = &"bones"
+modifiers_per_level = Array[ExtResource("1_e6rsx")]([SubResource("Resource_dm4ck")])
+tree_position = Vector2(320, 388)
+icon_cell = Vector2i(3, 2)

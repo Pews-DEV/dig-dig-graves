@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3]
+
+[ext_resource type="Script" path="res://data/types/stat_modifier.gd" id="1_ubgha"]
+[ext_resource type="Script" path="res://data/types/skill_node_data.gd" id="2_j6s8b"]
+
+[sub_resource type="Resource" id="Resource_glaeb"]
+script = ExtResource("1_ubgha")
+stat = &"crit_mult"
+value = 0.5
+
+[resource]
+script = ExtResource("2_j6s8b")
+id = &"E05"
+display_name = "Crítico Brutal"
+description = "+0,5 no multiplicador de crítico por nível."
+branch = 1
+max_level = 5
+base_cost = 20.0
+cost_growth = 1.8
+currency = &"bones"
+modifiers_per_level = Array[ExtResource("1_ubgha")]([SubResource("Resource_glaeb")])
+tree_position = Vector2(232, 382)
+icon_cell = Vector2i(7, 0)

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3]
+
+[ext_resource type="Script" path="res://data/types/stat_modifier.gd" id="1_4hxef"]
+[ext_resource type="Script" path="res://data/types/skill_node_data.gd" id="2_8xyin"]
+
+[sub_resource type="Resource" id="Resource_ht8ic"]
+script = ExtResource("1_4hxef")
+stat = &"regen_time"
+op = 1
+value = 0.88
+
+[resource]
+script = ExtResource("2_8xyin")
+id = &"C02"
+display_name = "Terra Fofa"
+description = "−12% no tempo de regeneração por nível."
+branch = 4
+max_level = 6
+base_cost = 60.0
+cost_growth = 1.6
+modifiers_per_level = Array[ExtResource("1_4hxef")]([SubResource("Resource_ht8ic")])
+children = Array[StringName]([&"C03"])
+tree_position = Vector2(320, 318)
+icon_cell = Vector2i(2, 2)

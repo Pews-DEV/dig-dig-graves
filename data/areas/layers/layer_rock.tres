@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="LayerData" format=3]
+
+[ext_resource type="Script" path="res://data/types/layer_data.gd" id="1_layer"]
+
+[resource]
+script = ExtResource("1_layer")
+id = &"rock"
+display_name = "Rocha"
+hp = 1.0
+copper = 0.0
+xp = 0.0
+bone_chance = 1.0
+stage_column = 4
+particle_colors = PackedInt32Array(8, 7, 6)
+sfx_key = &"dig_rock"

@@ -1,0 +1,36 @@
+GIMP Palette
+Name: Lua de Cova 32
+Columns: 8
+#
+ 13  11  20	01 sombra-breu
+ 26  22  38	02 sombra-noite
+ 42  36  64	03 sombra-indigo
+ 61  54  96	04 sombra-violeta
+ 88  80 127	05 sombra-luar
+125 120 156	06 pedra-escura
+168 165 191	07 pedra-media
+214 212 227	08 pedra-clara
+ 31  59  53	09 grama-funda
+ 47  90  70	10 grama-escura
+ 74 125  85	11 grama-media
+122 163  94	12 grama-clara
+ 43  26  23	13 terra-fundo
+ 74  44  34	14 terra-escura
+110  68  48	15 terra-media
+148  97  64	16 terra-clara
+184 138  90	17 terra-borda
+ 59  34  48	18 caixao-escuro
+ 94  51  64	19 caixao-medio
+138  75  79	20 caixao-claro
+201 180 143	21 osso-sombra
+232 220 192	22 osso
+255 246 224	23 osso-brilho
+168  84  26	24 lanterna-escura
+224 138  42	25 lanterna
+255 201  74	26 lanterna-brilho
+ 27  94  90	27 ecto-escuro
+ 47 179 154	28 ecto
+124 242 200	29 ecto-brilho
+143 211 255	30 alma
+140  43  58	31 perigo-escuro
+208  70  90	32 perigo

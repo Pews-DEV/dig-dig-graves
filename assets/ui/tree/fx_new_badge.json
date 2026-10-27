@@ -1,0 +1,70 @@
+{
+ "frames": [
+  {
+   "filename": "fx_new_badge 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 8,
+    "h": 10
+   },
+   "duration": 300
+  },
+  {
+   "filename": "fx_new_badge 1",
+   "frame": {
+    "x": 8,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 8,
+    "h": 10
+   },
+   "duration": 300
+  }
+ ],
+ "meta": {
+  "app": "https://www.aseprite.org/",
+  "version": "1.3",
+  "image": "fx_new_badge.png",
+  "format": "I8",
+  "size": {
+   "w": 16,
+   "h": 10
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "idle",
+    "from": 0,
+    "to": 1,
+    "direction": "forward",
+    "color": "#000000ff"
+   }
+  ],
+  "layers": [],
+  "slices": []
+ }
+}

@@ -1,0 +1,31 @@
+# Dig Dig Graves
+
+Incremental ativo isométrico em pixel art (Godot 4.7.2, GL Compatibility). Idioma de trabalho: português do Brasil; código em inglês.
+
+## Fonte da verdade
+- `docs/01_GDD.md` — regras, números, arquitetura (§18) e marcos (§19).
+- `docs/02_DIRECAO_DE_ARTE.md` — tudo que é visual; paleta fechada em `docs/palette/`.
+- Decisões novas de design entram nesses documentos (é o orquestrador quem os edita).
+
+## Organização do trabalho
+A sessão principal é o **orquestrador/designer-chefe**: decide design, quebra o trabalho em tarefas, delega, revisa as entregas e atualiza os docs. Não implementa features grandes nem desenha sprites diretamente.
+
+| Agente | Responsabilidade | Escreve em |
+|---|---|---|
+| `pixel-artist` | Sprites, tiles, animações, ícones e UI via MCP do Aseprite | `art_src/`, `assets/`, `assets/MANIFEST.md` |
+| `godot-dev` | Mecânicas, cenas, UI em código, animações de interface, dados `.tres`, save, sistema de áudio, integração de assets | `autoload/`, `data/`, `scenes/`, `tests/`, `project.godot` |
+| `sound-designer` | Trilha sonora, SFX e ambiente (composição, síntese, mixagem) | `audio_src/`, `assets/music/`, `assets/sfx/`, `assets/AUDIO_MANIFEST.md`, `assets/AUDIO_CREDITS.md` |
+
+Contratos: o `pixel-artist` registra cada asset exportado em `assets/MANIFEST.md` (arquivo, tamanho de frame, pivô, tags/fps, layout do atlas) e o `sound-designer` registra cada som em `assets/AUDIO_MANIFEST.md` por id; o `godot-dev` só integra o que está nos manifestos e usa placeholders (ou silêncio) enquanto isso. Vários agentes podem editar o mesmo manifesto: sempre com edições pontuais nas próprias linhas, nunca reescrevendo o arquivo inteiro.
+
+Interface, animação e áudio seguem `docs/03_UI_UX.md`.
+
+Ao delegar: passar o brief no formato da Direção de Arte §12 (arte) ou citar as seções do GDD e o critério de pronto (código). Tarefas de arte e código independentes rodam em paralelo.
+
+## Comandos
+Godot (console): `C:\Users\pedro\Documents\Godot_v4.7.2-stable_win64.exe\Godot_v4.7.2-stable_win64_console.exe`
+- Importar/validar: `<godot> --headless --path . --import`
+- Testes: `<godot> --headless --path . -s res://tests/<arquivo>.gd`
+
+## Marco atual
+**M0 · Protótipo cinza** (GDD §19): campo iso, cursor, pulso, 3 camadas, óleo, resumo, 10 nós, save. Critério: "cavar já é gostoso" com placeholders; 1º turno = 50–60 Cobre. Em paralelo, a arte começa pelo item 1 do M1 (tileset da Área 1).

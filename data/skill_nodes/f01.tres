@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3]
+
+[ext_resource type="Script" path="res://data/types/stat_modifier.gd" id="1_vpgl0"]
+[ext_resource type="Script" path="res://data/types/skill_node_data.gd" id="2_0248u"]
+
+[sub_resource type="Resource" id="Resource_ca6fd"]
+script = ExtResource("1_vpgl0")
+stat = &"copper_mult"
+value = 0.1
+
+[resource]
+script = ExtResource("2_0248u")
+id = &"F01"
+display_name = "Bolso Fundo"
+description = "+10% de Cobre por nível."
+branch = 3
+max_level = 10
+base_cost = 20.0
+cost_growth = 1.5
+modifiers_per_level = Array[ExtResource("1_vpgl0")]([SubResource("Resource_ca6fd")])
+children = Array[StringName]([&"F02"])
+tree_position = Vector2(408, 242)
+icon_cell = Vector2i(5, 1)

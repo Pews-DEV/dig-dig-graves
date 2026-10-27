@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AreaData" format=3]
+
+[ext_resource type="Script" path="res://data/types/layer_data.gd" id="1_jh0f4"]
+[ext_resource type="Resource" path="res://data/areas/layers/layer_grass.tres" id="2_gmfhw"]
+[ext_resource type="Resource" path="res://data/areas/layers/layer_dirt.tres" id="3_1b2e5"]
+[ext_resource type="Resource" path="res://data/areas/layers/layer_clay.tres" id="4_57d3r"]
+[ext_resource type="Script" path="res://data/types/area_data.gd" id="5_w2vvu"]
+[ext_resource type="Resource" path="res://data/areas/layers/layer_coffin.tres" id="6_coffin"]
+[ext_resource type="Resource" path="res://data/areas/layers/layer_rock.tres" id="7_rock"]
+
+[resource]
+script = ExtResource("5_w2vvu")
+display_name = "Cemitério da Paróquia"
+layers = Array[ExtResource("1_jh0f4")]([ExtResource("2_gmfhw"), ExtResource("3_1b2e5"), ExtResource("4_57d3r")])
+tile_atlas_path = "res://assets/tiles/a1/tiles_a1.png"
+tile_atlas_lit_path = "res://assets/tiles/a1/tiles_a1_lit.png"
+crack_atlas_path = "res://assets/tiles/a1/cracks_a1.png"
+crack_atlas_lit_path = "res://assets/tiles/a1/cracks_a1_lit.png"
+regen_atlas_path = "res://assets/tiles/a1/regen_a1.png"
+regen_atlas_lit_path = "res://assets/tiles/a1/regen_a1_lit.png"
+coffin_layer = ExtResource("6_coffin")
+rock_layer = ExtResource("7_rock")
+tombstone_path = "res://assets/sprites/props/lapide.png"
+rock_atlas_path = "res://assets/sprites/props/rocha.png"
+grave_atlas_path = "res://assets/tiles/a1/grave_a1.png"
+grave_atlas_lit_path = "res://assets/tiles/a1/grave_a1_lit.png"
+grave_open_path = "res://assets/tiles/a1/grave_open_a1.png"
+grave_open_lit_path = "res://assets/tiles/a1/grave_open_a1_lit.png"

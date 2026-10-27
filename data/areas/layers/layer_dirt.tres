@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="LayerData" format=3]
+
+[ext_resource type="Script" path="res://data/types/layer_data.gd" id="1_d6sht"]
+
+[resource]
+script = ExtResource("1_d6sht")
+id = &"dirt"
+display_name = "Terra"
+hp = 4.0
+copper = 2.0
+xp = 2.0
+bone_chance = 0.03
+stage_column = 1
+particle_colors = PackedInt32Array(17, 16, 15)
+sfx_key = &"dig_dirt"

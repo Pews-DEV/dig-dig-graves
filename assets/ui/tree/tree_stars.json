@@ -1,0 +1,121 @@
+{
+ "frames": [
+  {
+   "filename": "estrela_pequena 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 5,
+    "h": 5
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 5,
+    "h": 5
+   },
+   "sourceSize": {
+    "w": 5,
+    "h": 5
+   },
+   "duration": 500
+  },
+  {
+   "filename": "estrela_pequena 1",
+   "frame": {
+    "x": 5,
+    "y": 0,
+    "w": 5,
+    "h": 5
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 5,
+    "h": 5
+   },
+   "sourceSize": {
+    "w": 5,
+    "h": 5
+   },
+   "duration": 500
+  },
+  {
+   "filename": "estrela_cruz 0",
+   "frame": {
+    "x": 0,
+    "y": 5,
+    "w": 5,
+    "h": 5
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 5,
+    "h": 5
+   },
+   "sourceSize": {
+    "w": 5,
+    "h": 5
+   },
+   "duration": 500
+  },
+  {
+   "filename": "estrela_cruz 1",
+   "frame": {
+    "x": 5,
+    "y": 5,
+    "w": 5,
+    "h": 5
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 5,
+    "h": 5
+   },
+   "sourceSize": {
+    "w": 5,
+    "h": 5
+   },
+   "duration": 500
+  }
+ ],
+ "meta": {
+  "app": "https://www.aseprite.org/",
+  "version": "1.3",
+  "image": "tree_stars.png",
+  "format": "I8",
+  "size": {
+   "w": 10,
+   "h": 10
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "pequena",
+    "from": 0,
+    "to": 1,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "cruz",
+    "from": 2,
+    "to": 3,
+    "direction": "forward",
+    "color": "#000000ff"
+   }
+  ],
+  "layers": [],
+  "slices": []
+ }
+}

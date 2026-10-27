@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3]
+
+[ext_resource type="Script" path="res://data/types/stat_modifier.gd" id="1_efa1e"]
+[ext_resource type="Script" path="res://data/types/skill_node_data.gd" id="2_syeyp"]
+
+[sub_resource type="Resource" id="Resource_yoexk"]
+script = ExtResource("1_efa1e")
+stat = &"pulse_interval"
+op = 1
+value = 0.94
+
+[resource]
+script = ExtResource("2_syeyp")
+id = &"E02"
+display_name = "Braço Firme"
+description = "−6% no intervalo do golpe por nível (multiplicativo)."
+branch = 1
+max_level = 8
+base_cost = 25.0
+cost_growth = 1.55
+modifiers_per_level = Array[ExtResource("1_efa1e")]([SubResource("Resource_yoexk")])
+children = Array[StringName]([&"E03"])
+tree_position = Vector2(152, 302)
+icon_cell = Vector2i(4, 0)
