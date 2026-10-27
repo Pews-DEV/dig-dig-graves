@@ -93,5 +93,5 @@ func _checker_band(y0: int, y1: int, idx: int) -> void:
 		var dense := density > 0.5 if y0 < y1 and phase <= 1.0 else density < 0.5
 		var x0 := y % 2
 		var step := 2 if dense else 4
-		for x: int in range(x0 + (0 if dense else (y % 4) / 2 * 2), W, step):
+		for x: int in range(x0 + (0 if dense or y % 4 < 2 else 2), W, step):
 			draw_rect(Rect2(x, y, 1, 1), c)

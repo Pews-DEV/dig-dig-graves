@@ -14,7 +14,7 @@ var layout: TitleLayoutData
 
 var _world: Node2D
 var _layer_factor: Dictionary = {}  # Node2D -> fator de parallax
-var _souls: TitleLayers.Souls
+var _souls: TitleLayers.SoulsLayer
 var _coveiro: TitleCoveiro
 var _tiao: TitleTiao
 var _shovel: TitleProps.StuckShovel
@@ -78,9 +78,9 @@ func _exit_tree() -> void:
 func _build_world() -> void:
 	_world = Node2D.new()
 	add_child(_world)
-	_add_layer(TitleLayers.Sky.new(layout), layout.factor_sky)
-	_add_layer(TitleLayers.Village.new(layout), layout.factor_village)
-	_souls = TitleLayers.Souls.new(layout)
+	_add_layer(TitleLayers.SkyLayer.new(layout), layout.factor_sky)
+	_add_layer(TitleLayers.VillageLayer.new(layout), layout.factor_village)
+	_souls = TitleLayers.SoulsLayer.new(layout)
 	_world.add_child(_souls)
 	var wall_tex := TitleArt.texture(TitleArt.WALL)
 	var wall_top := 0.0
@@ -90,8 +90,8 @@ func _build_world() -> void:
 		var l := layout
 		wall_tex = TitleArt.generated("title_wall", func() -> Image: return TitleArt.wall_image(l.wall_base_y, l.gate_span))
 		wall_top = float(layout.wall_base_y - 40)
-	_add_layer(TitleLayers.Plate.new(wall_tex, wall_top), layout.factor_wall)
-	_add_layer(TitleLayers.Fog.new(layout), layout.factor_fog)
+	_add_layer(TitleLayers.PlateLayer.new(wall_tex, wall_top), layout.factor_wall)
+	_add_layer(TitleLayers.FogLayer.new(layout), layout.factor_fog)
 	var fg_tex := TitleArt.texture(TitleArt.FG)
 	var fg_top := 0.0
 	if fg_tex != null:
@@ -99,7 +99,7 @@ func _build_world() -> void:
 	else:
 		var l2 := layout
 		fg_tex = TitleArt.generated("title_fg", func() -> Image: return TitleArt.fg_image(l2))
-	var fg := TitleLayers.Plate.new(fg_tex, fg_top)
+	var fg := TitleLayers.PlateLayer.new(fg_tex, fg_top)
 	_add_layer(fg, layout.factor_fg)
 	# MANIFEST: ordem halo < pá < Coveiro < lanterna, tudo relativo ao pivô do Coveiro.
 	var seat := layout.coveiro_seat
@@ -119,8 +119,8 @@ func _build_world() -> void:
 	_tiao.position = layout.tiao_perch
 	fg.add_child(_tiao)
 	# MANIFEST: … < personagens < title_fg_canopy < pétalas e vaga-lumes < logo < UI < vinheta.
-	fg.add_child(TitleLayers.Canopy.new(layout))
-	fg.add_child(TitleLayers.Front.new(layout))
+	fg.add_child(TitleLayers.CanopyLayer.new(layout))
+	fg.add_child(TitleLayers.FrontLayer.new(layout))
 	_logo = TitleLogo.new()
 	_logo.setup(layout)
 	_logo.shovel_landed.connect(_on_shovel_landed)

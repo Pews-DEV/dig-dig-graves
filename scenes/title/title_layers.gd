@@ -6,7 +6,7 @@ extends RefCounted
 
 
 ## 1. Céu (title_sky, 640×600 em y = −240) com estrelas que cintilam e nuvens finas.
-class Sky:
+class SkyLayer:
 	extends Node2D
 
 	const CLOUD_SPEED := 2.0
@@ -57,7 +57,7 @@ class Sky:
 
 
 ## 2. Vila na colina (title_village) com janelas (title_windows) que acendem e apagam.
-class Village:
+class VillageLayer:
 	extends Node2D
 
 	var layout: TitleLayoutData
@@ -114,7 +114,7 @@ class Village:
 
 ## 3. Fila das almas (alma_fila): andam pela trilha da vila até o portão e somem nele.
 ## MANIFEST: ficam na profundidade da vila (parallax 0,5), entre title_village e title_wall.
-class Souls:
+class SoulsLayer:
 	extends Node2D
 
 	const VANISH := 0.36
@@ -207,7 +207,7 @@ class Souls:
 
 
 ## 4–5. Camada estática simples (muro, primeiro plano) com textura do manifesto ou placeholder.
-class Plate:
+class PlateLayer:
 	extends Node2D
 
 	var _tex: Texture2D
@@ -226,7 +226,7 @@ class Plate:
 
 
 ## 7. Frente: pétalas do ipê caindo e vaga-lumes (por cima da copa).
-class Front:
+class FrontLayer:
 	extends Node2D
 
 	const PETAL_EVERY := 0.7
@@ -291,7 +291,7 @@ class Front:
 
 
 ## Névoa baixa atravessando (nevoa_a1), entre o muro e o primeiro plano.
-class Fog:
+class FogLayer:
 	extends Node2D
 
 	const FOG_SPEED := 4.0
@@ -322,7 +322,7 @@ class Fog:
 
 
 ## 6. Copa do ipê (title_fg_canopy: 3 frames, pingpong de 400 ms) por cima do primeiro plano.
-class Canopy:
+class CanopyLayer:
 	extends Node2D
 
 	var layout: TitleLayoutData

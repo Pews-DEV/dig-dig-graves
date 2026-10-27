@@ -1,6 +1,8 @@
 extends Node
 ## Barramento de sinais global (GDD §18.2). Só declarações; nenhuma lógica.
 ## Sistemas emitem e escutam aqui em vez de usar get_node atravessando cenas.
+## Os sinais são emitidos por outros scripts, então o aviso UNUSED_SIGNAL não se aplica aqui.
+@warning_ignore_start("unused_signal")
 
 # Economia / progressão
 signal currency_changed(currency: StringName, amount: float)

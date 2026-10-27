@@ -165,7 +165,8 @@ static func get_theme() -> Theme:
 		tip = _panel(PANEL_PARCHMENT_PATH)
 		if tip != null:
 			tip.set_content_margin_all(4)
-	t.set_stylebox("panel", "TooltipPanel", tip if tip != null else UiKit.flat_box(Palette.BONE, Palette.OUTLINE, 4, 2))
+	var tip_box: StyleBox = (tip as StyleBox) if tip != null else (UiKit.flat_box(Palette.BONE, Palette.OUTLINE, 4, 2) as StyleBox)
+	t.set_stylebox("panel", "TooltipPanel", tip_box)
 	t.set_color("font_color", "TooltipLabel", parchment_text())
 	t.set_font("font", "TooltipLabel", body_font())
 	t.set_font_size("font_size", "TooltipLabel", SIZE_BODY)
