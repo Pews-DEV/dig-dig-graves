@@ -74,6 +74,7 @@ func _ready() -> void:
 	_root.add_child(_toast)
 
 	_options = OptionsMenu.new()
+	_options.show_title_button = true
 	add_child(_options)
 
 	Events.field_cleared.connect(_on_field_cleared)

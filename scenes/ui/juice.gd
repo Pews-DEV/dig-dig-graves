@@ -187,16 +187,19 @@ static func stop_beckon(c: Control) -> void:
 # --- Botões: comportamento padrão de hover e clique (UI/UX §6) -------------------------
 
 ## Liga hover (som; o degrau de 1 px e a borda 26 vêm do estilo) e clique (squash + "toc").
+## Metas opcionais no botão: `quiet_hover` (o menu do título usa `ui_wisp_slide` no lugar) e
+## `quiet_click` (ex.: "Enterrar" toca `ui_bury` no lugar do clique).
 static func attach_button(b: BaseButton) -> void:
 	if b.has_meta(&"juiced"):
 		return
 	b.set_meta(&"juiced", true)
 	var on_hover := func() -> void:
-		if not b.disabled:
+		if not b.disabled and not b.has_meta(&"quiet_hover"):
 			Audio.play(&"ui_hover")
 	var on_down := func() -> void:
 		if not b.disabled:
-			Audio.play(&"ui_click")
+			if not b.has_meta(&"quiet_click"):
+				Audio.play(&"ui_click")
 			squash(b, Vector2(1.04, 0.9), CLICK_DOWN, 0.001)
 	var on_up := func() -> void:
 		_kill(b, &"juice_scale")

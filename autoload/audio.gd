@@ -27,8 +27,10 @@ var _music_players: Array[AudioStreamPlayer] = []
 var _music_current: int = 0
 var _music_id: StringName = &""
 var _music_tweens: Dictionary = {}
-var _ambience: AudioStreamPlayer
-var _ambience_id: StringName = &""
+## Camadas de ambiente (0 = noite; 1 = extra, ex.: coro das almas no título).
+const AMBIENCE_SLOTS := 2
+var _ambience_players: Array[AudioStreamPlayer] = []
+var _ambience_ids: Array[StringName] = []
 var _tick_limiter := RateLimiter.new(20.0)
 var _manifest_text: String = ""
 
@@ -50,10 +52,13 @@ func _ready() -> void:
 		m.volume_db = SILENT_DB
 		add_child(m)
 		_music_players.append(m)
-	_ambience = AudioStreamPlayer.new()
-	_ambience.name = "Ambience"
-	_ambience.bus = &"Ambience"
-	add_child(_ambience)
+	for i: int in AMBIENCE_SLOTS:
+		var a := AudioStreamPlayer.new()
+		a.name = "Ambience%d" % i
+		a.bus = &"Ambience"
+		add_child(a)
+		_ambience_players.append(a)
+		_ambience_ids.append(&"")
 
 
 ## Relê as pastas de áudio e o manifesto (o sound-designer entrega durante o desenvolvimento).
@@ -153,12 +158,12 @@ func _stream(path: String) -> AudioStream:
 # --- Música e ambiente ----------------------------------------------------------------
 
 ## Troca a música com crossfade. Id ausente = a atual some (silêncio).
-func play_music(id: StringName) -> void:
+func play_music(id: StringName, fade: float = CROSSFADE) -> void:
 	if id == _music_id and _music_players[_music_current].playing:
 		return
 	_music_id = id
 	var old := _music_players[_music_current]
-	_fade(old, SILENT_DB, CROSSFADE, true)
+	_fade(old, SILENT_DB, fade, true)
 	var path := bank.pick(id, _rng)
 	if path.is_empty():
 		return
@@ -171,7 +176,7 @@ func play_music(id: StringName) -> void:
 	p.stream = stream
 	p.volume_db = SILENT_DB
 	p.play()
-	_fade(p, 0.0, CROSSFADE, false)
+	_fade(p, 0.0, fade, false)
 
 
 ## Jingle (ex.: Resumo do Turno): a música atual sai rápido e o jingle toca uma vez no bus Music.
@@ -204,28 +209,34 @@ func stop_music(fade: float = CROSSFADE) -> void:
 		_fade(p, SILENT_DB, fade, true)
 
 
-## Ambiente em loop (UI/UX §7.5). Mesmo id continua sem reiniciar.
-func play_ambience(id: StringName) -> void:
-	if id == _ambience_id and _ambience.playing:
+## Ambiente em loop (UI/UX §7.5). Mesmo id continua sem reiniciar. `slot` 1 = camada extra
+## por cima da noite (ex.: `amb_souls_choir` na tela-título).
+func play_ambience(id: StringName, slot: int = 0, fade: float = CROSSFADE) -> void:
+	var player := _ambience_players[clampi(slot, 0, AMBIENCE_SLOTS - 1)]
+	var i := _ambience_players.find(player)
+	if id == _ambience_ids[i] and player.playing:
 		return
-	_ambience_id = id
+	_ambience_ids[i] = id
 	var path := bank.pick(id, _rng)
 	if path.is_empty():
-		_ambience.stop()
+		player.stop()
 		return
 	var stream := _stream(path)
 	if stream == null:
 		return
 	_set_loop(stream, true)
-	_ambience.stream = stream
-	_ambience.volume_db = SILENT_DB
-	_ambience.play()
-	_fade(_ambience, 0.0, CROSSFADE, false)
+	player.stream = stream
+	player.volume_db = SILENT_DB
+	player.play()
+	_fade(player, 0.0, fade, false)
 
 
-func stop_ambience() -> void:
-	_ambience_id = &""
-	_fade(_ambience, SILENT_DB, 0.6, true)
+## Para o ambiente de um slot (−1 = todos).
+func stop_ambience(slot: int = -1, fade: float = 0.6) -> void:
+	for i: int in AMBIENCE_SLOTS:
+		if slot == -1 or slot == i:
+			_ambience_ids[i] = &""
+			_fade(_ambience_players[i], SILENT_DB, fade, true)
 
 
 func _fade(p: AudioStreamPlayer, to_db: float, time: float, stop_at_end: bool) -> void:
@@ -274,7 +285,7 @@ func _exit_tree() -> void:
 	var all: Array[AudioStreamPlayer] = []
 	all.append_array(_pool)
 	all.append_array(_music_players)
-	all.append(_ambience)
+	all.append_array(_ambience_players)
 	for p: AudioStreamPlayer in all:
 		if p != null:
 			p.stop()

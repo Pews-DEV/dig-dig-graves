@@ -4,6 +4,8 @@ extends Control
 ## reduzir flashes, intensidade do tremor e tamanho dos números flutuantes. Salva ao fechar.
 
 signal closed()
+## "Voltar ao título" (UI/UX §9.4): só aparece com `show_title_button`; o jogo salva antes.
+signal title_requested()
 
 const VOLUME_ROWS: Array[Array] = [
 	["Volume geral", "vol_master"],
@@ -14,6 +16,9 @@ const VOLUME_ROWS: Array[Array] = [
 ]
 
 var title_text: String = "Pausa"
+## Defina antes de adicionar à árvore.
+var show_title_button: bool = false
+var _resume: Button
 var _panel: PanelContainer
 var _float_btn: Button
 var _is_open: bool = false
@@ -63,11 +68,17 @@ func _ready() -> void:
 	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_child(buttons)
-	var resume := Button.new()
-	resume.theme_type_variation = &"BigButton"
-	resume.text = "Continuar"
-	resume.pressed.connect(close)
-	buttons.add_child(resume)
+	_resume = Button.new()
+	_resume.theme_type_variation = &"BigButton"
+	_resume.text = "Continuar" if show_title_button else "Voltar"
+	_resume.pressed.connect(close)
+	buttons.add_child(_resume)
+	if show_title_button:
+		var to_title := Button.new()
+		to_title.theme_type_variation = &"BigButton"
+		to_title.text = "Voltar ao título"
+		to_title.pressed.connect(_on_title_pressed)
+		buttons.add_child(to_title)
 
 
 func is_open() -> bool:
@@ -81,6 +92,7 @@ func open() -> void:
 	_panel.position = ((Vector2(640, 360) - _panel.size) * 0.5).floor()
 	_panel.set_meta(&"panel_base", _panel.position)
 	Juice.panel_open(_panel)
+	_resume.grab_focus()  # teclado e gamepad navegam desde a abertura
 
 
 func close() -> void:
@@ -93,8 +105,16 @@ func close() -> void:
 	closed.emit()
 
 
+func _on_title_pressed() -> void:
+	if not _is_open:
+		return
+	_is_open = false
+	Game.save_game()
+	title_requested.emit()
+
+
 func _unhandled_input(event: InputEvent) -> void:
-	if _is_open and event.is_action_pressed(&"pause"):
+	if _is_open and (event.is_action_pressed(&"pause") or event.is_action_pressed(&"ui_cancel")):
 		get_viewport().set_input_as_handled()
 		close()
 

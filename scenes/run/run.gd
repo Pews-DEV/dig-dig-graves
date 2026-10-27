@@ -17,6 +17,7 @@ var state: RunState
 
 var _autopilot_t: float = 0.0
 var _paused: bool = false
+var _leaving: bool = false
 var _hitstop: int = 0
 ## Cobre por tile ainda não mostrado (só números ≥ 1 sobem; o resto acumula).
 var _copper_pending: Dictionary = {}
@@ -50,6 +51,11 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 	hud.refresh(state)
 	hud.options().closed.connect(func() -> void: _set_paused(false))
+	# Pausa → "Voltar ao título" (UI/UX §9.4): o progresso já salvo fica; a noite em curso é abandonada.
+	hud.options().title_requested.connect(func() -> void:
+		_leaving = true  # a cortina despausa o jogo: o turno não pode andar durante a saída
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		Game.goto_title())
 	Audio.play_music(&"mus_area1")
 	Audio.play_ambience(&"amb_night")
 	Events.turn_started.emit()
@@ -77,7 +83,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _notification(what: int) -> void:
 	# GDD §16: pausa automática ao perder o foco da janela.
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and state != null and not state.ended and not Game.autopilot:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and state != null and not state.ended and not Game.autopilot and not _leaving:
 		_set_paused(true)
 
 
@@ -92,7 +98,7 @@ func _set_paused(value: bool) -> void:
 
 
 func _process(delta: float) -> void:
-	if _paused:
+	if _paused or _leaving:
 		return
 	if _hitstop > 0:
 		_hitstop -= 1

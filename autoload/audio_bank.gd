@@ -79,7 +79,9 @@ static func bus_for(id: StringName) -> StringName:
 	var s := String(id)
 	if s.begins_with("mus_") or s.begins_with("jingle_") or s.begins_with("stinger_"):
 		return &"Music"
-	# AUDIO_MANIFEST: UI = ui_*, node_*, root_grow, level_up, screen_transition.
+	# AUDIO_MANIFEST: UI = ui_* (inclui ui_wisp_slide e ui_bury do título), node_*, root_grow,
+	# level_up, screen_transition. logo_land/logo_thunk/logo_drip ficam no SFX (padrão);
+	# mus_title em Music e amb_souls_choir em Ambience pelos prefixos.
 	if s.begins_with("ui_") or s.begins_with("node_") or s in ["screen_transition", "root_grow", "level_up"]:
 		return &"UI"
 	if s.begins_with("amb_"):

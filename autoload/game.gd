@@ -10,6 +10,7 @@ const TOOL_PATHS: Dictionary = {&"shovel": "res://data/tools/tool_shovel.tres"}
 const SCENE_RUN := "res://scenes/run/run.tscn"
 const SCENE_SUMMARY := "res://scenes/run/turn_summary.tscn"
 const SCENE_TREE := "res://scenes/tree/skill_tree.tscn"
+const SCENE_TITLE := "res://scenes/title/title_screen.tscn"
 
 const TELEMETRY_KEEP := 50
 
@@ -30,6 +31,8 @@ var settings: Dictionary = GameSettings.sanitize({})
 var seen_nodes: Dictionary = {}
 ## `-- --autopilot`: cursor anda sozinho (captura de tela / demonstração), com save próprio.
 var autopilot: bool = false
+## A abertura do título já tocou nesta sessão: na volta, entra direto no enquadramento final.
+var title_intro_seen: bool = false
 ## `-- --font-test`: mostra a amostra de tipografia (UI/UX §2) por cima da tela.
 var font_test: bool = false
 
@@ -151,7 +154,16 @@ func goto_tree() -> void:
 	_change_scene(SCENE_TREE)
 
 
-## Cena inicial: 1º jogo vai direto ao turno; depois, à árvore (sem título no M0).
+## Tela-título (UI/UX §9). `curtain = false` no boot: a própria abertura sai do preto.
+func goto_title(curtain: bool = true) -> void:
+	if curtain:
+		_change_scene(SCENE_TITLE)
+	else:
+		get_tree().paused = false
+		get_tree().change_scene_to_file(SCENE_TITLE)
+
+
+## Atalho sem título (autopilot/captura): 1º jogo vai direto ao turno; depois, à árvore.
 func goto_start() -> void:
 	if turns_played == 0:
 		goto_run()
@@ -235,11 +247,32 @@ func save_game() -> void:
 func load_game() -> void:
 	var data := SaveManager.read()
 	if data.is_empty():
-		Economy.reset()
-		tree.reset()
-		turns_played = 0
-		unrest.clear()
-		seen_nodes.clear()
-		refresh_stats()
+		_reset_progress()
 	else:
 		apply_save_dict(data)
+
+
+func _reset_progress() -> void:
+	Economy.reset()
+	tree.reset()
+	turns_played = 0
+	unrest.clear()
+	seen_nodes.clear()
+	telemetry.clear()
+	nodes_bought_since_turn = 0
+	last_result = null
+	refresh_stats()
+
+
+## Há progresso para "Continuar"? (um save só com opções, gravado pelo menu, não conta)
+func has_progress() -> bool:
+	return SaveManager.has_save() and (turns_played > 0 or Economy.get_amount(Economy.COPPER) > 0.0)
+
+
+## Novo Jogo (UI/UX §9.4): enterra o save atual pelo SaveManager e recomeça do zero.
+## As opções do jogador (volume, acessibilidade) são mantidas.
+func new_game() -> void:
+	if SaveManager.has_save():
+		SaveManager.bury_save()
+	_reset_progress()
+	save_game()

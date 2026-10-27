@@ -21,3 +21,8 @@ func read() -> Dictionary:
 
 func delete_save() -> void:
 	SaveIO.delete(save_path)
+
+
+## Novo Jogo com save existente: guarda uma cópia enterrada e libera o save.
+func bury_save() -> bool:
+	return SaveIO.bury(save_path)

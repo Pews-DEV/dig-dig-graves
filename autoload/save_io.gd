@@ -45,6 +45,25 @@ static func delete(path: String) -> void:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
+## "Enterrar" (Novo Jogo, UI/UX §9.4): o save não é apagado de vez, é movido para
+## `<nome>_buried.json` (só o último enterro fica guardado), recuperável à mão.
+static func bury(path: String) -> bool:
+	if not FileAccess.file_exists(path):
+		return true
+	var backup := buried_path(path)
+	if FileAccess.file_exists(backup):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(backup))
+	var err := DirAccess.rename_absolute(ProjectSettings.globalize_path(path), ProjectSettings.globalize_path(backup))
+	if err != OK:
+		push_error("SaveIO: não foi possível enterrar o save (%s)" % error_string(err))
+		return false
+	return true
+
+
+static func buried_path(path: String) -> String:
+	return path.get_basename() + "_buried." + path.get_extension()
+
+
 ## Migrações por versão: cada passo leva de v para v+1.
 static func migrate(data: Dictionary) -> Dictionary:
 	var v := int(data.get("version", 0))
