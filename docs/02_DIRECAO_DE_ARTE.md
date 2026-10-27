@@ -232,6 +232,7 @@ Cada tile mostra no **topo** o material da camada atual, e a **profundidade** é
 | **Madame Ossada** | Esqueleto com turbante e xale, bola de cristal | Ossos 21/22, turbante 31/32, xale 28, bola 30/23 | Brincos de argola (26) |
 | **Tião, o Corvo** | Corvo gordinho, peito estufado | 01/02/04, bico 17 | Moeda de cobre no bico |
 | **Seu Damião** | Fantasma de coveiro velho, bigode grande, chapéu | Corpo 30/23 em xadrez nas bordas, chapéu 18 | Pá fantasma (28) |
+| **Mascate** | Esqueleto vendedor ambulante, chapéu de feltro, mochila alta de quinquilharias | Ossos 21/22/23, chapéu e colete 18/19/20 (fita 25), paletó 03/04/05, mochila 14/15/16, frigideira 05/06/07 | Dente de ouro (26) e sininho (25/26) |
 | **Toupeira Tita** | Bolinha marrom com focinho rosa e óculos de proteção | 14/15/16, focinho 32 | Óculos (07/26) |
 | **Gato Breu** | Gato preto sentado, olhos grandes | 01/02/04, olhos 26 | Coleira com sininho (25) |
 | **Cão Ossinho** | Cachorro esqueleto abanando o rabo | 21/22/23 | Osso na boca |
