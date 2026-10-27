@@ -175,3 +175,48 @@ Na volta ao título vindo do jogo, entra direto no enquadramento final, com o lo
 
 ### 9.5 Som
 Música própria `mus_title`, o tema principal do jogo e a melodia que as outras faixas citam. Ela começa já no fade. O pouso de cada letra tem um som leve; a pá no G tem um "tunc" com reverb. O ambiente noturno fica por baixo. As alminhas na fila têm um coro baixinho e distante que vai e volta.
+
+### 9.6 Contrato de produção (ids, caminhos e enquadramento)
+Coordenadas em pixels da tela **no enquadramento final** (640×360). Na abertura, a câmera começa 240 px acima: cada camada é desenhada deslocada para baixo em `240 × (1 − p) × fator` (p = progresso 0→1 da descida, ease-in-out), com o **fator de parallax** abaixo. O valor exato de cada posição é o que o `pixel-artist` registrar no `assets/MANIFEST.md`; os números daqui são o alvo.
+
+**Layout-alvo do enquadramento final**
+| Elemento | Região-alvo | Observação |
+|---|---|---|
+| Lua | centro ≈ (96, 64), r ≈ 26–30 | Alto à esquerda |
+| Logo | x ≈ 214–426, y ≈ 18–104 (≈ 1/3 da largura, centralizado) | 2 linhas: "DIG DIG" / "GRAVES" |
+| Vila na colina | horizonte em y ≈ 190–230 | Janelas acesas 25/26 |
+| Muro + portão | base do muro em y ≈ 262; portão em x ≈ 250–300 | As almas somem no portão |
+| Botões do menu | coluna x ≈ 372–476, a partir de y ≈ 168, passo 28 | `btn_grande` em 9-slice, largura 104 |
+| Monte + Coveiro | monte em x ≈ 40–150, chão em y ≈ 334 | À esquerda |
+| Tião | lápide perto do monte, x ≈ 150–175 | — |
+| Ipê-roxo | x ≈ 520–640, sai da borda direita | Copa com pétalas |
+| Versão | canto inferior direito, m5x7 em 05 | — |
+
+**Camadas (pixel-artist "cenário e logo") — `assets/sprites/bg/title/` e `assets/ui/title/`**
+| id | Tamanho | Fator | Conteúdo |
+|---|---|---|---|
+| `title_sky` | 640×600 (desenhado em y = −240 no final) | 0,25 | Céu 02→03→04 em dither, lua cheia grande, estrelas fixas. Estrelas que cintilam e nuvens reaproveitam `bg_a1_stars` e `bg_a1_clouds` |
+| `title_village` | 640×H | 0,5 | Colina com casinhas, torre da igreja e a trilha sinuosa até o portão; janelas apagadas na base |
+| `title_windows` | célula pequena, 2 frames | 0,5 | Janela apagada/acesa; posições das janelas listadas no manifesto |
+| `title_wall` | 640×H | 0,8 | Muro caiado, portão de ferro com arabescos, cruzes e lápides |
+| `title_fg` | 640×H | 1,0 | Chão do primeiro plano, monte de terra recém-cavada (sem pá), lápide do Tião, ipê-roxo (tronco e copa; copa com 2–3 frames de idle opcional) |
+| `title_logo` | atlas de letras | 1,0 (fixo na tela) | 12 letras separadas (D I G D I G G R A V E S) com terra escorrendo, posição final de cada letra no manifesto; `title_logo_shovel` (pá que crava no 2º G de GRAVES); `title_logo_drip` (gota, 3–4 frames) |
+| `panel_stone` | 9-slice | — | Painel de pedra em lápide (06/07/08, contorno 01, topo arredondado) para a confirmação |
+| `btn_perigo` | 4 estados, como `btn_grande` | — | Botão de perigo 31/32 ("Enterrar") |
+| `scroll_ends` | — | — | Rolos de pergaminho (topo/base) para os Créditos, em volta de `panel_parchment` |
+
+O manifesto também registra a **trilha das almas** (polilinha em coordenadas de tela, da vila até o portão), o ponto do monte onde o Coveiro senta, o ponto da lápide do Tião e onde ficam a pá cravada e a lanterna no chão.
+Reaproveitados: `fogo_fatuo` (cursor do menu), `fx_tree_petals` (pétalas), `fx_tree_firefly` (vaga-lumes), `nevoa_a1`, `vinheta`, `dust` (pouso das letras), `torroes` (terrinha da pá).
+
+**Personagens (pixel-artist "personagens") — `assets/sprites/chars/title/`**
+| id | Frame | Pivô | Tags |
+|---|---|---|---|
+| `coveiro_title` | 32×32 | base (16, 31) | `idle` (respirar, 6 fps, loop) · `scratch` (coçar a cabeça) · `yawn` (bocejo) · `stand` (levanta, pega a pá e a lanterna, segura o último frame) |
+| `pa_cravada` | — | base | Pá cravada no monte; some quando o `stand` a pega |
+| `lanterna_chao` | — | base | `idle` 3 frames, 8 fps; halo em xadrez em sprite separado (`lanterna_chao_halo`); some no `stand` |
+| `tiao` | 16×16 | base (8, 15) | `idle` (piscar) · `tilt` (inclina a cabeça) · `hop` (pulinho) · `caw` (grasna); moeda de cobre no bico |
+| `alma_fila` | 8×10 (+ folga) | base | `walk` (flutua andando, 4 frames, 6–8 fps, loop) · `vanish` (some em xadrez no portão, 3 frames) |
+
+**Som (sound-designer)**: `mus_title` (tema principal, loop), `logo_land` (3–4 variações), `logo_thunk` (pá no G, com reverb), `logo_drip`, `amb_souls_choir` (coro distante em loop, vai e volta), `ui_wisp_slide` (cursor deslizando), `ui_bury` (confirmar "Enterrar").
+
+**Montagem (godot-dev)**: `scenes/title/` (cena `title_screen.tscn`). O `boot` passa a abrir o título. Enquanto um asset não estiver no manifesto, usa placeholder (ou silêncio).
