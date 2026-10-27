@@ -220,8 +220,11 @@ func _pulse(is_final: bool) -> void:
 			result.max_crit = maxf(result.max_crit, amount)
 		hits.append({"cell": cell, "damage": amount, "useful": useful, "copper": copper, "crit": crit, "layer": layer, "broke": bool(hit.broken)})
 		if hit.broken:
-			broken_by_layer[layer.id] = int(broken_by_layer.get(layer.id, 0)) + 1
-			_on_layer_broken(cell, layer, crit)
+			# O Caixão de uma cova quebra nas 2 metades no mesmo golpe (FieldModel.partner).
+			var broken_cells: Array = hit.cells
+			for bc: Vector2i in broken_cells:
+				broken_by_layer[layer.id] = int(broken_by_layer.get(layer.id, 0)) + 1
+				_on_layer_broken(bc, layer, crit)
 	# 3. Covas completas.
 	_resolve_graves()
 	# 4. Dreno de rocha (GDD §4.5): por rocha dentro da área, salvo Picareta.
@@ -360,19 +363,26 @@ func _spawn_grave(avoid: Array = []) -> bool:
 	if candidates.is_empty():
 		return false
 	var pick: Array = candidates[rng.randi() % candidates.size()]
-	var cells: Array[Vector2i] = [pick[0] as Vector2i, pick[1] as Vector2i]
+	spawn_grave_at(pick[0] as Vector2i, int(pick[2]))
+	return true
+
+
+## Cria a cova com cabeça em `head` no eixo `axis` (GRAVE_DIRS), sem checar o lugar.
+## As 2 metades ficam ligadas no FieldModel: a cova é uma entidade só.
+func spawn_grave_at(head: Vector2i, axis: int) -> Dictionary:
+	var cells: Array[Vector2i] = [head, head + GRAVE_DIRS[axis]]
 	for c: Vector2i in cells:
 		field.set_kind(c, FieldModel.Kind.GRAVE)
-	var axis := int(pick[2])
-	field.set_kind(cells[0] - GRAVE_DIRS[axis], FieldModel.Kind.TOMBSTONE)
+	field.link_grave(cells[0], cells[1])
+	field.set_kind(head - GRAVE_DIRS[axis], FieldModel.Kind.TOMBSTONE)
 	var g := {
-		"id": _next_id, "head": cells[0], "cells": cells, "axis": axis,
-		"tombstone": cells[0] - GRAVE_DIRS[axis], "variant": rng.randi() % 3, "open": false, "timer": 0.0,
+		"id": _next_id, "head": head, "cells": cells, "axis": axis,
+		"tombstone": head - GRAVE_DIRS[axis], "variant": rng.randi() % 3, "open": false, "timer": 0.0,
 	}
 	_next_id += 1
 	graves.append(g)
 	grave_spawned.emit(g)
-	return true
+	return g
 
 
 func _grave_spot_ok(head: Vector2i, foot: Vector2i, tombstone: Vector2i, avoid: Array) -> bool:

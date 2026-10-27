@@ -51,14 +51,19 @@ func _draw_floor() -> void:
 	if atlas.has_grave_art:
 		_draw_open_anims()
 		return
-	var coffin := state.field.coffin_layer
 	for g: Dictionary in state.graves:
-		for c: Vector2i in g.cells:
+		# Estado decidido para a cova inteira: as 2 metades aparecem juntas ou nenhuma.
+		var row := GraveVisuals.state_row(state.field, g)
+		if row == GraveVisuals.ROW_BURIED:
+			continue
+		var cells: Array = g.cells
+		var ratio := state.field.hp_ratio(cells[0] as Vector2i)
+		for c: Vector2i in cells:
 			var center := tiles.map_to_local(c)
-			if bool(g.open):
+			if row == TileAtlas.GRAVE_ROW_OPEN:
 				_draw_open_grave(center)
-			elif coffin != null and state.field.top_layer(c) == coffin:
-				_draw_coffin_lid(center, state.field.hp_ratio(c))
+			else:
+				_draw_coffin_lid(center, ratio)
 
 
 ## Abertura com arte (MANIFEST grave_open_a1): as 2 metades juntas por 330 ms,
@@ -74,11 +79,14 @@ func _draw_open_anims() -> void:
 			continue
 		var frame := clampi(int(t / (OPEN_ANIM_TIME / OPEN_FRAMES)), 0, OPEN_FRAMES - 1)
 		var cells: Array = g.cells
+		# Uma luz só para a cova (as 2 metades no mesmo atlas).
+		var lit := false
+		for c: Vector2i in cells:
+			lit = lit or _is_lit(c)
+		var tex := atlas.grave_open_lit if lit else atlas.grave_open
 		for half: int in cells.size():
 			var c: Vector2i = cells[half]
 			var row := int(g.axis) * 2 + half
-			var lit := _is_lit(c)
-			var tex := atlas.grave_open_lit if lit else atlas.grave_open
 			var cell := Vector2(TileAtlas.CELL)
 			draw_texture_rect_region(tex, Rect2(tiles.map_to_local(c) - Vector2(TileAtlas.PIVOT), cell), Rect2(Vector2(frame, row) * cell, cell))
 

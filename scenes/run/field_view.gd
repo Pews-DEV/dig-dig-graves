@@ -141,9 +141,15 @@ func refresh(light_center: Vector2i, light_radius: int) -> void:
 	var hide_regen := regen_fx.uses_texture()
 	var grave_tiles := _grave_tiles()
 	for i: int in model.tile_count():
+		_lit[i] = 1 if _is_lit(model.cell_of(i), light_center, light_radius) else 0
+	if state != null:
+		# A cova usa uma luz só para as 2 metades (GraveVisuals.light_overrides).
+		var overrides := GraveVisuals.light_overrides(model, state.graves, _lit)
+		for idx: int in overrides:
+			_lit[idx] = int(overrides[idx])
+	for i: int in model.tile_count():
 		var cell := model.cell_of(i)
-		var lit := 1 if _is_lit(cell, light_center, light_radius) else 0
-		_lit[i] = lit
+		var lit: int = _lit[i]
 		var key: int
 		if hide_regen and regen_fx.is_playing(cell):
 			key = -2  # o frame de regeneração ocupa o lugar do tile
@@ -171,24 +177,12 @@ func refresh(light_center: Vector2i, light_radius: int) -> void:
 	cracks.queue_redraw()
 
 
-## Células de cova que usam o atlas de covas: caixão à mostra ou cova aberta.
-## Valor = (coluna eixo×2+metade, linha de estado).
+## Células de cova que usam o atlas de covas: caixão à mostra ou cova aberta, sempre
+## as 2 metades juntas. Valor = (coluna eixo×2+metade, linha de estado).
 func _grave_tiles() -> Dictionary:
-	var out: Dictionary = {}
 	if state == null or not atlas.has_grave_art:
-		return out
-	var coffin := model.coffin_layer
-	for g: Dictionary in state.graves:
-		var cells: Array = g.cells
-		for half: int in cells.size():
-			var c: Vector2i = cells[half]
-			var col := int(g.axis) * 2 + half
-			if bool(g.open):
-				out[c] = Vector2i(col, TileAtlas.GRAVE_ROW_OPEN)
-			elif model.top_layer(c) == coffin:
-				var cracked := model.hp_ratio(c) < TileAtlas.GRAVE_CRACK_RATIO
-				out[c] = Vector2i(col, TileAtlas.GRAVE_ROW_CRACKED if cracked else TileAtlas.GRAVE_ROW_EXPOSED)
-	return out
+		return {}
+	return GraveVisuals.atlas_cells(model, state.graves)
 
 
 func _is_lit(cell: Vector2i, center: Vector2i, radius: int) -> bool:

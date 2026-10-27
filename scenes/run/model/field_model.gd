@@ -20,6 +20,12 @@ var depth: PackedInt32Array  # índice da camada do topo na pilha; == stack.size
 var hp: PackedFloat32Array  # HP restante da camada do topo
 var kind: PackedInt32Array
 var regen_timer: PackedFloat32Array  # só conta em Buracos (GDD §4.7)
+## Cova = UMA entidade de 2 tiles (GDD §4.6). `partner[i]` = índice da outra metade, −1 se não é cova.
+## Regra (decisão de jogo): as camadas de solo de cada metade são cavadas separadamente;
+## o Caixão só fica exposto quando as DUAS metades chegam a ele (até lá a metade adiantada
+## é fundo de buraco, sem dano). Exposto, ele tem HP compartilhado (soma das 2 metades):
+## dano em qualquer metade desce o mesmo HP, e as 2 quebram juntas no mesmo golpe.
+var partner: PackedInt32Array
 
 
 func _init(p_area: AreaData, p_size: int, p_coffin: LayerData = null, p_rock: LayerData = null) -> void:
@@ -33,6 +39,8 @@ func _init(p_area: AreaData, p_size: int, p_coffin: LayerData = null, p_rock: La
 	hp.resize(n)
 	kind.resize(n)
 	regen_timer.resize(n)
+	partner.resize(n)
+	partner.fill(-1)
 	for i: int in n:
 		kind[i] = Kind.SOIL
 		_restore_index(i)
@@ -89,8 +97,68 @@ func is_intact(cell: Vector2i) -> bool:
 	return depth[index_of(cell)] == 0
 
 
+## Camada atingível do topo. null = Buraco, lápide ou Caixão ainda enterrado do outro lado
+## (a metade adiantada da cova vira fundo de buraco até a outra chegar ao Caixão).
 func top_layer(cell: Vector2i) -> LayerData:
 	var i := index_of(cell)
+	var layer := _raw_top(i)
+	if layer != null and _coffin_waiting(i):
+		return null
+	return layer
+
+
+func layer_max_hp(layer: LayerData) -> float:
+	return layer.hp * area.hp_mult
+
+
+## HP cheio da camada do topo deste tile; o Caixão de uma cova vale pelas 2 metades.
+func cell_max_hp(cell: Vector2i) -> float:
+	var i := index_of(cell)
+	var layer := _raw_top(i)
+	if layer == null:
+		return 0.0
+	return _max_hp_at(i, layer)
+
+
+func hp_ratio(cell: Vector2i) -> float:
+	if top_layer(cell) == null:
+		return 0.0
+	return hp[index_of(cell)] / cell_max_hp(cell)
+
+
+# --- Covas (entidade de 2 tiles) ------------------------------------------------
+
+## Liga as 2 metades de uma cova (os tiles já devem ser Kind.GRAVE).
+func link_grave(head: Vector2i, foot: Vector2i) -> void:
+	var a := index_of(head)
+	var b := index_of(foot)
+	partner[a] = b
+	partner[b] = a
+
+
+func unlink_grave(cell: Vector2i) -> void:
+	var a := index_of(cell)
+	var b: int = partner[a]
+	partner[a] = -1
+	if b >= 0:
+		partner[b] = -1
+
+
+## Outra metade da cova, ou (−1, −1) se o tile não é de cova.
+func grave_partner(cell: Vector2i) -> Vector2i:
+	var j: int = partner[index_of(cell)]
+	return cell_of(j) if j >= 0 else Vector2i(-1, -1)
+
+
+## Caixão à mostra: as 2 metades chegaram a ele e ele ainda não quebrou.
+func is_coffin_exposed(cell: Vector2i) -> bool:
+	var i := index_of(cell)
+	if coffin_layer == null or kind[i] != Kind.GRAVE or _raw_top(i) != coffin_layer:
+		return false
+	return not _coffin_waiting(i)
+
+
+func _raw_top(i: int) -> LayerData:
 	if kind[i] == Kind.TOMBSTONE:
 		return null
 	var stack: Array = stacks[i]
@@ -99,15 +167,21 @@ func top_layer(cell: Vector2i) -> LayerData:
 	return stack[depth[i]] as LayerData
 
 
-func layer_max_hp(layer: LayerData) -> float:
-	return layer.hp * area.hp_mult
+func _is_shared_coffin(i: int, layer: LayerData) -> bool:
+	return layer != null and layer == coffin_layer and kind[i] == Kind.GRAVE and partner[i] >= 0
 
 
-func hp_ratio(cell: Vector2i) -> float:
-	var layer := top_layer(cell)
-	if layer == null:
-		return 0.0
-	return hp[index_of(cell)] / layer_max_hp(layer)
+## A metade i já está no Caixão, mas a outra ainda tem solo por cima.
+func _coffin_waiting(i: int) -> bool:
+	if not _is_shared_coffin(i, _raw_top(i)):
+		return false
+	var j: int = partner[i]
+	return depth[j] < (stacks[j] as Array).size() and _raw_top(j) != coffin_layer
+
+
+func _max_hp_at(i: int, layer: LayerData) -> float:
+	var m := layer_max_hp(layer)
+	return m * 2.0 if _is_shared_coffin(i, layer) else m
 
 
 ## Coluna do atlas a desenhar (S0..S2 pela camada do topo, S3 = Buraco/Caixão, 4 = Rocha).
@@ -126,9 +200,10 @@ func copper_per_point(layer: LayerData) -> float:
 
 ## GDD §4.3: o dano atinge só a camada do topo; o excedente NÃO passa para baixo.
 ## Retorna {"useful": dano efetivo (≤ HP restante), "layer": camada atingida,
-## "broken": bool}. Buraco/fora do campo → useful 0 e layer null.
+## "broken": bool, "cells": tiles que quebraram (2 quando é o Caixão de uma cova)}.
+## Buraco/fora do campo/Caixão ainda enterrado → useful 0 e layer null.
 func apply_damage(cell: Vector2i, amount: float, regen_time: float) -> Dictionary:
-	var out := {"useful": 0.0, "layer": null, "broken": false}
+	var out := {"useful": 0.0, "layer": null, "broken": false, "cells": []}
 	if not in_bounds(cell) or amount <= 0.0:
 		return out
 	var i := index_of(cell)
@@ -138,19 +213,31 @@ func apply_damage(cell: Vector2i, amount: float, regen_time: float) -> Dictionar
 	out.layer = layer
 	out.useful = minf(amount, hp[i])
 	hp[i] -= amount
+	var shared := _is_shared_coffin(i, layer)
+	if shared:
+		hp[partner[i]] = hp[i]  # HP do Caixão é um só para as 2 metades
 	if hp[i] > 0.0:
 		return out
 	out.broken = true
+	var broken_cells: Array = out.cells
+	broken_cells.append(cell)
+	_break_top(i, regen_time)
+	if shared:
+		broken_cells.append(cell_of(partner[i]))
+		_break_top(partner[i], regen_time)
+	return out
+
+
+func _break_top(i: int, regen_time: float) -> void:
 	depth[i] += 1
-	var next := top_layer(cell)
+	var next := _raw_top(i)
 	if next == null:
 		hp[i] = 0.0
 		regen_timer[i] = regen_time
 		if kind[i] == Kind.ROCK:
 			kind[i] = Kind.SOIL  # rocha quebrada vira solo comum ao regenerar
 	else:
-		hp[i] = layer_max_hp(next)
-	return out
+		hp[i] = _max_hp_at(i, next)
 
 
 ## GDD §4.7: só Buracos regeneram; tiles de cova esperam a cova abrir/fechar.
@@ -171,6 +258,8 @@ func tick_regen(delta: float) -> Array[Vector2i]:
 ## a camada especial mantendo o que já foi cavado (usado ao surgir uma cova em tile intacto).
 func set_kind(cell: Vector2i, new_kind: int, restore: bool = true) -> void:
 	var i := index_of(cell)
+	if new_kind != Kind.GRAVE:
+		unlink_grave(cell)
 	kind[i] = new_kind
 	if restore:
 		_restore_index(i)
@@ -179,6 +268,7 @@ func set_kind(cell: Vector2i, new_kind: int, restore: bool = true) -> void:
 ## Fecha um tile de cova: vira solo, Buraco, regenerando normalmente (GDD §4.6).
 func close_grave_tile(cell: Vector2i, regen_time: float) -> void:
 	var i := index_of(cell)
+	unlink_grave(cell)
 	kind[i] = Kind.SOIL
 	stacks[i] = area.layers.duplicate()
 	depth[i] = (stacks[i] as Array).size()
@@ -225,4 +315,4 @@ func _restore_index(i: int) -> void:
 	stacks[i] = stack
 	depth[i] = 0
 	regen_timer[i] = 0.0
-	hp[i] = layer_max_hp(stack[0] as LayerData) if not stack.is_empty() else 0.0
+	hp[i] = _max_hp_at(i, stack[0] as LayerData) if not stack.is_empty() else 0.0
