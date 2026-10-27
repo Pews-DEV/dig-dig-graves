@@ -63,10 +63,12 @@
 
 ## 5. Cena do Turno — ambientação
 
+> **Revisão 1.1 (fundo):** o céu com lua, nuvens, vila e muro distante saiu do Turno. O fundo do Turno agora é uma **clareira de cemitério dentro de uma mata escura, à noite**, vista no mesmo ângulo iso do diorama: um chão grande e calmo, com poucos elementos bem desenhados nas bordas. O fundo não compete com o diorama: é escuro, de baixo contraste e quase sem animação. O céu, a lua e a vila continuam na tela-título (§9).
+
 Camadas, de trás para frente:
-1. **Céu** 02→03→04 com faixas em dithering xadrez nas transições; estrelas de 1 px que cintilam (2 frames, aleatório, lento).
-2. **Lua cheia grande** (alto à esquerda, coerente com a luz NO) com halo em xadrez; nuvens finas passando devagar na frente (parallax, ~2 px/s).
-3. **Fundo distante:** silhueta do muro caiado com portão, cruzes e o ipê-roxo, em tons 03/04 (decoração, luma ≤ 105).
+1. **Chão da clareira** (`bg_a1_chao`): cor-base escura e lisa (grama-funda 09 / sombra 02–03), com textura mínima (poucos tufos 1–2 px em 10, manchas de terra 13/14, folhas caídas), trilhas de terra batida que somem embaixo do diorama. Sem céu e sem horizonte: o chão ocupa a tela inteira.
+2. **Elementos do cemitério no chão** (`bg_a1_props`): poucos e espaçados, sempre fora do miolo da tela. Uma **cerquinha de ferro baixa** em diagonal iso cortando um canto, 4–6 **lápides e cruzes** tortas de tipos variados, um túmulo com cercadinho, um ou dois grupos de velas (as únicas luzes quentes do fundo, em halo xadrez discreto), arbustos e crisântemos murchos. Todos em tons de decoração (luma ≤ 74, exceto as chamas) e sombra projetada sólida 01/02.
+3. **Mata escura** (`bg_a1_mata`): moldura de copas e troncos nas bordas e nos cantos (topo e laterais, mais densa nos cantos de cima), em 01/02/09 com recorte de luar 03/04/10 só no lado NO de cada copa. Silhuetas bem desenhadas (folhagem em cachos, troncos tortos, 1–2 árvores secas com galhos), não um borrão. Balanço lento opcional nas copas (2 frames).
 4. **O campo como diorama:** o losango jogável fica sobre um **bloco de terra iso** — as duas faces visíveis (frente-esquerda e frente-direita) mostram os estratos do solo (grama 10/11 no topo, terra 14/15, barro 13, pedrinhas 06), sombreadas pela luz NO (face esquerda mais clara). Altura de ~24 px.
 5. **Borda do campo:** cerquinha de ferro baixa em trechos, velas, crisântemos e tufos nas quinas; nada invade a grade jogável.
 6. **Névoa** baixa em faixas de xadrez 04/05 atravessando devagar na frente do bloco.
