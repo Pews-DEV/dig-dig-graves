@@ -1,0 +1,185 @@
+{
+ "frames": [
+  {
+   "filename": "fx_alma_fila 0.aseprite",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 8,
+    "h": 10
+   },
+   "duration": 143
+  },
+  {
+   "filename": "fx_alma_fila 1.aseprite",
+   "frame": {
+    "x": 8,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 8,
+    "h": 10
+   },
+   "duration": 143
+  },
+  {
+   "filename": "fx_alma_fila 2.aseprite",
+   "frame": {
+    "x": 16,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 8,
+    "h": 10
+   },
+   "duration": 143
+  },
+  {
+   "filename": "fx_alma_fila 3.aseprite",
+   "frame": {
+    "x": 24,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 8,
+    "h": 10
+   },
+   "duration": 143
+  },
+  {
+   "filename": "fx_alma_fila 4.aseprite",
+   "frame": {
+    "x": 32,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 8,
+    "h": 10
+   },
+   "duration": 83
+  },
+  {
+   "filename": "fx_alma_fila 5.aseprite",
+   "frame": {
+    "x": 40,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 8,
+    "h": 10
+   },
+   "duration": 83
+  },
+  {
+   "filename": "fx_alma_fila 6.aseprite",
+   "frame": {
+    "x": 48,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 8,
+    "h": 10
+   },
+   "sourceSize": {
+    "w": 8,
+    "h": 10
+   },
+   "duration": 83
+  }
+ ],
+ "meta": {
+  "app": "https://www.aseprite.org/",
+  "version": "1.3.x (gerado em Python)",
+  "image": "alma_fila.png",
+  "format": "I8",
+  "size": {
+   "w": 56,
+   "h": 10
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "walk",
+    "from": 0,
+    "to": 3,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "vanish",
+    "from": 4,
+    "to": 6,
+    "direction": "forward",
+    "color": "#000000ff"
+   }
+  ]
+ }
+}
