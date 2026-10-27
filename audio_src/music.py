@@ -1,7 +1,7 @@
 """Dig Dig Graves - composicao e render das musicas (seresta assombrada lo-fi).
 
 Uso:  python audio_src/music.py [id ...]
-Ids: mus_tree, mus_area1, jingle_summary, stinger_grave, stinger_level
+Ids: mus_title, mus_tree, mus_area1, jingle_summary, stinger_grave, stinger_level
 Todas as melodias sao originais, escritas aqui.
 """
 import os
@@ -401,6 +401,97 @@ def build_level():
     return out
 
 
+def build_title():
+    """Tema principal (tela-titulo). La menor, 80 BPM, 4/4, 36 compassos = 108 s.
+
+    Motivo-mae "M" (compartilhado): grau 5 pontuado descendo por grau ate o 3 e caindo no 1
+    (ritmo longo-curto-longo: 1,5 + 0,5 + 1), respondido por subida em graus 2-3-4-5 ate a oitava.
+      - mus_tree abre com a metade de cima de M (E-D-C = 5-4-3, pontuado) e a resposta 2-3-5.
+      - mus_area1 abre com M "em arpejo" (A-F-D = 5-3-1, pontuado) e a resposta 2-3-4-5-8.
+    Motivo de cadencia "C": arpejo descendente do V7 ate a sensivel (4-2-#7 -> 1), igual ao
+    D-B-G#-A de mus_tree e ao C#-E-D de mus_area1.
+    """
+    s = Song(bpm=80, beats_per_bar=4, bars=36, seed=41)
+    intro = ["Am", "F", "Dm", "E7"]
+    A = ["Am", "AmG", "F", "E7", "Dm", "Am", "E7", "Am"]
+    B = ["F", "G", "C", "Am", "Dm", "G7", "C", "E7"]
+    # escrito uma oitava abaixo; caixinha/assovio tocam +12
+    melA = mel("E5:1.5 D5:.5 C5:1 A4:1  B4:.5 C5:.5 D5:.5 E5:.5 A5:2  "
+               "G5:1.5 F5:.5 E5:1 C5:1  D5:1 B4:1 G#4:1 B4:1  "
+               "F5:1.5 E5:.5 D5:1 A4:1  C5:1 E5:1 A5:1.5 G5:.5  "
+               "F5:1 D5:1 B4:1 G#4:1  A4:3 r:1")
+    melB = mel("A5:1.5 G5:.5 F5:1 C5:1  D5:.5 E5:.5 F5:.5 G5:.5 B5:2  "
+               "C6:1.5 B5:.5 G5:1 E5:1  A5:1.5 G5:.5 E5:2  "
+               "F5:1 A5:1 D6:1.5 C6:.5  B5:1 G5:1 F5:1 D5:1  "
+               "E5:1.5 D5:.5 C5:1 G4:1  B4:1 D5:1 E5:1 G#5:1")
+    # final do ultimo A mais ralo, deixando o loop "respirar" antes da intro
+    melA_end = melA[:-2] + mel("A4:4")
+
+    def seresta(b, ch, vel):
+        bass, alt, up, _ = CHORDS[ch]
+        bt = s.beat
+        s.pluck(b, 0, bass, bt * 2.2, vel, bright=0.35)
+        s.pluck(b, 2, alt, bt * 2.2, vel * 0.8, bright=0.35)
+        for beat, idx, v in ((0.5, 1, 0.45), (1.0, 2, 0.5), (1.5, 3, 0.42), (2.5, 2, 0.45),
+                             (3.0, 3, 0.48), (3.5, 1, 0.4)):
+            s.pluck(b, beat, up[idx], bt * 1.4, vel * v)
+
+    form = [("I", intro), ("A1", A), ("A2", A), ("B1", B), ("A3", A)]
+    bar = 0
+    for name, chords in form:
+        for i, ch in enumerate(chords):
+            b = bar + i
+            if name == "I":
+                # intro rala (o jogo faz fade-in de 0,6 s): orgao + violao rolado so a partir do 2o tempo
+                _, _, up, _ = CHORDS[ch]
+                if i > 0:
+                    s.pluck(b, 0, CHORDS[ch][0], s.beat * 4.0, 0.62, bright=0.3)
+                s.roll(b, 1 if i == 0 else 2, up[1:], s.beat * 2.2, 0.36 + 0.03 * i, spread=0.03)
+            elif name == "A3" and i >= 6:
+                bass, _, up, _ = CHORDS[ch]
+                s.pluck(b, 0, bass, s.beat * 3.5, 0.62, bright=0.3)
+                s.roll(b, 2, up[1:], s.beat * 2.0, 0.34, spread=0.025)
+            else:
+                seresta(b, ch, vel=0.7 if name != "B1" else 0.74)
+            if name in ("A2", "B1"):
+                s.brush(b, 1, 0.12)
+                s.brush(b, 3, 0.14)
+        vel_org = {"I": 0.09, "A1": 0.11, "A2": 0.13, "B1": 0.17, "A3": 0.12}[name]
+        s.organ_bars(bar, chords, vel=vel_org, start_voices=(57, 60, 64))
+        if name == "I":
+            # o motivo M aparece de longe na caixinha (anuncio do tema)
+            s.box_line(bar + 1, mel("E6:1.5 D6:.5 C6:1 A5:1"), vel=0.32, pan=0.4)
+            s.box_line(bar + 3, mel("r:1 D6:1 B5:1 G#5:1"), vel=0.28, pan=0.4)
+        elif name == "A1":
+            s.box_line(bar, melA, vel=0.55, transpose=12)
+        elif name == "A2":
+            s.whistle(bar, melA, vel=0.5, transpose=12)
+            for i, ch in enumerate(chords):  # contracanto esparso da caixinha
+                top = [m for m in range(84, 97) if m % 12 in CHORDS[ch][3]]
+                s.box_note(bar + i, 1.5, top[1], vel=0.17)
+                s.box_note(bar + i, 3.5, top[0], vel=0.14)
+        elif name == "B1":
+            # momento maior: assovio + caixinha em terca acima nos pontos de apoio + coro bem baixo
+            s.whistle(bar, melB, vel=0.5, transpose=12)
+            for i, ch in enumerate(chords):
+                top = [m for m in range(86, 99) if m % 12 in CHORDS[ch][3]]
+                s.box_note(bar + i, 0, top[0], vel=0.2)
+                s.box_note(bar + i, 2, top[1], vel=0.15)
+                pcs = CHORDS[ch][3]
+                for m in [m for m in range(60, 72) if m % 12 in pcs][:3]:
+                    x = choir_voice(midi_hz(m), s.beat * 4 - 0.3, s.rng, att=0.9, rel=1.2)
+                    s.choir.add(x, s.t(bar + i), pan=s.rng.uniform(-0.5, 0.5), gain=0.05)
+            s.choir.add(bell(midi_hz(69), 4.0, s.rng, vel=0.5), s.t(bar), pan=-0.2)
+        elif name == "A3":
+            s.box_line(bar, melA_end, vel=0.52, transpose=12)
+            s.whistle(bar, melA_end, vel=0.24, transpose=0, pan=-0.1)
+        bar += len(chords)
+    assert bar == s.bars
+    out = s.mix({"gtr": 0.6, "box": 0.72, "org": 0.5, "wh": 0.4, "perc": 1.4, "choir": 1.0},
+                rev_mix=0.32, t60=2.6)
+    return out, s
+
+
 TARGET_MUSIC = -14.0  # docs/03_UI_UX.md §8
 
 
@@ -431,6 +522,7 @@ def render_oneshot(id_, builder, lufs=None, peak_db=None):
 JOBS = {
     "mus_tree": lambda: render_loop("mus_tree", build_tree),
     "mus_area1": lambda: render_loop("mus_area1", build_area1),
+    "mus_title": lambda: render_loop("mus_title", build_title),
     "jingle_summary": lambda: render_oneshot("jingle_summary", build_jingle, lufs=-15.0),
     "stinger_grave": lambda: render_oneshot("stinger_grave", build_grave, peak_db=-2.0),
     "stinger_level": lambda: render_oneshot("stinger_level", build_level, peak_db=-4.0),

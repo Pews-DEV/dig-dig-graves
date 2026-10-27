@@ -8,7 +8,7 @@ import sys
 
 import numpy as np
 
-from dsp import SR, bp, exp_decay, fade, hp, lp, onepole, secs, sweep_bp, peak
+from dsp import SR, midi_hz, bp, exp_decay, fade, hp, lp, onepole, secs, sweep_bp, peak
 from common import BUILD, SFX, encode_ogg, measure, write_wav
 
 
@@ -479,6 +479,185 @@ def amb_night(seed=77, L=48.0):
     return out
 
 
+# ------------------------------------------------------------------ tela-titulo (UI/UX §9.5)
+
+_IR_CHAPEL = None
+
+
+def chapel(x, mix=0.35, t60=2.2, max_len=None):
+    """Reverb de capela mono (canal esquerdo da IR estereo do dsp)."""
+    global _IR_CHAPEL
+    from scipy.signal import fftconvolve
+    from dsp import make_ir
+    if _IR_CHAPEL is None:
+        _IR_CHAPEL = make_ir(t60=t60, length=t60 * 1.4, seed=13)[0]
+    wet = fftconvolve(hp(x, 180), _IR_CHAPEL)
+    out = np.zeros(len(wet))
+    out[:len(x)] = x * (1 - mix * 0.5)
+    out = out + wet * mix
+    if max_len:
+        out = out[:secs(max_len)]
+        k = secs(max_len * 0.4)
+        out[-k:] *= np.linspace(1, 0, k) ** 2
+    return out
+
+
+def logo_land(rng, i):
+    """Letra de pedra pousando: 'toc' curto e abafado + poeirinha. Toca 12x a cada 40 ms."""
+    d = 0.24
+    x = buf(d)
+    f = [430, 475, 515, 560][i % 4] * rng.uniform(0.98, 1.02)
+    put(x, modal(rng, [f, f * 2.32, f * 3.7], [1, 0.4, 0.15], [0.05, 0.03, 0.015], 0.1) * 0.7, 0)
+    put(x, thump(210, 95, 0.08, 0.035) * 0.55, 0)
+    put(x, click(rng, 0.0015, 2500), 0, 0.12)
+    n = secs(0.16)
+    env = np.minimum(np.arange(n) / secs(0.012), 1) * exp_decay(n, 0.11)
+    put(x, bp(noise(rng, 0.16), 900, 4500) * env * 0.22, 0.004)
+    for _ in range(rng.integers(2, 4)):
+        put(x, grain(rng, 0.008, 2000, 6000, 0.005) * 0.08, rng.uniform(0.02, 0.12))
+    return x
+
+
+def logo_thunk(rng, i):
+    """Pa cravando no G: lamina entrando na terra + 'tunc' de cabo de madeira + capela."""
+    d = 0.9
+    x = buf(d)
+    put(x, bp(noise(rng, 0.03), 1500, 6000) * perc_env(secs(0.03), 0.0005, 0.02) * 0.5, 0)
+    put(x, thump(135 + 10 * i, 52, 0.35, 0.16) * 1.0, 0)
+    put(x, lp(noise(rng, 0.12), 900) * perc_env(secs(0.12), 0.002, 0.07) * 0.6, 0.002)
+    w = [185, 400, 720] if i == 0 else [172, 385, 690]
+    put(x, modal(rng, w, [0.55, 0.3, 0.12], [0.22, 0.12, 0.06], 0.4), 0.003)
+    put(x, modal(rng, [1240, 2960, 4410], [0.08, 0.05, 0.02], [0.3, 0.18, 0.1], 0.5), 0.001)
+    for _ in range(rng.integers(6, 10)):
+        tt = 0.04 + rng.uniform(0, 0.35) ** 1.2
+        put(x, grain(rng, rng.uniform(0.008, 0.02), 900, 4000), tt, rng.uniform(0.04, 0.1))
+    return chapel(x, mix=0.4, max_len=1.6)
+
+
+def logo_drip(rng, i):
+    """Gota de terra caindo do logo: tique minusculo + 'puf' + farelos."""
+    d = 0.2
+    x = buf(d)
+    f = [2300, 2550, 2800][i % 3]
+    put(x, modal(rng, [f, f * 1.9], [1, 0.3], [0.018, 0.01], 0.04) * 0.5, 0)
+    put(x, lp(noise(rng, 0.06), 700) * perc_env(secs(0.06), 0.001, 0.035) * 0.8, 0.002)
+    put(x, thump(260, 140, 0.04, 0.02) * 0.4, 0)
+    for _ in range(rng.integers(1, 3)):
+        put(x, grain(rng, 0.005, 2500, 7000, 0.003) * 0.2, rng.uniform(0.03, 0.09))
+    return x
+
+
+def ui_wisp_slide(rng, i):
+    """Fogo-fatuo deslizando ao proximo botao: sopro que sobe + sininho de vidro."""
+    d = 0.34
+    x = buf(d)
+    n = secs(0.16)
+    t = np.arange(n) / SR
+    air = sweep_bp(noise(rng, 0.16), 1400, 4200, q=2.0) * (0.2 + 0.8 * np.sin(np.pi * t / 0.16) ** 2)
+    put(x, air * 0.35, 0)
+    f = [2637, 2794, 2960][i % 3]
+    for k, (r, a) in enumerate([(1.0, 0.5), (1.5, 0.28), (2.0, 0.12)]):
+        put(x, chime(rng, f * r, 0.3, a, ratios=(1, 2.0, 3.0), amps=(1, 0.08, 0.03), t60=0.22), 0.002 + 0.03 * k)
+    put(x, sparkle(rng, 0.2, 3, 6000, 9500, 0.06), 0.04)
+    return x
+
+
+def ui_bury(rng, i):
+    """Confirmar 'Enterrar': pa raspando, terra jogada e caindo + nota grave de sino."""
+    d = 1.6
+    x = buf(d)
+    n = secs(0.14)
+    t = np.arange(n) / SR
+    scrape = sweep_bp(noise(rng, 0.14), 700, 1800, q=2.5) * np.minimum(t / 0.01, 1) * np.exp(-t / 0.1)
+    put(x, scrape * 0.5, 0)
+    put(x, thump(150, 70, 0.08, 0.05) * 0.35, 0)
+    n2 = secs(0.16)
+    t2 = np.arange(n2) / SR
+    put(x, sweep_bp(noise(rng, 0.16), 1500, 450, q=1.5) * np.sin(np.pi * t2 / 0.16) ** 2 * 0.45, 0.1)
+    tl = 0.26
+    put(x, thump(105 - 6 * i, 42, 0.45, 0.25) * 1.0, tl)
+    put(x, lp(noise(rng, 0.3), 1000) * perc_env(secs(0.3), 0.004, 0.18) * 0.55, tl)
+    for _ in range(rng.integers(16, 22)):
+        tt = tl + rng.uniform(0, 0.45) ** 1.3
+        put(x, grain(rng, rng.uniform(0.01, 0.03), 600, 3500), tt, rng.uniform(0.05, 0.16) * (1 - (tt - tl) / 0.6))
+    from dsp import bell
+    put(x, bell(110.0 * (1, 0.944)[i % 2], 1.3, rng, vel=0.22), tl + 0.01)
+    return chapel(x, mix=0.25, max_len=1.5)
+
+
+VOWEL_OO = [(320, 70, 1.0), (800, 90, 0.3), (2300, 160, 0.05), (3000, 200, 0.03)]
+VOWEL_AH2 = [(700, 90, 1.0), (1100, 110, 0.5), (2600, 160, 0.16), (3300, 200, 0.08)]
+
+
+def soul_voice(freq, dur, rng, m_curve, att=1.2, rel=1.6, sigh=-0.5):
+    """Voz 'uuh -> aah' com morfologia de vogal ao longo da nota e leve suspiro descendo no fim."""
+    n = secs(dur + rel)
+    t = np.arange(n) / SR
+    vib = 0.1 * np.sin(2 * np.pi * rng.uniform(4.4, 5.4) * t + rng.uniform(0, 6)) * np.clip((t - 0.4) / 0.8, 0, 1)
+    tail = np.clip((t - dur * 0.8) / (dur * 0.2 + rel), 0, 1) ** 2 * sigh
+    f = freq * 2 ** ((vib + tail + rng.uniform(-0.06, 0.06)) / 12)
+    ph = np.cumsum(2 * np.pi * f / SR)
+    m = np.interp(t, np.linspace(0, dur + rel, len(m_curve)), m_curve)
+    out = np.zeros(n)
+    k = 1
+    while k * freq < 5000:
+        fk = k * freq
+        a_oo = sum(g / (1 + ((fk - F) / bw) ** 2) for F, bw, g in VOWEL_OO) / k ** 0.6
+        a_ah = sum(g / (1 + ((fk - F) / bw) ** 2) for F, bw, g in VOWEL_AH2) / k ** 0.6
+        out += (a_oo * (1 - m) + a_ah * m) * np.sin(k * ph + rng.uniform(0, 6))
+        k += 1
+    out += bp(rng.normal(0, 1, n), 500, 2500) * 0.015
+    from dsp import adsr
+    return out * adsr(n, att, dur, rel)
+
+
+def amb_souls_choir(seed=91, L=32.0):
+    """Coro distante das almas na fila: vozes longas 'uuh/aah' em La menor pentatonica,
+    com 2 ondas de intensidade por loop (vai e volta). Estereo, circular (arquivo inteiro = loop)."""
+    from dsp import make_ir, pan_gains
+    from scipy.signal import fftconvolve
+    rng = np.random.default_rng(seed)
+    n = secs(L)
+    pitches = [57, 60, 64, 62, 67, 69, 52, 64, 60]
+    st = np.zeros((2, n + secs(12)))
+    tt = 0.0
+    while tt < L:
+        for _ in range(rng.integers(1, 3)):
+            m = int(rng.choice(pitches))
+            dur = rng.uniform(3.0, 6.5)
+            mc = np.clip(np.cumsum(rng.uniform(-0.3, 0.45, 6)), 0, 1)  # uuh abrindo para aah e voltando
+            v = soul_voice(midi_hz(m), dur, rng, mc, sigh=rng.choice([-0.5, -0.3, 0.0]))
+            gl, gr = pan_gains(rng.uniform(-0.55, 0.35))
+            a = secs(tt + rng.uniform(0, 0.8))
+            g = rng.uniform(0.5, 1.0) * (0.7 if m < 55 else 1.0)
+            st[0, a:a + len(v)] += v * g * gl
+            st[1, a:a + len(v)] += v * g * gr
+        tt += rng.uniform(1.6, 3.2)
+    # enrola o excesso no inicio (circular)
+    loop = st[:, :n].copy()
+    rest = st[:, n:]
+    loop[:, :rest.shape[1]] += rest
+    # distancia: sem graves e sem brilho
+    trip = np.concatenate([loop, loop, loop], axis=1)
+    trip = np.stack([lp(hp(c, 160), 2400, order=2) for c in trip])
+    loop = trip[:, n:2 * n]
+    # vai e volta: 2 ondas por loop (periodico)
+    t = np.arange(n) / SR
+    swell = 0.55 + 0.45 * np.sin(2 * np.pi * 2 * t / L - np.pi / 2) * (0.8 + 0.2 * np.sin(2 * np.pi * 3 * t / L))
+    loop = loop * np.clip(swell, 0.08, 1.0)
+    # capela longa, quase so molhado (distante); convolucao circular
+    ir = make_ir(t60=3.2, length=4.5, seed=19, hf=0.35)
+    wet = np.stack([fftconvolve(loop[c], ir[c]) for c in range(2)])
+    out = loop * 0.35
+    w = wet[:, :n].copy()
+    r = wet[:, n:]
+    while r.shape[1] > 0:
+        k = min(n, r.shape[1])
+        w[:, :k] += r[:, :k]
+        r = r[:, k:]
+    return out + w * 0.9
+
+
 # ------------------------------------------------------------------ registro
 
 # id: (gerador, n_variacoes, pico alvo dBFS)
@@ -506,7 +685,15 @@ SPEC = {
     "node_reveal": (node_reveal, 2, -9.0),
     "level_up": (level_up, 1, -7.0),
     "screen_transition": (screen_transition, 2, -8.0),
+    # tela-titulo
+    "logo_land": (logo_land, 4, -17.0),
+    "logo_thunk": (logo_thunk, 2, -6.0),
+    "logo_drip": (logo_drip, 3, -20.0),
+    "ui_wisp_slide": (ui_wisp_slide, 3, -23.0),
+    "ui_bury": (ui_bury, 2, -9.0),
 }
+
+AMBIENT = {"amb_night": (lambda: amb_night(), -30.0), "amb_souls_choir": (lambda: amb_souls_choir(), -35.0)}
 
 AMB_LUFS = -30.0
 
@@ -527,10 +714,11 @@ def finish(x, peak_db):
 
 
 def render(id_):
-    if id_ == "amb_night":
+    if id_ in AMBIENT:
         from common import normalize_oneshot
-        st = amb_night()
-        y = normalize_oneshot(st, target_lufs=AMB_LUFS, name=id_)
+        fn, lufs = AMBIENT[id_]
+        st = fn()
+        y = normalize_oneshot(st, target_lufs=lufs, name=id_)
         wav = os.path.join(BUILD, id_ + "_1.wav")
         write_wav(wav, y)
         ogg = os.path.join(SFX, id_ + "_1.ogg")
@@ -549,6 +737,6 @@ def render(id_):
 
 
 if __name__ == "__main__":
-    ids = sys.argv[1:] or (list(SPEC) + ["amb_night"])
+    ids = sys.argv[1:] or (list(SPEC) + list(AMBIENT))
     for i in ids:
         render(i)

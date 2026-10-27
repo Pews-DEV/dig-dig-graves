@@ -14,3 +14,6 @@ Todo o áudio desta leva (músicas, jingle, stingers, SFX e ambiente) foi **sint
 | mido | (instalado; não usado nesta leva) | MIT |
 | FFmpeg 9 + libvorbis | Codificação OGG Vorbis e medição EBU R128 | LGPL/GPL (ferramenta) · BSD (libvorbis) |
 | matplotlib | Espectrogramas para revisão | PSF-like |
+
+## Leva 2 — tela-título (27/10/2026)
+`mus_title`, `logo_land`, `logo_thunk`, `logo_drip`, `amb_souls_choir`, `ui_wisp_slide` e `ui_bury` também foram **sintetizados do zero** (`audio_src/music.py` → `build_title`; `audio_src/sfx.py`). Melodia original; nenhum sample, SoundFont ou gravação de terceiros. Mesmas ferramentas da leva 1.
