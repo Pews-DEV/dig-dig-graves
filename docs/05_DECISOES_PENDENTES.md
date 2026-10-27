@@ -86,17 +86,32 @@ Alternativas descartadas por ora: **A** (chefe aparece sozinho no meio da noite:
 - Primeiro elemento novo do campo: **lápides com efeito por tipo** (cada tipo de lápide tem uma regra própria; ex.: com foto dá Almas, rachada quebra e solta Ossos, cruz bloqueia mas dá bônus ao redor). Lista final de tipos e números a definir.
 - Velas, ossário, baú e alminhas errantes ficam para depois (não descartados).
 
-## D6–D10 · Ainda não discutidas (não bloqueiam o M0.5)
-Da §7 da revisão; ficam para o M0.6 em diante:
-- **D6** Loja (Mascate: pás e amuletos em 2 espaços) e se os amuletos viram as Relíquias do jogo completo.
-- **D7** Hub: cena separada ou superfície da Árvore.
-- **D8** Respec ("Replantar"): grátis (100%) ou com custo (ex.: devolve 80%).
-- **D9** Nó de regra "Cava-Funda" (o dano que sobra passa para a camada de baixo).
-- **D10** Fogo-fátuo com retorno decrescente (cada um da mesma noite vale 80% do anterior), para evitar noite infinita.
+## D6 · Loja: o Mascate, com pás e amuletos — ✅ Aprovado
+- **Uma loja só**, o **Mascate** (vendedor ambulante que aparece no cemitério).
+- Vende **pás** (ferramentas com formato/efeito diferente) e **amuletos** (bônus equipáveis em **2 espaços** no início; mais espaços depois).
+- Os amuletos **viram as Relíquias** do jogo completo.
+- Gasta principalmente Ossos e Almas (moedas que hoje sobram).
+- Fica no hub (D7). Itens, preços e espaços a definir no balanceamento.
+
+## D7 · Hub na superfície da Árvore — ✅ Aprovado
+- Não há cena de hub separada: a **parte de cima da tela da Árvore** (onde ficam o ipê e a grama) vira o cemitério a restaurar.
+- Ali ficam as **construções** de restauração (GDD §11), o **Mascate** (D6) e o **seletor de estágios** (D12).
+- Fluxo: Título → Árvore/hub ⇄ Turno → Resumo → Árvore/hub. Muda o GDD §11 e §15.1.
+
+## D8 · Respec ("Replantar") grátis após o chefe — ✅ Aprovado
+- Liberado ao vencer o **1º chefe** (Caixão Fujão).
+- Devolve **100%** do que foi gasto (e solta as encruzilhadas); custa só algumas Almas por uso; só na Árvore.
+
+## D9 · Nó "Cava-Funda" — ✅ Aprovado
+- Nó-chave do ramo **Escavação**: o dano que passa da vida da camada **passa para a camada de baixo** (hoje é perdido).
+- Sem o nó, o excedente continua perdido (é isso que dá peso ao nó). Exceção registrada à DA/GDD §4.3.
+
+## D10 · Fogo-fátuo com retorno decrescente — ✅ Aprovado
+- Cada fogo-fátuo coletado na **mesma noite** vale **80%** do anterior; o valor volta ao normal na noite seguinte.
+- Corrige o risco de "noite infinita" com os nós de Lanterna no máximo (revisão §3).
 
 ---
 
 ## Próximo passo
-1. **Bater o martelo:** passar D0–D5, D11 e D12 para o GDD (§4, §7, §10, §14, §19) e reescrever os marcos: M0.5 Economia nova → M0.6 Ativos e regras → estágio 1 completo (lápides com efeito + Noite do Chefe) → estágio 2.
-2. Discutir D6–D10 antes do M0.6.
-3. Abrir o **M0.5 · Economia nova** (revisão §6) numa branch separada.
+1. **Bater o martelo:** passar D0–D12 para o GDD (§4, §7, §10, §11, §14, §15, §19) e reescrever os marcos: M0.5 Economia nova → M0.6 Ativos e regras → estágio 1 completo (lápides com efeito + Noite do Chefe) → estágio 2.
+2. Abrir o **M0.5 · Economia nova** (revisão §6) numa branch separada.
