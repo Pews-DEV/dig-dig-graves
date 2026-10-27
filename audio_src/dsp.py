@@ -369,3 +369,145 @@ def compressor(x, thr_db=-24.0, ratio=2.5, att=0.005, rel=0.12, makeup=True):
 
 def soft_sat(x, drive=1.0):
     return np.tanh(x * drive) / np.tanh(drive)
+
+
+# ---------------------------------------------------------------- leva 3: instrumentos novos
+
+def _polyblep_saw(f, rng):
+    """Dente-de-serra com polyBLEP (f: array de frequencia instantanea)."""
+    dt = f / SR
+    ph = (np.cumsum(dt) + rng.uniform(0, 1)) % 1.0
+    y = 2 * ph - 1
+    m = ph < dt
+    tt = ph[m] / dt[m]
+    y[m] -= tt + tt - tt * tt - 1
+    m = ph > 1 - dt
+    tt = (ph[m] - 1) / dt[m]
+    y[m] -= tt * tt + tt + tt + 1
+    return y, ph
+
+
+def accordion(freq, dur, rng, vel=0.5, att=0.06, rel=0.12, musette=0.0025, bellows=0.0):
+    """Sanfona (palhetas livres): duas palhetas levemente desafinadas (musette discreto),
+    mistura serra + pulso, corpo nasal (pico ~1,2 kHz). bellows = profundidade do 'fole'."""
+    n = secs(dur + rel)
+    t = np.arange(n) / SR
+    out = np.zeros(n)
+    for det in (-musette, musette):
+        f = np.full(n, freq * (1 + det)) * (1 + 0.0015 * np.sin(2 * np.pi * 0.6 * t + rng.uniform(0, 6)))
+        saw, ph = _polyblep_saw(f, rng)
+        pulse = np.where(((ph + 0.37) % 1.0) < 0.32, 1.0, -0.47)
+        out += 0.6 * saw + 0.25 * pulse
+    out = lp(out, min(3200, freq * 9), order=2)
+    out = out + 0.5 * peak(out, 1250, 2.2) + 0.25 * peak(out, 2600, 3)
+    env = adsr(n, att, dur, rel)
+    if bellows:
+        env *= 1 + bellows * np.sin(np.pi * np.clip(t / max(dur, 1e-3), 0, 1))
+    return hp(out * env, 120) * vel * 0.35
+
+
+def harpsichord(freq, dur, rng, vel=0.6, t60=None, octave=0.35):
+    """Cravo: corda beliscada perto da ponta (brilhante), registro 8' + 4' discreto,
+    abafador no fim da nota e 'tique' do plectro."""
+    ring = dur + 0.15
+    if t60 is None:
+        t60 = float(np.clip(2.6 * (220.0 / freq) ** 0.5, 0.9, 4.0))
+    x = ks_pluck(freq, ring, rng, vel=1.0, bright=1.0, t60=t60, pos=0.08)
+    if octave and freq * 2 < 5000:
+        x += octave * ks_pluck(freq * 2, ring, rng, vel=1.0, bright=1.0, t60=t60 * 0.7, pos=0.1)
+    x = hp(x, 160) + 0.35 * peak(x, 2400, 1.5)
+    n = len(x)
+    env = np.ones(n)
+    k = secs(dur)
+    if k < n:
+        env[k:] = np.exp(-np.arange(n - k) / SR / 0.03)
+    x = x * env
+    pl = hp(rng.normal(0, 1, secs(0.004)), 2500) * np.linspace(1, 0, secs(0.004)) * 0.15
+    x[:len(pl)] += pl
+    return fade(x, 0.0005, 0.02) * vel
+
+
+def piano(freq, dur, rng, vel=0.6, honky=0.0, rel=0.25):
+    """Piano de salao (aditivo): parciais com inarmonicidade, decaimento em 2 estagios,
+    2 cordas por nota (honky = desafinacao extra, cara de piano velho), martelo."""
+    n = secs(dur + rel)
+    t = np.arange(n) / SR
+    B = 0.0004 * (freq / 261.6) ** 0.5
+    out = np.zeros(n)
+    bright = 0.5 + 0.5 * vel
+    T = float(np.clip(5.0 * (261.6 / freq) ** 0.6, 1.2, 9.0))
+    for k in range(1, 13):
+        fk = freq * k * np.sqrt(1 + B * k * k)
+        if fk > 9000:
+            break
+        a = (1.0 / k ** (1.3 - 0.5 * bright)) * (1.0 if k == 1 else 0.7)
+        if k in (7, 14):
+            a *= 0.3  # ponto de golpe do martelo
+        tk = T / (1 + 0.35 * (k - 1))
+        e = 0.65 * np.exp(-6.9 * t / (tk * 0.18)) + 0.35 * np.exp(-6.9 * t / tk)
+        for det in (-0.0007 - honky, 0.0007 + honky):
+            out += 0.5 * a * np.sin(2 * np.pi * fk * (1 + det) * t + rng.uniform(0, 6)) * e
+    ham = lp(rng.normal(0, 1, secs(0.012)), 2500) * exp_decay(secs(0.012), 0.008) * 0.25
+    out[:len(ham)] += ham
+    env = np.ones(n)
+    k0 = secs(dur)
+    if k0 < n:
+        env[k0:] = np.exp(-6.9 * np.arange(n - k0) / SR / rel)
+    return fade(out * env, 0.0008, 0.02) * vel * 0.5
+
+
+def drum_low(rng, f0=95, f1=55, dur=0.9, vel=1.0, t60=0.45, membrane=True, noise_amt=0.25):
+    """Surdo/tímpano grave: queda de altura + modos de membrana + ruido de pele."""
+    n = secs(dur)
+    t = np.arange(n) / SR
+    f = f1 + (f0 - f1) * np.exp(-t / 0.035)
+    out = np.sin(np.cumsum(2 * np.pi * f / SR)) * exp_decay(n, t60)
+    if membrane:
+        for r, a, tt in [(1.59, 0.35, 0.35), (2.14, 0.2, 0.25), (2.65, 0.12, 0.18)]:
+            out += a * np.sin(2 * np.pi * f1 * r * t + rng.uniform(0, 6)) * exp_decay(n, t60 * tt / 0.45)
+    nz = lp(rng.normal(0, 1, n), 1800) * exp_decay(n, 0.05) * noise_amt
+    return fade(out + nz, 0.0005, 0.05) * vel
+
+
+def triangle_hit(rng, dur=0.5, vel=0.3, muted=False):
+    n = secs(dur)
+    t = np.arange(n) / SR
+    t60 = 0.06 if muted else 0.7
+    out = np.zeros(n)
+    for f, a in [(3520, 1.0), (5310, 0.6), (7150, 0.4), (9020, 0.25)]:
+        out += a * np.sin(2 * np.pi * f * (1 + rng.uniform(-0.003, 0.003)) * t) * exp_decay(n, t60)
+    return fade(out, 0.0003, 0.02) * vel * 0.3
+
+
+def echo(st, delay_s=0.42, fb=0.45, taps=7, pingpong=True, lp_fc=2500):
+    """Eco (atraso com realimentacao) via convolucao com resposta esparsa; ping-pong estereo.
+    Retorna so o sinal molhado, comprimento n + cauda."""
+    from scipy.signal import fftconvolve
+    D = secs(delay_s)
+    L = D * taps + 1
+    irL = np.zeros(L)
+    irR = np.zeros(L)
+    for k in range(1, taps + 1):
+        g = fb ** (k - 1)
+        if pingpong:
+            (irL if k % 2 else irR)[k * D] = g
+        else:
+            irL[k * D] = g
+            irR[k * D] = g
+    src = np.stack([lp(c, lp_fc) for c in st])
+    mono = 0.5 * (src[0] + src[1])
+    return np.stack([fftconvolve(mono, irL), fftconvolve(mono, irR)])
+
+
+VOWEL_OO = [(320, 70, 1.0), (800, 90, 0.3), (2300, 160, 0.05), (3000, 200, 0.03)]
+VOWEL_EH = [(530, 80, 1.0), (1850, 120, 0.4), (2500, 160, 0.2), (3400, 200, 0.08)]
+
+
+def mist_pad(dur, rng, f_lo=500, f_hi=1600, sweeps=1.0):
+    """Nevoa: ruido filtrado com centro passeando devagar (mono)."""
+    n = secs(dur)
+    x = rng.normal(0, 1, n)
+    y = sweep_bp(x, f_lo, f_hi, q=3.0, blocks=48)
+    t = np.arange(n) / SR
+    env = np.sin(np.pi * np.clip(t / dur, 0, 1)) ** 1.5
+    return y * env

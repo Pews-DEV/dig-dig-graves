@@ -5,7 +5,7 @@ Fonte: tudo sintetizado em `audio_src/` (`music.py`, `sfx.py`, núcleo em `dsp.p
 
 ## Regras de reprodução (GDD §17, UI/UX §8)
 - SFX repetitivos (golpes, pickups, ticks, UI): sortear uma variação a cada disparo e aplicar pitch aleatório ±6%; máx. 6 vozes simultâneas por id.
-- Loops (`mus_title`, `mus_tree`, `mus_area1`, `amb_night`, `amb_souls_choir`): o arquivo inteiro é o loop — ligar `loop = true`, `loop_offset = 0`. A cauda de reverb já está "enrolada" no início; não precisa de crossfade no motor.
+- Loops (`mus_title`, `mus_tree`, `mus_area1`, `mus_area2`, `mus_area3`, `mus_area4`, `mus_area5`, `mus_boss`, `mus_shop`, `amb_night`, `amb_souls_choir`): o arquivo inteiro é o loop — ligar `loop = true`, `loop_offset = 0`. A cauda de reverb já está "enrolada" no início; não precisa de crossfade no motor.
 - Buses sugeridos: Music (músicas, jingle, stingers), SFX (inclui `logo_land`, `logo_thunk`, `logo_drip`), UI (`ui_*`, `node_*`, `root_grow`, `level_up`, `screen_transition`), Ambience (`amb_night`, `amb_souls_choir`).
 - Níveis já vêm mixados entre si (golpe < quebra de camada < cova aberta; UI bem abaixo do gameplay). Tocar com volume 0 dB no player e ajustar só pelos buses.
 
@@ -19,6 +19,16 @@ Fonte: tudo sintetizado em `audio_src/` (`music.py`, `sfx.py`, núcleo em `dsp.p
 | jingle_summary | jingle_summary.ogg | 7,0 s | não | Abertura da tela de Resumo do Turno | Lá m → Fá → Sol → Lá **maior** (resolução). Tocar com fade-out da música do turno (~0,3 s) antes. −15 LUFS. |
 | stinger_grave | stinger_grave.ogg | 2,4 s | não | Cova aberta | Sino de capela (Lá) + coro "aah" em Lá maior. Toca junto com `grave_open`; pode-se baixar a música ~4 dB por 2 s (ducking). |
 | stinger_level | stinger_level.ogg | 1,25 s | não | Subiu de nível | Caixinha ascendente (arpejo de Lá maior). Toca junto com `level_up`. |
+| mus_boss | mus_boss.ogg | 74,667 s | sim, arquivo inteiro (0 → fim) | Tema de chefe (genérico, todos os estágios): toca a **Noite do Chefe** inteira no lugar do `mus_areaN` (crossfade ~1 s). Para quando o chefe morre (fade-out 0,3 s → `jingle_boss_win`) ou quando o óleo acaba com ele vivo (fade-out normal para o Resumo). | Ré menor, 90 BPM, 4/4, 28 compassos. Galope de violão (3+3+2), surdo grave, órgão com pedal, bII (Mi♭) frígio para tensão. M em Ré m (Lá–Sol–Fá pontuado–Ré, resposta Mi–Fá–Sol–Lá–Ré) na caixinha; assovio na parte B; o órgão repete M no grave; C = Sol–Mi–Dó♯ → Ré. Virada de surdo no fim volta à intro. −14 LUFS. |
+| mus_area2 | mus_area2.ogg | 113,684 s | sim, arquivo inteiro (0 → fim) | Música do turno no estágio 2 (Campo dos Indigentes) | Mi menor, 76 BPM, 4/4, 36 compassos. Violão dedilhado, assovio (melodia), sanfona discreta (acordes; numa passagem leva a melodia uma oitava abaixo), névoa (ruído filtrado passeando), coro bem distante. M em Mi m: Si–Lá–Sol pontuado–Mi, resposta Fá♯–Sol–Lá–Si–Mi; C = Lá–Fá♯–Ré♯ → Mi. Parte B em Sol maior. −14 LUFS. |
+| mus_area3 | mus_area3.ogg | 123,429 s | sim, arquivo inteiro (0 → fim) | Música do turno no estágio 3 (Catacumbas de Pedra) | Dó menor, 70 BPM, 4/4, 36 compassos. Órgão em primeiro plano (M: Sol–Fá–Mi♭ pontuado–Dó), violão grave e lento, gotas com eco (o eco e o reverb são circulares: a costura é limpa), zumbido de Dó grave, coro de monges "uuh" e sino na parte maior (Mi♭). C = Fá–Ré–Si → Dó. −14 LUFS. |
+| mus_area4 | mus_area4.ogg | 99,000 s | sim, arquivo inteiro (0 → fim) | Música do turno no estágio 4 (Necrópole dos Barões) | Sol menor, valsa de salão lenta, 80 BPM, 3/4, 44 compassos. Cravo no acompanhamento (baixo + 2 acordes), piano de salão velho (levemente desafinado, apojaturas) na melodia, órgão solene, sinos. M em 3/4: Ré–Dó–Si♭ pontuado / Sol – Lá / Si♭–Dó–Ré / Sol (oitava); C = Dó–Lá–Fá♯ → Sol. Uma parte com o cravo solando. −14 LUFS. |
+| mus_area5 | mus_area5.ogg | 123,429 s | sim, arquivo inteiro (0 → fim) | Música do turno no estágio 5 (Jardim das Almas) | Lá menor → **Lá maior** na última parte; 70 BPM, 4/4, 36 compassos, sem percussão. Caixinha (melodia, cita o `mus_title`), coro "uuh/éh/aah", harpa de violão, vidro (senoides), sinos. A parte final toca M em maior (Mi–Ré–Dó♯–Lá) e volta ao menor na costura. −14 LUFS. |
+| mus_shop | mus_shop.ogg | 42,667 s | sim, arquivo inteiro (0 → fim) | Loja do Mascate: enquanto o painel/tela da loja estiver aberto (crossfade ~0,5 s com a música do hub; ao fechar, volta a do hub) | Xote simpático em Dó maior, 90 BPM, 4/4, 16 compassos. Sanfona na melodia (M em maior: Sol–Fá–Mi pontuado–Dó, resposta Ré–Mi–Fá–Sol–Dó), violão, zabumba (surdo + bacalhau), triângulo, caixinha como "quinquilharias" do carrinho. −14 LUFS. |
+| mus_ending | mus_ending.ogg | 78,667 s | **não** | Cena final (Dona Ceifa deita e entrega a foice) até o começo dos créditos | Lá menor → Lá maior, 72 BPM com ritardando no fim. Cada frase passa por um instrumento dos estágios: violão sozinho canta M (citação do `mus_title`) → caixinha + sanfona + órgão → assovio com M em **maior**, coro e sino → cravo na coda → acorde final de Lá maior suspenso (sino, coro, caixinha subindo) com fade de 4 s embutido. Começa direto (não precisa de fade). −14 LUFS. |
+| jingle_boss_win | jingle_boss_win.ogg | 5,6 s | não | Vitória sobre o chefe: ~0,3 s depois do `boss_defeat`, com a `mus_boss` em fade-out | M em Ré menor que vira Ré **maior** na resposta (Fá → Fá♯), surdo, sino, coro "aah", caixinha subindo. −15 LUFS (igual ao `jingle_summary`). Se o Resumo especial vier logo depois, não tocar o `jingle_summary` por cima (ou esperar o fim deste). |
+| stinger_boss_appear | stinger_boss_appear.ogg | 2,3 s | não | O chefe surge (1ª aparição na noite; junto com `boss_emerge`) | Surdo + gongo grave, órgão com Ré–Mi♭–Lá (bII), cabeça de M descendo rápido na caixinha, sino grave. Pico −5 dBTP (abaixo do `grave_open`). Ducking da música ~4 dB por 2 s, como no `stinger_grave`. |
+| stinger_stage_unlock | stinger_stage_unlock.ogg | 2,3 s | não | Novo estágio liberado (quando o estágio aparece/destrava no seletor de estágios ou a Chave da Cripta é usada) | Sino + resposta de M em Lá maior (Si–Dó♯–Ré–Mi–Lá) na caixinha + coro "aah" + violão rolado. Pico −5 dBTP. |
 
 ## SFX (`assets/sfx/`)
 
@@ -54,6 +64,40 @@ Fonte: tudo sintetizado em `audio_src/` (`music.py`, `sfx.py`, núcleo em `dsp.p
 | amb_souls_choir | amb_souls_choir_1.ogg | 32,0 s | sim, arquivo inteiro (0 → fim) | Tela-título: coro das almas na fila. Começa em t = 0 com o fade junto com `amb_night` (ou entra com fade de ~2 s durante a descida da câmera) e fica em loop por baixo enquanto o título estiver aberto | **Estéreo.** Vozes longas "uuh → aah" em Lá menor pentatônica (casa com `mus_title`), filtradas e quase só reverb (distante), levemente à esquerda (lado da vila/portão). "Vai e volta": 2 ondas de intensidade por loop (~13 dB entre vale e crista). −35 LUFS (abaixo do `amb_night`). Bus Ambience. |
 | ui_wisp_slide | ui_wisp_slide_1..3.ogg | 0,26 s | não | Menu do título: o fogo-fátuo desliza até o botão em foco (toda mudança de foco por mouse, teclado ou gamepad); também no painel "Enterrar/Voltar" | Sopro que sobe + sininho de vidro. Substitui o `ui_hover` no menu do título (não tocar os dois). Pico −23 dBFS, RMS −30,5 (entre `ui_hover` e `ui_click`). Sortear variação + pitch ±6%. Bus UI. |
 | ui_bury | ui_bury_1..2.ogg | 1,40 s | não | Confirmação "Enterrar o progresso atual?": ao apertar **Enterrar** (no lugar do `ui_click`) | Pá raspando + terra jogada e caindo + sino grave (Lá 110 Hz) com capela. Pico −9 dBFS. Em seguida vem a saída normal do Novo Jogo (`screen_transition`). Bus UI. |
+| stomp | stomp_1..4.ogg | 0,40–0,48 s | não | **Pisão** ativado (clique/tecla/auto-pisão), no frame do impacto | Baque subgrave + terra explodindo + farelos + rumor. Pico −4 dBFS (abaixo só do `grave_open`). Pitch ±6%; máx. 3 vozes. Bus SFX. |
+| flare | flare_1..3.ogg | 0,85–0,88 s | não | **Clarão** ativado | Fósforo riscando + chama "fuump" + estalos + brilho tonal. Pico −6 dBFS. Bus SFX. |
+| dig_bone | dig_bone_1..4.ogg | 0,13–0,18 s | não | Golpe na camada **Ossada** | "Toc-tac" oco de ossos + chocalhar miúdo + terra. Pico −7 dBFS. Regras de golpe (variação + ±6%, máx. 6 vozes). |
+| dig_mud | dig_mud_1..4.ogg | 0,30–0,42 s | não | Golpe em **lama** (estágio 2) | Baque mole + "chlop" + sucção subindo + bolhas (o barro desce; a lama sobe). Pico −7 dBFS. |
+| dig_stone | dig_stone_1..4.ogg | 0,11–0,15 s | não | Golpe em **pedra das catacumbas** (estágio 3) | "Toc" seco e opaco (sem o "tinc" metálico do `dig_rock`) + areia + lascas. Pico −7 dBFS. |
+| dig_marble | dig_marble_1..4.ogg | 0,31–0,36 s | não | Golpe em **mármore** (estágio 4) | "Clank" polido e brilhante com ressonância. Pico −8 dBFS. |
+| dig_mist | dig_mist_1..4.ogg | 0,42 s | não | Golpe em tile de **névoa** (estágio 5) | Golpe macio + sopro "fff" descendo + tom de vidro que se desfaz (Lá m pentatônica). Pico −9 dBFS. |
+| boss_sink | boss_sink_1..2.ogg | 0,90 s | não | Chefe afunda/some (Caixão Fujão a cada 4 s; serve a qualquer chefe que se esconda) | Rangido de madeira + terra escorrendo + "glup" grave em ~0,55 s. Pico −6 dBFS. Bus SFX. |
+| boss_emerge | boss_emerge_1..2.ogg | 0,96–1,02 s | não | Chefe reaparece/emerge (na 1ª aparição, junto com `stinger_boss_appear`) | Rumor crescendo + rangido subindo + explosão de terra em ~0,6 s (sincronizar o pulo do sprite com esse ponto). Pico −5 dBFS. |
+| boss_hit | boss_hit_1..3.ogg | 0,26–0,29 s | não | Cada golpe que acerta o chefe (no lugar do `dig_*` do tile) | Madeira grossa e oca (mais grave que `dig_coffin`) + caixão chacoalhando. Pico −6 dBFS. Pitch ±6%; máx. 4 vozes. |
+| boss_defeat | boss_defeat_1.ogg | 2,51 s | não | HP do chefe chega a 0 | Estalo grande + lascas + desabamento + terra assentando + alma subindo + sino, com capela. Pico −3,5 dBFS (como a cova aberta). Seguido do `jingle_boss_win` ~0,3 s depois. |
+| card_flip | card_flip_1..3.ogg | 0,09–0,10 s | não | Epitáfios: cada carta-lápide virando na apresentação (80–120 ms entre as 3) | Sopro curto + toque de pedra fina. Pico −15 dBFS. Sortear variação + ±6%. Bus UI. |
+| card_pick | card_pick_1..2.ogg | 0,58–0,60 s | não | Escolher uma carta (comum/rara) | Toque + arpejo de sininhos (Lá maior) + faíscas. Pico −11 dBFS. Bus UI. |
+| card_legendary | card_legendary_1.ogg | 1,99 s | não | Carta **lendária** virando (no lugar do `card_flip` dela); ao escolher, `card_pick` normal | Sino + coro "aah" em Lá maior + chuva de faíscas, com capela. Pico −8 dBFS. Ducking leve da música (~3 dB) opcional. Bus UI. |
+| shop_bell | shop_bell_1..2.ogg | 0,67–0,69 s | não | Abrir a loja do Mascate (sininho da porta/carrinho), junto com a troca para `mus_shop` | 4–5 batidas de sininho na mola, perdendo força. Pico −12 dBFS. Bus UI. |
+| shop_buy | shop_buy_1..3.ogg | 0,61–0,65 s | não | Compra concluída na loja | Moedas no balcão de madeira + "tlim" da venda. Pico −10 dBFS. Bus UI. |
+| shop_deny | shop_deny_1..2.ogg | 0,19 s | não | Sem saldo / item indisponível (serve também a clique em nó selado) | Dois "bonc" de madeira abafados descendo uma terça menor. Pico −15 dBFS. Bus UI. |
+| coin_gold | coin_gold_1..3.ogg | 0,44–0,49 s | não | Moeda dourada coletada no tabuleiro | Mais grave, pesada e brilhante que o `pickup_copper`; as variações sobem de altura (1→3). Pico −9 dBFS. |
+| chest_open | chest_open_1..2.ogg | 1,18–1,20 s | não | Baú enterrado aberto | Trinco + dobradiça rangendo (aguda) + tampa batendo em ~0,62 s + brilho do tesouro. Pico −6 dBFS. |
+| bone_rain | bone_rain_1..2.ogg | 1,33–1,35 s | não | Ossário cheio esvazia (chuva de ossos) | 22–31 toques de osso caindo e chacoalhando, rareando. Pico −7 dBFS. |
+| soul_wander | soul_wander_1..2.ogg | 1,60–1,65 s | não (one-shot recorrente) | Alminha errante no campo: disparar a cada 3–6 s (aleatório) enquanto ela estiver na tela; pan pela posição; máx. 2 vozes | "Uuu" baixinho e curioso (1 sobe, 2 desce) + brilho, com capela. Pico −20 dBFS (fica por baixo de tudo). Bus SFX ou Ambience. |
+| tombstone_effect | tombstone_effect_1..3.ogg | 0,57 s | não | Lápide com efeito ativando no campo | Pedra arrastando curtinho + sininho mágico (Mi/Sol/Lá) + brilho. Pico −10 dBFS. |
+| seal | seal_1..2.ogg | 0,88–0,89 s | não | Raiz selada: ao comprar um lado de uma encruzilhada (o outro sela) ou ao escolher a Raiz-mestra | Raízes se atando + trava "clunc" em ~0,22 s + sino grave misterioso. Pico −10 dBFS. Bus UI. |
+| respec | respec_1..2.ogg | 1,83 s | não | Confirmar **Replantar** (respec) na Árvore | Terra revolvendo, raízes recolhendo (rangido desacelerando) e arpejo de sininhos "de volta ao início" em ~1,2 s. Pico −8 dBFS. Bus UI. |
+| milestone | milestone_1.ogg | 0,73 s | não | Marco/desafio alcançado (aviso da Dona Ceifa) | Toque de madeira + três sinos subindo (Mi–Lá–Dó♯). Pico −10 dBFS. Bus UI. |
+| helper_mole | helper_mole_1..3.ogg | 0,25–0,26 s | não | Toupeira Tita cavando (cada ação dela) | 3–4 arranhões rápidos + torrões. Pico −13 dBFS, RMS −35 (bem abaixo do golpe do jogador). Pitch ±6%; máx. 2 vozes. |
+| helper_cat | helper_cat_1..2.ogg | 0,42 / 0,28 s | não | Gato Breu age (ex.: acha algo); cooldown ≥ 4 s para não cansar | 1 = "miau", 2 = "mrrp" (trinado). Pico −20 dBFS. Pitch ±6%. |
+| dialog_blip | dialog_blip_1..3.ogg | 0,06 s | não | Balão de diálogo, voz genérica (personagens sem voz própria, ex.: Seu Damião): 1 blip a cada 2–3 caracteres revelados | Sílaba curta "a/é/ó" (vogal sintetizada). Pico −19 dBFS. Sortear variação + ±6%; 1 voz por falante (cortar o anterior). Bus UI. |
+| dialog_blip_ossada | dialog_blip_ossada_1..3.ogg | 0,06 s | não | Voz da **Madame Ossada** (mesma regra do `dialog_blip`) | Voz média "ó/a/u" + toque oco de osso. Pico −19 dBFS. |
+| dialog_blip_ceifa | dialog_blip_ceifa_1..3.ogg | 0,08 s | não | Voz da **Dona Ceifa** | Grave, soprada e cansada. Pico −19 dBFS. |
+| dialog_blip_tiao | dialog_blip_tiao_1..3.ogg | 0,04 s | não | Voz do **Tião, o Corvo** | Aguda, anasalada e áspera (grasnadinho). Pico −19 dBFS. |
+| dialog_blip_mascate | dialog_blip_mascate_1..3.ogg | 0,06 s | não | Voz do **Mascate** | Média, anasalada, subindo (jeito de vendedor). Pico −19 dBFS. |
+| unrest_warning | unrest_warning_1..2.ogg | 1,59 s | não | "A terra treme": aviso de Inquietação alta (ex.: ao cruzar 90%) ou evento que sacode o campo; junto com o tremor de tela | Rumor grave tremido + 3 baques subgraves + pedrinhas chacoalhando. Pico −6 dBFS. Bus SFX. |
+| build_complete | build_complete_1..2.ogg | 1,52–1,54 s | não | Construção restaurada no hub | 3 marteladas, a peça assenta, acorde de sinos em Lá maior (1 sobe, 2 desce) + faíscas, com capela. Pico −7 dBFS. |
 
 ### Tela-título — onde cada som entra (UI/UX §9.3–§9.5)
 | Momento | Sons |
@@ -71,6 +115,22 @@ Fonte: tudo sintetizado em `audio_src/` (`music.py`, `sfx.py`, núcleo em `dsp.p
 | Começar/continuar: Coveiro levanta → cortina de terra | `screen_transition`; `mus_title` e `amb_souls_choir` com fade-out ~0,4 s; `amb_night` pode continuar |
 | Volta ao título vindo do jogo | `mus_title` + ambientes direto (sem `logo_*`, logo já montado) |
 | Hover de mouse fora do menu (ex.: nada focável) | `ui_hover` não é usado no título (o `ui_wisp_slide` cumpre o papel) |
+
+### Jogo completo — onde cada som entra (leva 3)
+| Momento | Música | SFX |
+|---|---|---|
+| Turno no estágio N | `mus_area1` … `mus_area5` (loop) + `amb_night` | golpe pelo material do tile: `dig_grass/dirt/clay/coffin/rock` (est. 1), `dig_mud` (2), `dig_stone` (3), `dig_marble` (4), `dig_mist` (5); camada Ossada = `dig_bone` |
+| Ativos | — | `stomp` (Pisão), `flare` (Clarão) |
+| Tabuleiro vivo | — | `tombstone_effect`, `chest_open`, `coin_gold`, `bone_rain`, `soul_wander` (recorrente), ajudantes `helper_mole` / `helper_cat` |
+| Inquietação alta | — | `unrest_warning` (+ tremor de tela) |
+| Noite do Chefe | `mus_boss` no lugar do `mus_areaN` (crossfade ~1 s) | 1ª aparição: `stinger_boss_appear` + `boss_emerge`; depois `boss_sink` / `boss_emerge` a cada salto; golpe nele = `boss_hit` |
+| Chefe derrotado | fade-out da `mus_boss` (0,3 s) → `jingle_boss_win` | `boss_defeat` (o jingle entra ~0,3 s depois) |
+| Novo estágio liberado | `stinger_stage_unlock` | — |
+| Epitáfios | (música da noite segue; ducking leve opcional na lendária) | `card_flip` ×3 (ou `card_legendary` na lendária), `card_pick` ao escolher; fala da Ossada = `dialog_blip_ossada` |
+| Diálogos em balão | — | `dialog_blip_<personagem>` (ossada, ceifa, tiao, mascate) ou `dialog_blip` genérico |
+| Hub / Árvore | `mus_tree` | `build_complete` (construção restaurada), `seal` (raiz selada), `respec` (Replantar), `milestone` (marco) |
+| Loja do Mascate | `mus_shop` enquanto aberta (crossfade ~0,5 s com a do hub) | `shop_bell` ao abrir, `shop_buy`, `shop_deny` |
+| Final | `mus_ending` (sem loop, 78,7 s) → créditos | — |
 
 ## Medições (do OGG final, `python audio_src/verify.py`)
 
@@ -112,5 +172,45 @@ Fonte: tudo sintetizado em `audio_src/` (`music.py`, `sfx.py`, núcleo em `dsp.p
 | ui_panel_close | curto* | −16,1 / −16,4 | −30,1 / −31,1 | 0 ms | — |
 | ui_count_tick | curto* | −18,0 a −18,7 | −33,3 a −33,8 | 0 ms | — |
 | ui_hover | curto* | −19,9 a −20,4 | −34,3 a −35,3 | 0 ms | — |
+| mus_boss | −14,0 | −1,4 | −10,4 | 0 ms | percentil 21,5 — sem clique (ΔRMS −10,8 dB: o loop começa no surdo do tempo 1) |
+| mus_area2 | −14,0 | −3,5 | −12,1 | 0 ms | percentil 42,6, ΔRMS −3,9 dB — sem clique |
+| mus_area3 | −14,0 | −1,5 | −10,3 | 0 ms | percentil 22,4, ΔRMS −1,7 dB — sem clique |
+| mus_area4 | −14,2 | −2,0 | −9,3 | 0 ms | percentil 23,2 — sem clique (ΔRMS −8,4 dB: ataque do cravo no tempo 1) |
+| mus_area5 | −14,0 | −1,4 | −10,7 | 0 ms | percentil 44,9, ΔRMS −2,3 dB — sem clique |
+| mus_shop | −14,0 | −2,6 | −11,9 | 0 ms | percentil 16,0 — sem clique (ΔRMS −17,4 dB: zabumba + violão no tempo 1) |
+| mus_ending | −14,0 | −1,6 | −11,4 | 4,7 ms | — (sem loop) |
+| jingle_boss_win | −14,9 | −3,0 | −13,1 | 0 ms | — |
+| stinger_boss_appear | −18,5 | −5,0 | −13,0 | 0 ms | — |
+| stinger_stage_unlock | −16,4 | −5,0 | −16,3 | 0 ms | — |
+| stomp | ≈ −24 (var. 2 curta*) | −3,9 a −4,2 | −10,7 a −11,7 | 0 ms | — |
+| boss_defeat | −25,9 | −3,5 | −11,3 | 0 ms | — |
+| boss_emerge | −24,9 / −26,4 | −4,8 / −5,0 | −13,2 / −14,3 | 0 ms | — |
+| boss_sink | −21,7 / −22,4 | −6,0 / −6,1 | −13,5 / −13,9 | 0 ms | — |
+| unrest_warning | −22,0 / −23,2 | −5,9 / −6,0 | −11,6 / −12,6 | 0 ms | — |
+| boss_hit | curto* | −5,9 a −6,1 | −17,9 a −18,0 | 0 ms | — |
+| chest_open | −23,7 / −23,8 | −6,0 | −17,0 / −17,2 | 0 ms | — |
+| flare | −25,6 a −29,8 | −5,5 a −6,5 | −15,6 a −20,0 | 0 ms | — |
+| dig_mud | curto* (var. 2: −28,5) | −6,8 a −7,2 | −18,8 a −19,9 | 0 ms | — |
+| dig_marble | curto* | −7,1 a −8,4 | −19,0 a −22,0 | 0 ms | — |
+| dig_stone | curto* | −7,0 a −7,6 | −22,4 a −23,1 | 0 ms | — |
+| dig_bone | curto* | −7,1 a −7,5 | −23,5 a −25,1 | 0 ms | — |
+| dig_mist | −24,3 a −28,5 | −8,9 a −10,5 | −20,0 a −23,6 | 0 ms | — |
+| bone_rain | −25,9 / −27,4 | −7,0 / −7,1 | −19,1 / −20,4 | 0 ms | — |
+| build_complete | −24,5 / −25,1 | −7,2 / −7,4 | −19,9 / −20,0 | 0 ms | — |
+| card_legendary | −23,0 | −7,9 | −17,7 | 0 ms | — |
+| respec | −23,7 / −23,8 | −8,0 / −8,2 | −16,8 / −16,9 | 0 ms | — |
+| coin_gold | −24,0 a −24,2 | −8,4 a −9,0 | −19,0 a −19,2 | 0 ms | — |
+| shop_buy | −24,5 a −27,0 | −9,4 a −9,8 | −21,9 a −22,7 | 0 ms | — |
+| milestone | −21,5 | −9,9 | −18,0 | 0 ms | — |
+| tombstone_effect | −23,9 a −24,5 | −9,8 a −10,4 | −18,9 a −19,2 | 0 ms | — |
+| seal | −33,0 / −34,1 | −9,8 / −10,2 | −24,1 / −24,8 | 0 ms | — |
+| card_pick | −26,3 / −26,4 | −10,7 / −11,0 | −20,1 / −20,4 | 0 ms | — |
+| shop_bell | −25,7 / −27,2 | −12,2 / −12,5 | −21,0 / −21,3 | 0 ms | — |
+| helper_mole | curto* | −13,2 a −13,6 | −34,7 a −35,9 | 0 ms | — |
+| card_flip | curto* | −14,3 a −14,8 | −29,4 a −30,8 | 0,5 ms | — |
+| shop_deny | curto* | −14,9 / −15,3 | −27,8 / −27,9 | 0 ms | — |
+| dialog_blip (todos os 5 ids) | curto* | −18,7 a −19,5 | −30,3 a −36,2 | ≤ 0,3 ms | — |
+| helper_cat | −28,5 / curto* | −19,9 / −20,0 | −23,3 / −25,3 | 0,6 ms | — |
+| soul_wander | −30,3 / −30,5 | −19,9 / −20,0 | −26,8 / −27,2 | 2,2 ms | — |
 
 \* "curto": abaixo de 400 ms o LUFS integrado (BS.1770) não é definido; use pico e RMS de 50 ms para comparar.

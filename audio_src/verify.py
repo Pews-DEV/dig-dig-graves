@@ -11,7 +11,8 @@ import numpy as np
 from common import BUILD, MUSIC, SFX, decode, measure
 from dsp import SR
 
-LOOPS = {"mus_title", "mus_tree", "mus_area1", "amb_night_1", "amb_souls_choir_1"}
+LOOPS = {"mus_title", "mus_tree", "mus_area1", "amb_night_1", "amb_souls_choir_1",
+         "mus_boss", "mus_area2", "mus_area3", "mus_area4", "mus_area5", "mus_shop"}
 
 
 def rms50(x):

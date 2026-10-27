@@ -25,8 +25,33 @@ def n2m(s):
     return 12 * (octv + 1) + NOTE[name]
 
 
+_QUAL = {"": [0, 4, 7], "m": [0, 3, 7], "7": [0, 4, 7, 10], "m7": [0, 3, 7, 10],
+         "maj7": [0, 4, 7, 11], "dim": [0, 3, 6], "dim7": [0, 3, 6, 9], "m7b5": [0, 3, 6, 10],
+         "sus4": [0, 5, 7], "add9": [0, 4, 7, 2], "madd9": [0, 3, 7, 2]}
+
+
+class _Chords(dict):
+    """Acordes fixos (leva 1-2) + gerados sob demanda ('Ebmaj7', 'F#m', 'A/C#'...)."""
+
+    def __missing__(self, name):
+        main, _, slash = name.partition("/")
+        r = main[0] + (main[1] if len(main) > 1 and main[1] in "#b" else "")
+        q = main[len(r):]
+        iv = _QUAL[q]
+        root = NOTE[r]
+        pcs = [(root + i) % 12 for i in iv]
+        bass = next(m for m in range(40, 52) if m % 12 == NOTE[slash or r])
+        i5 = iv[2]
+        alt = bass - (12 - i5) if bass - (12 - i5) >= 40 else bass + i5
+        if slash:  # baixo invertido: o alternado e a fundamental
+            alt = next(m for m in range(40, 52) if m % 12 == root)
+        up = [m for m in range(52, 76) if m % 12 in pcs][:4]
+        self[name] = (bass, alt, up, pcs)
+        return self[name]
+
+
 # nome: (baixo, baixo alternado, notas agudas do violao, classes de altura p/ orgao)
-CHORDS = {
+CHORDS = _Chords({
     "Am": (45, 40, [52, 57, 60, 64], [9, 0, 4]),
     "AmG": (43, 40, [52, 57, 60, 64], [9, 0, 4]),
     "F": (41, 48, [53, 57, 60, 65], [5, 9, 0]),
@@ -40,7 +65,7 @@ CHORDS = {
     "Bb": (46, 41, [53, 58, 62, 65], [10, 2, 5]),
     "C7": (48, 43, [52, 58, 60, 64], [0, 4, 7, 10]),
     "A": (45, 40, [52, 57, 61, 64], [9, 1, 4]),
-}
+})
 
 
 def mel(s):
@@ -80,6 +105,14 @@ class Song:
         self.wh = Bus(total)
         self.perc = Bus(total)
         self.choir = Bus(total)
+        self.extra = {}
+        self._total = total
+
+    def bus(self, name):
+        """Barramento extra (leva 3: sanfona, cravo, piano, tambor, nevoa, gotas...)."""
+        if name not in self.extra:
+            self.extra[name] = Bus(self._total)
+        return self.extra[name]
 
     def t(self, bar, beat=0.0, jitter=0.0):
         x = (bar * self.bpb + beat) * self.beat
@@ -188,7 +221,7 @@ class Song:
         self.perc.add(fade(x, 0.0005, 0.01) * vel, self.t(bar, beat, 0.004), pan=-0.3)
 
     # mix -----------------------------------------------------------------
-    def mix(self, gains, rev_mix=0.28, t60=2.3, loop=True):
+    def mix(self, gains, rev_mix=0.28, t60=2.3, loop=True, echo_send=None, echo_cfg=None):
         """Em modo loop, tudo e circular: os barramentos secos sao 'enrolados' no
         comprimento do loop (a cauda soma no inicio), compressores/filtros rodam sobre
         3 copias (pega-se a do meio) e o reverb e convolucao circular. Costura exata."""
@@ -204,6 +237,13 @@ class Song:
         dry = (gtr * g.get("gtr", 1) + wrap(self.box.buf) * g.get("box", 1)
                + wrap(self.org.buf) * g.get("org", 1) + wrap(self.wh.buf) * g.get("wh", 1)
                + wrap(self.perc.buf) * g.get("perc", 1) + wrap(self.choir.buf) * g.get("choir", 1))
+        for k, b in self.extra.items():
+            dry = dry + wrap(b.buf) * g.get(k, 1)
+        if echo_send:
+            from dsp import echo as _echo
+            src = sum((self.extra[k].buf if k in self.extra else getattr(self, k).buf) * v * g.get(k, 1)
+                      for k, v in echo_send.items())
+            dry = dry + wrap(_echo(src, **(echo_cfg or {})))
         ir = make_ir(t60=t60, length=t60 * 1.5)
         wet = wrap(reverb(dry, ir, mix=rev_mix))
 
@@ -495,9 +535,9 @@ def build_title():
 TARGET_MUSIC = -14.0  # docs/03_UI_UX.md §8
 
 
-def render_loop(id_, builder):
+def render_loop(id_, builder, ceiling=-1.5):
     out, s = builder()
-    y, gr, pct = normalize_loop(out, TARGET_MUSIC, id_)
+    y, gr, pct = normalize_loop(out, TARGET_MUSIC, id_, ceiling=ceiling)
     wav = os.path.join(BUILD, id_ + ".wav")
     write_wav(wav, y)
     ogg = os.path.join(MUSIC, id_ + ".ogg")
@@ -529,6 +569,8 @@ JOBS = {
 }
 
 if __name__ == "__main__":
+    from music_v1 import JOBS as JOBS_V1  # leva 3 (jogo completo)
+    JOBS.update(JOBS_V1)
     ids = sys.argv[1:] or list(JOBS)
     for i in ids:
         JOBS[i]()
