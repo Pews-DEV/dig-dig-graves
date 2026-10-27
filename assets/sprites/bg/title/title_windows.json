@@ -1,0 +1,62 @@
+{
+ "frames": [
+  {
+   "filename": "title_windows 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 2,
+    "h": 3
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 2,
+    "h": 3
+   },
+   "sourceSize": {
+    "w": 2,
+    "h": 3
+   },
+   "duration": 100
+  },
+  {
+   "filename": "title_windows 1",
+   "frame": {
+    "x": 2,
+    "y": 0,
+    "w": 2,
+    "h": 3
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 2,
+    "h": 3
+   },
+   "sourceSize": {
+    "w": 2,
+    "h": 3
+   },
+   "duration": 100
+  }
+ ],
+ "meta": {
+  "app": "https://www.aseprite.org/",
+  "version": "1.3",
+  "image": "title_windows.png",
+  "format": "I8",
+  "size": {
+   "w": 4,
+   "h": 3
+  },
+  "scale": "1",
+  "frameTags": [],
+  "layers": [],
+  "slices": []
+ }
+}

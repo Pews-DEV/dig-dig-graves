@@ -1,0 +1,114 @@
+{
+ "frames": [
+  {
+   "filename": "title_logo_drip 0",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 4,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 4,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 4,
+    "h": 16
+   },
+   "duration": 100
+  },
+  {
+   "filename": "title_logo_drip 1",
+   "frame": {
+    "x": 4,
+    "y": 0,
+    "w": 4,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 4,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 4,
+    "h": 16
+   },
+   "duration": 83
+  },
+  {
+   "filename": "title_logo_drip 2",
+   "frame": {
+    "x": 8,
+    "y": 0,
+    "w": 4,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 4,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 4,
+    "h": 16
+   },
+   "duration": 83
+  },
+  {
+   "filename": "title_logo_drip 3",
+   "frame": {
+    "x": 12,
+    "y": 0,
+    "w": 4,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 4,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 4,
+    "h": 16
+   },
+   "duration": 84
+  }
+ ],
+ "meta": {
+  "app": "https://www.aseprite.org/",
+  "version": "1.3",
+  "image": "title_logo_drip.png",
+  "format": "I8",
+  "size": {
+   "w": 16,
+   "h": 16
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "act",
+    "from": 0,
+    "to": 3,
+    "direction": "forward",
+    "color": "#000000ff"
+   }
+  ],
+  "layers": [],
+  "slices": []
+ }
+}
