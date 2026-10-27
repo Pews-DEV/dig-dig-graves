@@ -20,5 +20,5 @@ base_cost = 25.0
 cost_growth = 1.55
 modifiers_per_level = Array[ExtResource("1_efa1e")]([SubResource("Resource_yoexk")])
 children = Array[StringName]([&"E03"])
-tree_position = Vector2(152, 302)
+tree_position = Vector2(144, 304)
 icon_cell = Vector2i(4, 0)

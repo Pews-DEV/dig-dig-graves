@@ -9,6 +9,6 @@ id = &"N00"
 display_name = "Pá Velha"
 description = "Início. Libera os 3 primeiros nós."
 children = Array[StringName]([&"E01", &"L01", &"F01"])
-tree_position = Vector2(320, 186)
+tree_position = Vector2(320, 176)
 starts_owned = true
 icon_cell = Vector2i(0, 0)

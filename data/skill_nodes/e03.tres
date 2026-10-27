@@ -19,5 +19,5 @@ base_cost = 15.0
 cost_growth = 6.0
 currency = &"bones"
 modifiers_per_level = Array[ExtResource("1_ii7g6")]([SubResource("Resource_cxgk4")])
-tree_position = Vector2(104, 368)
+tree_position = Vector2(144, 368)
 icon_cell = Vector2i(5, 0)

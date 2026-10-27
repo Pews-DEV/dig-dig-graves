@@ -63,6 +63,16 @@ func _test_audio_bank() -> void:
 	check_eq(AudioBank.bus_for(&"root_grow"), &"UI", "root_grow no bus UI")
 	check_eq(AudioBank.bus_for(&"amb_night"), &"Ambience", "ambiente no bus Ambience")
 	check_eq(AudioBank.bus_for(&"dig_rock"), &"SFX", "golpe no bus SFX")
+	# Tela-título (AUDIO_MANIFEST): logo_* em SFX, ui_wisp_slide/ui_bury em UI, coro em Ambience.
+	check_eq(AudioBank.bus_for(&"mus_title"), &"Music", "mus_title no bus Music")
+	check_eq(AudioBank.bus_for(&"logo_land"), &"SFX", "logo_land no bus SFX")
+	check_eq(AudioBank.bus_for(&"logo_thunk"), &"SFX", "logo_thunk no bus SFX")
+	check_eq(AudioBank.bus_for(&"logo_drip"), &"SFX", "logo_drip no bus SFX")
+	check_eq(AudioBank.bus_for(&"ui_wisp_slide"), &"UI", "ui_wisp_slide no bus UI")
+	check_eq(AudioBank.bus_for(&"ui_bury"), &"UI", "ui_bury no bus UI")
+	check_eq(AudioBank.bus_for(&"amb_souls_choir"), &"Ambience", "amb_souls_choir no bus Ambience")
+	check(AudioBank.loops(&"mus_title") and AudioBank.loops(&"amb_souls_choir"), "tema do título e coro em loop")
+	check(not AudioBank.loops(&"logo_thunk"), "logo_thunk não repete")
 	check(AudioBank.loops(&"mus_tree") and AudioBank.loops(&"amb_night"), "música e ambiente em loop")
 	check(not AudioBank.loops(&"jingle_summary"), "jingle não repete")
 	check(AudioBank.voice_available(5) and not AudioBank.voice_available(6), "máx. 6 vozes por id (GDD §17)")
@@ -127,20 +137,100 @@ func _test_anim_timing() -> void:
 	check_eq(seq, [0, 1, 2, 1, 0, 1], "copa em ping-pong (MANIFEST tree_canopy)")
 
 
-## Layout da árvore (.tres): nós de 32 px não se sobrepõem e ficam dentro do mundo 640×720.
+## Layout da árvore (.tres + TreeLayout): grade regular, caixas (medalhão + "!" + pips + custo)
+## sem sobreposição, raízes que não atravessam custo nem nó, nada escondido atrás do painel/HUD.
 func _test_tree_layout() -> void:
 	var defs := SkillTreeModel.load_definitions("res://data/skill_nodes/")
-	var ok := true
+	var by_id: Dictionary = {}
+	for d: SkillNodeData in defs:
+		by_id[d.id] = d
+	check(by_id.has(&"N00"), "N00 existe")
+	var n00: Vector2 = (by_id[&"N00"] as SkillNodeData).tree_position
+	var on_grid := true
 	var inside := true
-	for i: int in defs.size():
-		var a := defs[i].tree_position
-		if a.x < 20 or a.x > 620 or a.y < TreeArt.GRASS_Y + 40 or a.y > 700:
+	for d: SkillNodeData in defs:
+		var p := d.tree_position
+		var col := (p.x - 320.0) / TreeLayout.COLUMN
+		var row := (p.y - n00.y) / TreeLayout.ROW
+		if not is_equal_approx(col, roundf(col)) or not is_equal_approx(row, roundf(row)):
+			on_grid = false
+			print("  fora da grade: %s %s" % [d.id, p])
+		var r := TreeLayout.node_rect(p)
+		if r.position.x < TreeLayout.SIDE_MARGIN or r.end.x > TreeArt.WORLD.x - TreeLayout.SIDE_MARGIN or r.position.y < TreeArt.GRASS_Y + 8 or r.end.y > TreeArt.WORLD.y:
 			inside = false
+			print("  cortado pela borda do mundo: %s" % d.id)
+	check(on_grid, "nós na grade (colunas 320 ± 88k, linhas de 64 px a partir do N00)")
+	check(inside, "caixas dos nós dentro do mundo, abaixo da grama")
+	# Caixas (medalhão 32 + "!" + pips + custo de até 56 px) não se tocam (2 px de folga).
+	var apart := true
+	for i: int in defs.size():
 		for j: int in range(i + 1, defs.size()):
-			var b := defs[j].tree_position
-			# 32 px de medalhão + custo embaixo: pelo menos 44 px entre centros.
-			if a.distance_to(b) < 44.0:
-				ok = false
+			var a := TreeLayout.node_rect(defs[i].tree_position).grow(1.0)
+			var b := TreeLayout.node_rect(defs[j].tree_position).grow(1.0)
+			if a.intersects(b):
+				apart = false
 				print("  perto demais: %s %s" % [defs[i].id, defs[j].id])
-	check(ok, "medalhões de 32 px sem sobreposição")
-	check(inside, "nós dentro do mundo, abaixo da grama")
+	check(apart, "medalhões, pips e custos sem sobreposição entre nós")
+	check(TreeLayout.node_rect(Vector2.ZERO).size.y < TreeLayout.ROW, "uma linha da grade comporta a caixa do nó")
+	check(TreeLayout.LABEL_MAX_W < TreeLayout.COLUMN, "uma coluna comporta o custo mais largo")
+	# Raízes: do pai até o filho sem passar pelo custo do pai/filho nem pela caixa de outro nó.
+	var clean := true
+	for d: SkillNodeData in defs:
+		for child: StringName in d.children:
+			if not by_id.has(child):
+				continue
+			var to: Vector2 = (by_id[child] as SkillNodeData).tree_position
+			for decor: float in [TreeLayout.decor_bottom(true, true), TreeLayout.decor_bottom(true, false), TreeLayout.decor_bottom(false, false)]:
+				var from := TreeLayout.root_start(d.tree_position, to, decor)
+				var pts: Array = TreeLayout.root_path(from, to)[0]
+				for q: Vector2i in pts:
+					var pt := Vector2(q)
+					var bad := ""
+					var own := TreeLayout.label_rect(d.tree_position)
+					own.size.y = decor - TreeLayout.PIPS_TOP  # só o que esse estado desenha embaixo
+					if own.size.y > 0.0 and own.has_point(pt):
+						bad = "custo do pai"
+					elif TreeLayout.label_rect(to).has_point(pt):
+						bad = "custo do filho"
+					else:
+						for o: SkillNodeData in defs:
+							if o.id != d.id and o.id != child and TreeLayout.node_rect(o.tree_position).has_point(pt):
+								bad = "nó " + String(o.id)
+					if not bad.is_empty():
+						clean = false
+						print("  raiz %s>%s passa por %s em %s" % [d.id, child, bad, pt])
+						break
+	check(clean, "raízes não atravessam custos, pips nem outros nós")
+	# Filho logo abaixo: a raiz sai por baixo do custo; na diagonal, pela lateral do medalhão.
+	var below := TreeLayout.root_start(Vector2(100, 100), Vector2(100, 164), TreeLayout.decor_bottom(true, true))
+	check(below.y > 100 + TreeLayout.decor_bottom(true, true), "raiz vertical sai abaixo do custo")
+	var side := TreeLayout.root_start(Vector2(100, 100), Vector2(12, 164), TreeLayout.decor_bottom(true, true))
+	check(side.x < 100 - TreeLayout.HALF + 2 and side.y < 100 + TreeLayout.PIPS_TOP, "raiz diagonal sai pela lateral do medalhão")
+	# Câmera: nenhum nó fora de alcance e o enquadramento inicial mostra N00 + 2 linhas inteiras.
+	var cam := TreeCamera.new(Vector2(640, 360), Rect2(Vector2.ZERO, TreeArt.WORLD))
+	var safe := TreeLayout.safe_rect(TreeLayout.PANEL_Y)
+	var reachable := true
+	var start_y := cam.clamp_pos(Vector2(0, TreeLayout.start_camera_y(n00.y))).y
+	var start_ok := true
+	for d: SkillNodeData in defs:
+		var p := d.tree_position
+		if p.y - cam.max_pos().y > safe.end.y or p.x < safe.position.x or p.x > safe.end.x:
+			reachable = false
+			print("  inalcançável acima do painel: %s" % d.id)
+		var depth := roundi((p.y - n00.y) / TreeLayout.ROW)
+		if depth <= 2:
+			var r := TreeLayout.node_rect(p)
+			if r.end.y - start_y > TreeLayout.PANEL_Y or r.position.y - start_y < TreeLayout.TOP_HUD_BOTTOM:
+				start_ok = false
+				print("  escondido no enquadramento inicial: %s" % d.id)
+	check(reachable, "todo nó pode ser rolado para cima do painel de descrição")
+	check(start_ok, "enquadramento inicial: N00 e as 2 primeiras linhas inteiras entre o HUD e o painel")
+	check(safe.position.y + TreeLayout.BADGE_TOP - 1.0 >= TreeLayout.TOP_HUD_BOTTOM, "faixa segura: o \"!\" não entra embaixo das plaquetas")
+	check(safe.end.y + TreeLayout.decor_bottom(true, true) <= TreeLayout.PANEL_Y, "faixa segura: o custo não entra embaixo do painel")
+	# Distribuição: a árvore fica centrada no tronco (x = 320).
+	var min_x := INF
+	var max_x := -INF
+	for d: SkillNodeData in defs:
+		min_x = minf(min_x, d.tree_position.x)
+		max_x = maxf(max_x, d.tree_position.x)
+	check(absf((min_x + max_x) * 0.5 - 320.0) <= TreeLayout.COLUMN * 0.5, "ramos distribuídos dos dois lados do tronco")

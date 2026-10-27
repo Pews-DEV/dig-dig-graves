@@ -19,7 +19,8 @@ enum Branch { CENTER, DIG, LANTERN, FORTUNE, CEMETERY, HELPERS, SOULS, LUNAR }
 @export var unlock_flags: Array[StringName] = []
 ## Nós revelados quando este é comprado (topologia da árvore).
 @export var children: Array[StringName] = []
-## Posição do centro do medalhão na tela da árvore (px, viewport 640×360).
+## Centro do medalhão no mundo da Árvore (640×720, grama em y = 112). Grade de TreeLayout:
+## colunas 320 ± 88k, linhas de 64 px a partir do N00 (y = 176).
 @export var tree_position: Vector2 = Vector2.ZERO
 ## Célula 16×16 do ícone em assets/ui/tree/node_icons.png (MANIFEST tree_node_icons).
 ## (−1, −1) = sem ícone (desenha o id como placeholder).

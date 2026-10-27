@@ -18,5 +18,5 @@ max_level = 10
 base_cost = 40.0
 cost_growth = 1.55
 modifiers_per_level = Array[ExtResource("1_e2lj0")]([SubResource("Resource_6naeh")])
-tree_position = Vector2(456, 302)
+tree_position = Vector2(496, 304)
 icon_cell = Vector2i(6, 1)

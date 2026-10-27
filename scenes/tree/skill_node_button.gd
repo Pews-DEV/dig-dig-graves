@@ -177,13 +177,13 @@ func _draw() -> void:
 	if preview_only:
 		return
 	var lvl := tree.level_of(node_id)
-	var below := SIZE + 2.0
-	if lvl > 0 and not maxed and d.max_level > 1:
+	var pips := lvl > 0 and not maxed and d.max_level > 1
+	if pips:
 		_draw_pips(lvl, d.max_level, off)
-		below += 5.0
 	if not maxed and d.base_cost > 0.0:
+		# TreeLayout: a caixa do custo é a mesma que o layout e as raízes respeitam.
 		var text := NumberFormat.format(tree.next_cost(node_id)) + _currency_suffix(d.currency)
-		_draw_centered_text(text, below + 8.0, Palette.color(Palette.BONE if affordable else Palette.DANGER))
+		_draw_centered_text(text, HALF + TreeLayout.label_baseline(pips), Palette.color(Palette.BONE if affordable else Palette.DANGER))
 	if not Game.seen_nodes.has(node_id) and not d.starts_owned:
 		_draw_badge(off)
 	if focused:
@@ -231,7 +231,7 @@ func _draw_icon(d: SkillNodeData, off: Vector2) -> void:
 func _draw_pips(level: int, max_level: int, off: Vector2) -> void:
 	var w := 3 * max_level + 1
 	var x0 := float((SIZE - w) >> 1)
-	var y := SIZE + 1.0
+	var y := HALF + TreeLayout.PIPS_TOP
 	for i: int in max_level:
 		var col := 0
 		if i < level:

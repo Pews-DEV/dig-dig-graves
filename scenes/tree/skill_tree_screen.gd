@@ -5,11 +5,9 @@ extends Control
 ## O layout dos nós vem dos .tres (SkillNodeData.tree_position, coordenadas do mundo).
 
 const PANEL_H := 58
-const PANEL_Y := 360 - 6 - PANEL_H
+const PANEL_Y := TreeLayout.PANEL_Y  # = 360 − 6 − PANEL_H
 const DIG_BUTTON_POS := Vector2(548, 6)
-## Faixa da tela onde o nó em foco deve ficar (acima do painel, abaixo das plaquetas).
-const SAFE_RECT := Rect2(24, 44, 592, PANEL_Y - 44 - 44)
-const START_CAM := Vector2(0, 34)
+const START_CAM := Vector2(0, 48)
 const WHEEL_STEP := 40.0
 const DRAG_THRESHOLD := 3.0
 const COMBO_RESET := 0.6
@@ -70,11 +68,13 @@ func _ready() -> void:
 	_build_info_panel()
 	_options = OptionsMenu.new()
 	_options.title_text = "Opções"
+	_options.show_title_button = true
 	add_child(_options)
+	_options.title_requested.connect(func() -> void: Game.goto_title())
 
 	Events.currency_changed.connect(_on_currency_changed)
 	var n00 := Game.tree.get_node_data(&"N00")
-	_cam.pos = _cam.clamp_pos(START_CAM if n00 == null else Vector2(0, n00.tree_position.y - 152))
+	_cam.pos = _cam.clamp_pos(START_CAM if n00 == null else Vector2(0, TreeLayout.start_camera_y(n00.tree_position.y)))
 	_refresh(false)
 	_apply_camera()
 	if Game.autopilot:
@@ -298,7 +298,8 @@ func _scroll_to_node(id: StringName) -> void:
 	var d := Game.tree.get_node_data(id)
 	if d == null:
 		return
-	_cam.scroll_to(_cam.focus_for(d.tree_position, SAFE_RECT))
+	# A caixa inteira do nó (com o custo) fica entre as plaquetas de cima e o painel.
+	_cam.scroll_to(_cam.focus_for(d.tree_position, TreeLayout.safe_rect(PANEL_Y)))
 
 
 # --- Compra e foco ---------------------------------------------------------------------
@@ -445,8 +446,10 @@ func _root_list() -> Array[Dictionary]:
 		for child: StringName in d.children:
 			if not _buttons.has(child) or not (tree.is_revealed(child) or tree.is_hinted(child)):
 				continue
-			out.append({"key": String(id) + ">" + String(child), "from": d.tree_position + Vector2(0, 15),
-				"to": tree.get_node_data(child).tree_position, "bought": tree.is_owned(child)})
+			var to := tree.get_node_data(child).tree_position
+			var from := TreeLayout.root_start(d.tree_position, to, TreeLayout.decor_bottom_for(tree, id))
+			out.append({"key": String(id) + ">" + String(child), "from": from,
+				"to": to, "bought": tree.is_owned(child)})
 	return out
 
 

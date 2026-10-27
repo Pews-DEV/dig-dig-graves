@@ -19,5 +19,5 @@ base_cost = 15.0
 cost_growth = 1.5
 modifiers_per_level = Array[ExtResource("1_fej1y")]([SubResource("Resource_y7w4f")])
 children = Array[StringName]([&"C02"])
-tree_position = Vector2(320, 248)
+tree_position = Vector2(320, 240)
 icon_cell = Vector2i(1, 1)

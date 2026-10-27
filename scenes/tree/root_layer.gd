@@ -72,24 +72,9 @@ func _dirt_at_tip(r: Dictionary) -> void:
 		"color": [Palette.DIRT, Palette.DIRT_LIGHT, Palette.DIRT_DARK][randi() % 3]})
 
 
-## Bezier quadrática: sai do pai quase na horizontal e desce até o filho (pixels inteiros).
+## Caminho em pixels inteiros (TreeLayout.root_path, testável sem cena).
 static func _path(a: Vector2, b: Vector2) -> Array:
-	var ctrl := Vector2(lerpf(a.x, b.x, 0.85), a.y + (b.y - a.y) * 0.2)
-	if absf(a.x - b.x) < 2.0:
-		ctrl = (a + b) * 0.5
-	var length := a.distance_to(b) * 1.3 + 4.0
-	var steps := int(length * 2.0)
-	var pts: Array[Vector2i] = []
-	var steep: Array[bool] = []
-	for i: int in steps + 1:
-		var t := float(i) / steps
-		var p := a.lerp(ctrl, t).lerp(ctrl.lerp(b, t), t)
-		var q := Vector2i(p.round())
-		if pts.is_empty() or pts[pts.size() - 1] != q:
-			var tangent := (ctrl - a).lerp(b - ctrl, t)
-			pts.append(q)
-			steep.append(absf(tangent.y) > absf(tangent.x))
-	return [pts, steep]
+	return TreeLayout.root_path(a, b)
 
 
 func _process(delta: float) -> void:
