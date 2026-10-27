@@ -506,3 +506,9 @@ TURNO ─[Esc]─► PAUSA ─Abandonar a noite (confirmação)─► [cortina] 
 - **Música entre telas:** título `mus_title` → turno `mus_areaN` (crossfade 1 s) → Resumo `jingle_summary` → Árvore/hub `mus_tree`; Loja `mus_shop`; Noite do Chefe `mus_boss`; final `mus_ending` → `credits_roll`\*.
 - **Regra de 1 clique:** de qualquer Resumo ou da Árvore, um turno novo está a 1 clique; de qualquer overlay, Esc/B fecha e volta ao estado anterior.
 - **Autosave:** fim de cada noite, compra de nó/item/construção, vitória sobre chefe, Replantar, a cada 60 s no hub.
+
+## 21. Splash do estúdio (Briba Studio)
+- Primeira coisa que o jogo mostra, antes da tela-título (§9). Fundo chapado 01, logo `briba_logo_anim` centralizado em escala 1× (canto em (268, 114)).
+- Sequência: preto 0,2 s → fade-in 0,3 s com a tag `intro` (0,8 s) e o som `splash_briba` no primeiro frame → segura em `idle` até 1,8 s no total → fade para preto 0,3 s → título (o `mus_title` começa no fade do título, como hoje).
+- Qualquer tecla, clique ou botão pula direto ao título. Só aparece ao abrir o jogo, nunca ao "Voltar ao título". O autopilot pula a splash.
+- "Reduzir flashes" não muda nada (não há flash); "reduzir movimento" mantém a sequência (a animação é pequena).
