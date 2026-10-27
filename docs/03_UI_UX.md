@@ -1,6 +1,6 @@
 # Dig Dig Graves — UI, UX e Animação
 
-> Versão 1.0 · 26/10/2026 · Complementa o [01_GDD.md](01_GDD.md) (§15–16) e a [02_DIRECAO_DE_ARTE.md](02_DIRECAO_DE_ARTE.md) (§9–10).
+> Versão 2.0 · 27/10/2026 (Parte 2: telas do v1.0, §10–§20) · Complementa o [01_GDD.md](01_GDD.md) (§15–16) e a [02_DIRECAO_DE_ARTE.md](02_DIRECAO_DE_ARTE.md) (§9–10).
 > Motivo: o primeiro build jogável tinha texto ilegível, HUD solto no vazio, cena sem ambientação e nenhuma animação de interface. Este documento é a fonte da verdade para **como a interface se parece, se move e soa**. Nada na tela fica parado sem motivo.
 
 ---
@@ -222,3 +222,287 @@ Reaproveitados: `fogo_fatuo` (cursor do menu), `fx_tree_petals` (pétalas), `fx_
 **Som (sound-designer)**: `mus_title` (tema principal, loop), `logo_land` (3–4 variações), `logo_thunk` (pá no G, com reverb), `logo_drip`, `amb_souls_choir` (coro distante em loop, vai e volta), `ui_wisp_slide` (cursor deslizando), `ui_bury` (confirmar "Enterrar").
 
 **Montagem (godot-dev)**: `scenes/title/` (cena `title_screen.tscn`). O `boot` passa a abrir o título. Enquanto um asset não estiver no manifesto, usa placeholder (ou silêncio).
+
+
+---
+
+# Parte 2 · Telas do v1.0 (GDD 2.0)
+
+> Acrescentado em 27/10/2026 junto com o GDD 2.0. Vale tudo da Parte 1 (§1–§9): fontes, kit de madeira/pergaminho/pedra, catálogo de juice (§6), cortina de terra, "reduzir movimento"/"reduzir flashes". Ids de som citados estão no `assets/AUDIO_MANIFEST.md` ou na lista de ids novos do [06_PLANO_V1.md](06_PLANO_V1.md) §8 (marcados com \*). Ids de arte novos: DA §13. A letra entre colchetes diz em que marco a tela entra: [A], [B], [C], [D].
+
+## 10. Hub na superfície da Árvore [A estrutura · B construções]
+
+### 10.1 Mundo e câmera
+- A cena da Árvore passa a ter um **mundo de 1936×1024** (GDD §6.1). **Superfície = y 0–176**; a grama fica em y = 176 e as raízes começam embaixo. A vista é 640×360.
+- **Câmera inicial:** x = 648, y = 0 (ipê no centro da tela, superfície inteira visível e o N00 aparecendo embaixo). Arrastar com inércia nos 2 eixos; roda = vertical, Shift+roda = horizontal; **Home** volta para essa posição.
+- **Parallax:** céu (`tree_sky_wide`) a 0,5 na horizontal e na vertical; estrelas cintilando; vila distante (`hub_village`) a 0,7; superfície e raízes a 1,0.
+- Ambiente: `amb_night` + `mus_tree`; pétalas do ipê, vaga-lumes e fumaça da chaminé da Casa quando restaurada.
+
+### 10.2 Composição da superfície (x = centro da base, y da base = 172)
+```
+x:  150      290      430      580      760        968        1120      1260    1390    1530    1680    1820
+   Jazigo   Portão   Casa do  Capelinha Barraca   IPÊ-ROXO   Seletor   Poço    Canteiro Torre  Galinheiro Coreto
+   [D]      [B]      Coveiro  [B]      Mascate   (N00 embaixo) [A]    [C]     [C]     [C]     [D]     [D]
+                     [B]               [B]
+```
+- Cada construção: sprite com estados **ruína** (05/06, mato, tábuas caídas) e **restaurada** (cores cheias, 1 luz quente); tamanho 48–96 px (DA §13). Antes de liberada, a ruína aparece **escurecida** (1 degrau abaixo) com cadeado 8×8; liberada e sem dinheiro, ruína normal com o custo em 32; liberada e comprável, a ruína **respira** (halo 26 pulsando 1,2 s, igual ao medalhão comprável).
+- **Hover:** sobe 1 px, contorno 26, tooltip de pergaminho com nome, efeito, custo e "Clique para restaurar".
+- **Clique** → **painel de obra** (pergaminho 200×110, ancorado acima da construção): nome m6x11, desenho da versão restaurada em miniatura (o próprio sprite), efeito em m5x7, custo com ícones, botões "Restaurar" e "Agora não". Sem dinheiro: "Restaurar" desabilitado e o que falta em 32.
+- **Restaurar:** a câmera centraliza a construção (300 ms) → nuvem de poeira cobre (`dust`, 3 frames) → 3 marteladas com tremor de 1 px (`build_complete`) → troca para o sprite restaurado com pop (1,0→1,1→1,0, 160 ms) e faíscas 26 → texto do bônus sobe ("+10% de Cobre") → autosave.
+- **Personagens na superfície:** Tião na placa do seletor (idle do título); Mascate na Barraca (`mascate` idle/`wave` quando o cursor passa); Madame Ossada na porta da Capelinha (B, após a Capelinha); Seu Damião sentado no Poço (C); Dona Ceifa só aparece em falas e no final. Clicar num personagem = 1 balão curto de dica (§14, sem pausa).
+
+### 10.3 Seletor de estágios [A]
+- Objeto do mundo em x = 1120: **placa de madeira com 5 lanternas penduradas** (`hub_selector`, 96×64), uma por estágio, com o nome entalhado embaixo em m5x7.
+  - **Liberado:** lanterna acesa (chama 3 frames), nome em 22. **Selecionado:** lanterna maior (frame alternativo) + seta 26 piscando embaixo. **Trancado:** lanterna apagada em silhueta 03, cadeado e "Vença ‹chefe›" no tooltip.
+  - Clicar numa lanterna acesa seleciona o estágio (`ui_click`, a chama "sopra" 1 frame).
+- **Atalho na tela** (sempre visível, plaqueta fixa no topo-direito com "Cavar ▶"): `◀ Paróquia ▶` em m5x7 acima do botão; setas trocam o estágio (`stage_select`\*). Assim o jogador não precisa rolar até a placa.
+- **Estágio liberado** (após o Resumo especial): a câmera rola até a placa (500 ms), a Chave voa do canto e entra na fechadura (`key_get`\*), a lanterna acende de baixo para cima (4 frames), `stinger_stage_unlock`, o nome aparece letra a letra (30 ms/letra).
+
+### 10.4 Botão "Enfrentar ‹chefe›" [A]
+- Aparece **abaixo do "Cavar ▶"** (plaqueta em pedra `panel_stone` em vez de madeira, 120×28), só com a Inquietação do estágio selecionado em 100%: ícone do chefe 16×16 (`icon_boss_*`) + "Enfrentar o Caixão Fujão" em m6x11 + linha m5x7 "A terra treme…".
+- **Entrada:** sobe do chão (+28 px → 0, 300 ms, back-out) com poeira e `unrest_warning`; tremor de 1 px na tela (escala pela opção de tremor).
+- **Ocioso:** a caveira treme 1 px a cada 0,5 s; a borda alterna 31/32 a 1 Hz (desligável com "reduzir flashes": borda fixa 32).
+- **Clique:** botão afunda 1 px, a tela escurece por vinheta (200 ms), `stinger_boss_appear` e cortina de terra → Noite do Chefe. Atalho F / Y.
+- No **marco A** (sem hub completo) a superfície mostra só o ipê, a placa do seletor (1 lanterna acesa, 4 em silhueta) e as ruínas em silhueta escura sem cadeado nem tooltip ("Em breve").
+
+### 10.5 Barra de topo da Árvore/hub
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ ╔═══════════════════════════╗  ╔═══╗              ╔═◀ Paróquia ▶════╗ │
+│ ║ ◉ 12.345 🦴 678  ✦ 90    ║  ║ ☠ ║ (Tião:Marcos)║   CAVAR ▶       ║ │
+│ ╚═══════════════════════════╝  ╚═══╝              ╚═════════════════╝ │
+│                                                  ╔═════════════════╗ │
+│                                                  ║☠ Enfrentar o … ║ │  (só com 100%)
+│                                                  ╚═════════════════╝ │
+```
+Carteira à esquerda (já existe); plaqueta 20×20 do Tião com um "!" quando há marco novo [C]; "Cavar ▶" com o seletor compacto; "Enfrentar" embaixo. Minimapa da Árvore no canto inferior esquerdo (§18.2).
+
+## 11. Loja do Mascate [B]
+
+### 11.1 Layout (overlay sobre o hub, 640×360)
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ ╔═[retrato 48]═╗  ╔═══════════ PRATELEIRA (madeira) ═══════════════╗ │
+│ ║  Mascate     ║  ║ [PÁS]  [AMULETOS]   (abas)                    ║ │
+│ ║ "Freguês! Pá ║  ║ ┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐                  ║ │
+│ ║  boa não     ║  ║ │24││24││24││24││24││24││24│   (até 7 por linha║ │
+│ ║  quebra."    ║  ║ └──┘└──┘└──┘└──┘└──┘└──┘└──┘    2 linhas)     ║ │
+│ ╚══════════════╝  ║ ┌──┐┌──┐ …                                    ║ │
+│                   ╚═══════════════════════════════════════════════╝ │
+│ ╔═══ PERGAMINHO: item em foco ═══════════════╗ ╔═ EQUIPADO ════════╗ │
+│ ║ Dentadura de Ouro            300 🦴         ║ ║ Pá: [■]           ║ │
+│ ║ +12% de Cobre                               ║ ║ Amuletos: [■][■]  ║ │
+│ ║ [ Comprar ]  [ Equipar ]                    ║ ║  [🔒][🔒]          ║ │
+│ ╚═════════════════════════════════════════════╝ ╚═══════════════════╝ │
+│                                      [ Voltar (Esc) ]                │
+└──────────────────────────────────────────────────────────────────────┘
+```
+- **Retrato** 48×48 (`portrait_mascate`, tag `talk` enquanto o texto escreve) num quadro de madeira; balão com frase do Mascate (rotativa, ~12 frases; uma nova a cada compra).
+- **Prateleira** (madeira `panel_wood` 9-slice, ~400×150): abas **Pás** e **Amuletos** (botão pequeno com ícone); cada item numa casa 24×24 (`shop_slot`) com o ícone 16×16 centralizado e o preço em m5x7 embaixo.
+- **Pergaminho de detalhe** (`panel_parchment`, 300×58): nome m6x11, efeito m5x7, "antes → depois" do stat afetado quando houver (mesmo estilo do painel da Árvore, seta animada), preço com ícones, botões.
+- **Equipado** (madeira, 150×58): 1 casa de pá + 4 casas de amuleto (as não liberadas com cadeado e "Vença a Raiz-Mãe" / "Restaure o Coreto" no tooltip).
+
+### 11.2 Estados de um item
+| Estado | Visual | Som ao clicar |
+|---|---|---|
+| À venda, comprável | Ícone cheio; casa respira (halo 26, 1,2 s); preço em 22 | `ui_click` |
+| À venda, sem dinheiro | Ícone cheio; preço em 32 | `shop_deny` + casa balança ±1 px 2× |
+| Trancado (estágio não liberado) | Silhueta 02 com "?" ; tooltip "Chega no ‹estágio›" | `shop_deny` |
+| Comprado | Selo de cera 8×8 "✓" no canto; preço some | `ui_click` |
+| Equipado | Moldura 26 e brilho varrendo 1× a cada 3 s | `ui_click` |
+| Achado em baú | Como comprado, com fitinha 32 "achado" na 1ª vez | — |
+
+### 11.3 Animações e sons
+- **Abrir** (clique na Barraca ou no Mascate): `shop_bell` + crossfade `mus_tree` → `mus_shop` (0,5 s); o fundo escurece 2 degraus (vinheta); a prateleira desce de −20 px (180 ms, back-out), o retrato entra pela esquerda (−48 px, 220 ms) e o Mascate dá `wave`.
+- **Hover em item:** sobe 1 px, pergaminho troca o conteúdo com contador nos números (120 ms).
+- **Comprar:** squash da casa → o preço "voa" para a carteira (contador diminui) → `shop_buy` → selo de cera bate no canto (pop 1,0→1,2→1,0) → frase nova do Mascate; com "Equipar automático" (padrão) o item voa em arco para a 1ª casa livre (`shop_equip`\*).
+- **Equipar/desequipar:** arrastar ou clicar; o item desliza em arco (220 ms) para a casa; trocar de pá = a pá velha volta à prateleira com o mesmo arco ao contrário.
+- **Fechar:** inverso (120 ms), crossfade de volta para `mus_tree`.
+- Teclado/gamepad: foco percorre a prateleira em grade; LB/RB trocam de aba; A compra/equipa; B fecha.
+
+## 12. Escolha de Epitáfio [B]
+
+### 12.1 Overlay (o jogo pausa)
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                          NÍVEL 4!  (m6x11, 26)                       │
+│        ┌────────┐        ┌────────┐        ┌────────┐               │
+│        │  ╭──╮  │        │  ╭──╮  │        │  ╭──╮  │   lápides     │
+│        │ título │        │ título │        │ título │   64×88       │
+│        │ [32×32]│        │ [32×32]│        │ [32×32]│               │
+│        │ texto  │        │ texto  │        │ texto  │               │
+│        │ ◇ tags │        │ ◇ tags │        │ ◇ tags │               │
+│        └───1────┘        └───2────┘        └───3────┘               │
+│ ╔═[Madame Ossada 48]══ "As cartas não mentem… só exageram." ═══════╗ │
+│ ╚══════════════════════════════════════  [Embaralhar (1) · Z] ═════╝ │
+└──────────────────────────────────────────────────────────────────────┘
+```
+- O campo fica visível por baixo, escurecido 2 degraus (vinheta em xadrez, sem alfa); o HUD de cima continua visível.
+- **Cartas** 64×88 (DA §10.4), espaçadas 32 px, centralizadas (4 cartas com S03/Óculos: espaço 16 px). Número da tecla embaixo de cada uma.
+- **Madame Ossada** (retrato 48×48, `talk` enquanto escreve) num balão largo na base com uma frase por raridade mais alta da mão.
+
+### 12.2 Animações
+- **Entrada:** "NÍVEL N!" cai do topo (−20 px, 200 ms, back-out); as 3 lápides **brotam do chão** uma a uma (y +40 → 0, 220 ms, back-out, 90 ms de defasagem) com terrinha; cada uma vira de costas → frente (2 frames de "giro" pixelado) com `card_flip`; Lendária vira por último com brilho dourado varrendo e `card_legendary` (ducking leve da música).
+- **Ocioso:** carta em foco sobe 3 px e respira; Raro tem 2 frames de cintilar ecto; Lendário 2 frames de ouro.
+- **Escolher** (clique, 1/2/3/4, A): a carta escolhida dá pop e **voa em arco** até a fileira de Epitáfios do HUD (§13), virando um ícone 12×12; as outras afundam no chão (180 ms); `card_pick`; o jogo despausa com a cortina mais curta (vinheta some em 150 ms).
+- **Embaralhar:** as 3 afundam, novas brotam; `card_reroll`\*; contador "(n)" diminui com pop.
+- **Fila:** se houver outro nível pendente, o "NÍVEL N+1!" entra logo depois sem soltar a pausa.
+- "Reduzir movimento": sem brotar/voar (fade de 120 ms).
+
+## 13. HUD do turno v2 [A ativos · B Clarão e Epitáfios · A barra do chefe]
+
+### 13.1 Wireframe (640×360)
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ ╔══════════════════════╗   ╔═(Nv 4)══════════╗         ╔══════════╗ │
+│ ║ ◉ 1.234  🦴 56  ✦ 3 ║   ║ ███████░░░ XP    ║ [B+]    ║ ☠ ▓▓▓░░ ║ │
+│ ╚══════════════════════╝   ╚══════════════════╝         ╚══════════╝ │
+│ ▫▫▫▫ (Epitáfios da noite, 12×12) [B]                                  │
+│              ╔═[☠16] O CAIXÃO FUJÃO ════════════════════╗            │
+│              ║ ██████████████████████░░░░░░  24.560     ║ (Noite do  │
+│              ╚══════════════════════════════════════════╝  Chefe)    │
+│                       ◇◇ campo em bloco de terra ◇◇                  │
+│                                                                      │
+│              ╔══════════════════════════════════╗  ╔═[Q]═╗ ╔═[E]═╗  │
+│              ║ 🏮  ██████████████░░░░░░   12 s  ║  ║ 👢  ║ ║ ✷   ║  │
+│              ╚══════════════════════════════════╝  ╚═pips╝ ╚═pips╝  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+- **Marco A:** sem a barra de XP (a medalha some) e sem a fileira de Epitáfios; o topo fica: recursos à esquerda, Inquietação à direita.
+- **Ativos** (base direita): plaquetas 28×28 com ícone 20×20 (`hud_stomp`, `hud_flare`), tecla em m5x7 no topo da moldura e a **recarga** como 4 pips embaixo que enchem da esquerda para a direita (mais um "relógio" de escurecimento 03 descendo sobre o ícone).
+  - **Pronto:** ícone aceso, borda 26 com brilho varrendo a cada 1,5 s, `stomp_ready`\* / `flare_ready`\* baixinho (desligável no volume de UI).
+  - **Usado:** ícone afunda 1 px, flash 23 de 1 frame (sem flash com "reduzir flashes"), pips zeram.
+  - **Sem óleo para o Clarão** (< 2 s): ícone em 05, recusa com `shop_deny`.
+  - Pisão no campo: anel de impacto (`fx_stomp`, 4 frames) na área + tremor de 2 px + `stomp`; com Pisão Sísmico, um segundo anel 1 tile maior 60 ms depois.
+  - Clarão: luz vai ao raio máximo com o anel em xadrez se expandindo (200 ms), tiles iluminados ganham uma borda 26 pulsando; `flare`. Ao acabar, a luz volta ao raio do óleo em 300 ms.
+- **Fileira de Epitáfios** [B]: ícones 12×12 da carta, alinhados abaixo dos recursos, máx. 15; hover mostra o tooltip da carta; um número "×2" quando acumulado.
+- **Inquietação:** ao passar de 80% a caveira treme; em 100% a barra fica cheia com brilho 32 varrendo e o rótulo "A terra treme…" pisca 3× ao chegar.
+
+### 13.2 Barra do chefe [A]
+- Plaqueta larga (320×22) no topo central, **abaixo** da medalha de nível: ícone do chefe 16×16 (`icon_boss_*`), nome em m6x11, barra com moldura `barra_chefe` (preenchimento 31/32, ponta 23) e o HP em m5x7 à direita.
+- **Entrada:** quando o chefe surge, a plaqueta desce de −28 px (300 ms) junto com `stinger_boss_appear`.
+- **Dano:** a barra perde em 2 passos: um "fantasma" 22 fica por 400 ms e escorre até o valor real (estilo "dano atrasado"); pop de 1 px no ícone a cada golpe (limitado a 8/s); `boss_hit`.
+- **Fase/marco do chefe** (bulbo morto, fase do mausoléu, camada da Cova): a barra pisca 26, traço vertical na posição e `boss_phase`\*.
+- **Fuga** (óleo acabou): a barra se esvazia ao contrário ("ele recupera") enquanto o chefe some; `boss_flee`\*.
+- **Vitória:** a barra estoura em faíscas; hit-stop 2 frames; `boss_defeat` → `jingle_boss_win`.
+
+### 13.3 Pausa no turno
+Painel de madeira: **Continuar · Opções · Abandonar a noite · Voltar ao título**. "Abandonar" e "Voltar ao título" abrem a confirmação de lápide (`panel_stone`, como no título): "Os ganhos desta noite serão perdidos." com "Abandonar" em `btn_perigo` e "Voltar" em foco.
+
+## 14. Diálogo em balão com retrato [A]
+
+### 14.1 Dois tamanhos
+| Tipo | Uso | Pausa o jogo? | Layout |
+|---|---|---|---|
+| **Fala** (bloqueante) | Abertura/fim de capítulo, chefes, 1ª visita ao Mascate/Vidente, final | Sim | Faixa na base: retrato 48×48 num quadro de madeira à esquerda (ou à direita para o 2º personagem) + balão de pergaminho `balao` 9-slice de 480×56 com rabicho apontando o retrato; nome em m6x11 na borda do balão |
+| **Dica** (não bloqueante) | Tião no 1º turno, 1ª cova, clique em personagem no hub | Não | Balão pequeno (máx. 160×32) com rabicho `balao_rabicho` apontando o personagem ou o elemento, some sozinho em 3,5 s ou no clique |
+
+### 14.2 Texto e ritmo
+- m5x7 em 01 sobre pergaminho; até 3 linhas de ~70 caracteres por balão.
+- **Máquina de escrever:** 40 caracteres/s; o retrato fica em `talk` enquanto escreve e volta a `idle` no fim; voz `dialog_blip_<personagem>` a cada 2 caracteres visíveis (não em espaços e pontuação), pitch ±6%. Seu Damião: `dialog_blip_damiao`\* (até lá, `dialog_blip`).
+- Clique/Espaço/A com o texto escrevendo = completa a linha; com o texto completo = próxima fala (`ui_click` suave). Indicador "▼" 26 balançando 1 px no canto quando dá para avançar.
+- "Pular" (Esc/B segurado 0,5 s, com anel enchendo) pula a conversa inteira.
+
+### 14.3 Animações
+- **Entrar:** faixa sobe da base (+64 → 0, 220 ms, back-out); o retrato entra pelo lado com 2 px de overshoot. Troca de personagem: o retrato sai e o outro entra pelo lado oposto (140 ms).
+- **Sair:** desce (140 ms, ease-in).
+- O fundo escurece 1 degrau (vinheta) nas falas bloqueantes.
+
+## 15. Resumo especial pós-chefe [A]
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│               O CAIXÃO FUJÃO DESCANSOU!    (m6x11, cai letra a letra) │
+│                         ╔════════╗                                   │
+│                         ║ 🗝 32×32║  ← Chave da Cripta I gira e pousa │
+│                         ╚════════╝                                   │
+│ ╔═══ PRÊMIOS (pergaminho) ═════════╗ ╔═══ O QUE SE ABRIU ══════════╗ │
+│ ║ ✦ +25 Almas                      ║ ║ 🏮 Campo dos Indigentes      ║ │
+│ ║ 🦴 +60 Ossos                     ║ ║ 🏪 O Mascate chegou          ║ │
+│ ║ (+ ganhos normais da noite)      ║ ║ 🌱 20 raízes novas           ║ │
+│ ╚══════════════════════════════════╝ ╚══════════════════════════════╝ │
+│                    [ Ver o cemitério ▶ ]  (único botão)              │
+└──────────────────────────────────────────────────────────────────────┘
+```
+- Entra depois do diálogo de vitória, com cortina de terra. Fundo do Resumo normal + raios de luz 26/23 em xadrez girando devagar atrás da Chave (sem com "reduzir movimento").
+- **Sequência:** título cai letra a letra (30 ms) → a Chave sobe girando (4 frames de giro, 600 ms) e pousa com pop + `key_get`\* + `jingle_boss_win` (se ainda não tocou) → os prêmios contam (contador padrão) → "O que se abriu" entra linha a linha (−8 px, 120 ms de defasagem) com um ícone cada → o botão "chama" (balanço ±1 px).
+- **Ver o cemitério ▶** leva ao hub e dispara a **revelação**: câmera rola até o seletor (lanterna acende, §10.3), depois desce até as raízes novas (brotam com `node_reveal`, máx. 6 visíveis animando, o resto aparece direto) e volta ao ipê. Duração total ≤ 6 s; qualquer clique acelera para o fim.
+- Builds A–C: depois da revelação entra o **Fim do Capítulo** (§19). Revanche vencida: Resumo normal com a linha "Revanche: +X Almas".
+- Derrota na Noite do Chefe: Resumo normal com a faixa de pedra "O Caixão Fujão fugiu… faltaram 3.420 de vida" e o botão "Árvore" em foco.
+
+## 16. Replantar (respec) [B]
+- **Onde:** medalhão do N03 na Árvore (depois de comprado vira um botão de pá com raiz, sempre visível no centro) e atalho na Ficha do Coveiro.
+- **Confirmação** em `panel_stone` (lápide 240×120): "Replantar a árvore?" · m5x7: "Todas as raízes voltam para o chão e você recebe de volta tudo o que gastou." · prévia com as 3 moedas que voltam (contadores) · custo do uso "5 ✦ × estágio" · botões **"Replantar"** (`btn_perigo`) e **"Voltar"** (foco).
+- **Animação:** as raízes compradas **recolhem** de baixo para cima, das pontas para o N00 (desenho reverso da raiz, 600 ms no total, em ondas por linha), os medalhões viram semente (escala 1→0,6, 2 frames) e voltam ao estado disponível; as moedas sobem do solo e voam para a carteira; `respec`; selos das encruzilhadas se partem (`seal` ao contrário: 2 frames). Autosave.
+
+## 17. Marcos (conquistas internas) [C]
+- **Toast:** quando um marco completa (mesmo no turno), uma plaqueta de pergaminho 200×28 desce do topo central (−28 → 6 px, 220 ms, back-out), com o ícone 16×16 do marco, o nome em m6x11 e o prêmio em m5x7; fica 2,5 s e sobe. `milestone`. Vários marcos = fila, 0,4 s entre eles. Não pausa o jogo.
+- **Painel** (aberto pela plaqueta do Tião no hub): pergaminho grande 480×280 com o Tião no canto (retrato) e uma lista rolável de 20 linhas: ícone, nome, condição, **barra de progresso** (contador) e prêmio; concluídos com selo de cera e o prêmio riscado em 18 ("recebido"); a fileira das 5 Chaves no topo. Abrir/fechar como qualquer painel (§6).
+- Hover numa linha: Tião comenta (dica curta).
+
+## 18. Árvore v2: navegação e molduras [A]
+
+### 18.1 Medalhões por tipo (DA §10.3)
+| Tipo | Moldura | Leitura |
+|---|---|---|
+| P (passivo) | Medalhão 32×32 do ramo (já existe) | — |
+| At (ativo) | Aro com 4 "raios" de luz 26 nas diagonais | "botão novo" |
+| R (regra) | Aro rúnico (pontos 28 nas 8 direções) | "muda o jogo" |
+| D (desbloqueio) | Aro com cadeado aberto 8×8 no topo | "coisa nova no campo" |
+| X (encruzilhada) | Dois medalhões ligados por raiz em "Y"; ao comprar um, o outro vira **selado**: pedra 06/07 com raiz cortada e um "×" 8×8 | escolha |
+| M (Raiz-mestra) | Medalhão grande 40×40 com raízes abraçando; antes de revelado, silhueta 40×40 com nome e custo no hover | objetivo distante |
+
+- **Selado** ≠ **oculto** ≠ **sem dinheiro**: pedra fria, sem respirar, tooltip "Escolhida a outra raiz. Duas Raízes libera esta."
+- Comprar Raiz-mestra: pop maior (1,0→1,25→1,0), 2 ondas de pétalas, tremor de 1 px, `seal` + `node_buy`; o custo das outras mestras atualiza com contador ("×3").
+
+### 18.2 Navegação
+- **Minimapa** 96×48 no canto inferior esquerdo (moldura de madeira): faixas dos 7 ramos nas cores da DA §10.3 em 2 tons, nós comprados = ponto 1×1 aceso, mestras = ponto 2×2, retângulo 26 da vista; clique/arraste move a câmera.
+- **Atalhos 1–7** (E, L, S, N, F, C, A) e **LB/RB**: rolam até o topo do ramo (400 ms, ease-out) com o nome do ramo aparecendo 1 s no topo da tela.
+- **Home / R3:** volta à câmera inicial (superfície).
+- Painel de descrição, Ficha (Tab) e "Cavar ▶" como na Parte 1 (§7).
+
+## 19. Fim de capítulo e final
+
+### 19.1 "Fim do Capítulo N" [A, B, C]
+- Depois da revelação do hub (§15): cortina → cartão de pergaminho 360×220 sobre o céu da Árvore: "FIM DO CAPÍTULO 1 · O Cemitério da Paróquia" (m6x11, cai letra a letra) · estatísticas (tempo de jogo, noites, covas, nós comprados, chefe vencido em N tentativas) contando · os estágios seguintes em silhueta com "Em breve" · botões **Continuar cavando** (foco) e **Créditos**. Música: `jingle_chapter_end`\* e depois `mus_tree` baixinho.
+- Mostrado 1× por save (fica no painel de Marcos como "Capítulo 1 ✓").
+
+### 19.2 Final [D]
+Sequência (pular com Esc segurado 1 s; o pulo nunca pula os créditos na 1ª vez):
+1. Vitória sobre a Cova da Dona Ceifa → diálogo final (6–8 falas, Dona Ceifa e Coveiro).
+2. **Cena de encerramento** (`end_*`, 640×360, ~45 s, `mus_ending`): (a) a cova aberta no Jardim; Dona Ceifa tira os óculos, deita, ajeita a prancheta no peito (anim 6 frames); (b) ela estende a foice ao Coveiro, que larga a pá (a pá crava no chão como no título); (c) plano aberto: a fila de almas olha para o Coveiro; uma a uma sobem como na cova aberta; (d) **amanhece pela primeira vez**: o céu passa de 02/03 para 04/05 com o sol de 26/23 surgindo atrás das lápides (troca de paleta por passos de 300 ms, sem gradiente).
+3. **Créditos:** pergaminho rolando devagar (reaproveita Créditos do título, §9.4), com os personagens passando na base (desfile 16 px, cada um com sua anim idle) e `credits_roll`\* (arranjo de `mus_title`) após `mus_ending`.
+4. **Tela "Fim":** "FÉRIAS MERECIDAS" em letras de pedra (estilo do logo, 1 linha) + estatísticas + selo; botões **Continuar cavando** e **Voltar ao título**. O título passa a ter Dona Ceifa de chapéu de praia sentada no monte ao lado do Coveiro.
+
+## 20. Fluxo completo de telas e transições
+
+```
+                        ┌───────────────── Opções / Créditos (painéis do título)
+                        │
+BOOT ─► TÍTULO ─Novo Jogo (Coveiro levanta)─► [cortina] ─► TURNO 1 ─┐
+          │  └─Continuar (Coveiro levanta)──► [cortina] ─► ÁRVORE/HUB
+          ▲                                                           │
+          └──────── Pausa: Voltar ao título [cortina] ◄───────────────┤
+                                                                       ▼
+TURNO ─óleo/amanhecer─► "O ÓLEO ACABOU" 0,8 s ─► HUD sai ─► [cortina] ─► RESUMO
+RESUMO ─[Árvore]──────► [cortina] ─► ÁRVORE/HUB (câmera na superfície)
+       └[Mais uma noite]► [cortina] ─► TURNO (mesmo estágio)
+ÁRVORE/HUB ─[Cavar ▶ / Espaço]────────────► [cortina] ─► TURNO (estágio do seletor)
+           ─[Enfrentar / F]─ vinheta 200 ms ► [cortina] ─► NOITE DO CHEFE
+           ─[Barraca/Mascate]─► LOJA (overlay, sem trocar de cena; crossfade de música)
+           ─[ruína]─► PAINEL DE OBRA (overlay) ─Restaurar─► animação na própria superfície
+           ─[Tião]─► PAINEL DE MARCOS (overlay) · ─[Tab]─► FICHA · ─[N03]─► REPLANTAR (overlay)
+           ─[Esc]─► PAUSA (Continuar / Opções / Voltar ao título)
+NOITE DO CHEFE ─perdeu─► RESUMO (faixa "fugiu") ─► ÁRVORE/HUB (placa Enfrentar continua)
+               └venceu─► hit-stop ─► DIÁLOGO (overlay no turno) ─► [cortina] ─► RESUMO ESPECIAL
+RESUMO ESPECIAL ─[Ver o cemitério]─► [cortina] ─► ÁRVORE/HUB + REVELAÇÃO (≤ 6 s)
+                                            └─(A–C, 1ª vez)─► FIM DO CAPÍTULO ─► Continuar cavando / Créditos
+NOITE DO CHEFE 5 ─venceu─► DIÁLOGO FINAL ─► [fade preto 600 ms] ─► CENA FINAL ─► CRÉDITOS ─► "FIM"
+"FIM" ─[Continuar cavando]─► [cortina] ─► ÁRVORE/HUB · ─[Voltar ao título]─► TÍTULO (Dona Ceifa de férias)
+TURNO ─nível (B+)─► EPITÁFIO (overlay, pausa) ─escolheu─► TURNO
+TURNO ─[Esc]─► PAUSA ─Abandonar a noite (confirmação)─► [cortina] ─► ÁRVORE/HUB (sem ganhos)
+```
+- **Cortina de terra** (450 ms, `screen_transition`) em toda troca de cena; overlays usam "abrir painel" (180 ms) e nunca a cortina.
+- **Música entre telas:** título `mus_title` → turno `mus_areaN` (crossfade 1 s) → Resumo `jingle_summary` → Árvore/hub `mus_tree`; Loja `mus_shop`; Noite do Chefe `mus_boss`; final `mus_ending` → `credits_roll`\*.
+- **Regra de 1 clique:** de qualquer Resumo ou da Árvore, um turno novo está a 1 clique; de qualquer overlay, Esc/B fecha e volta ao estado anterior.
+- **Autosave:** fim de cada noite, compra de nó/item/construção, vitória sobre chefe, Replantar, a cada 60 s no hub.

@@ -1,6 +1,6 @@
 # Dig Dig Graves — Direção de Arte
 
-> Versão 1.0 · 26/10/2026 · Complementa o [01_GDD.md](01_GDD.md).
+> Versão 1.1 · 27/10/2026 (§13: assets do v1.0) · Complementa o [01_GDD.md](01_GDD.md).
 > Este documento é a **fonte da verdade** para qualquer ilustração do jogo, feita à mão ou via ferramentas (Aseprite/MCP). Se um asset contradiz este documento, quem está errado é o asset.
 > Paleta em arquivo: [palette/lua-de-cova-32.gpl](palette/lua-de-cova-32.gpl) (abre no Aseprite e no GIMP) e [palette/lua-de-cova-32.hex](palette/lua-de-cova-32.hex).
 
@@ -330,7 +330,7 @@ assets/ui/          panels/, icons/, cards/, fonts/
 7. Encaixa no losango 32×16 sem sobrepor o tile vizinho (exceto tufos/props na folga superior).
 8. Animação com nome de tag correto e timing da §9.2.
 
-## 12. Lista de assets por marco
+## 12. Lista de assets por marco (M0/M1 — histórico; v1.0 no §13)
 
 ### M0 · Protótipo cinza
 Formas lisas em 05/07/15/13 para os 4 estágios do tile, losango da área desenhado por código, ícones placeholder 16×16. Objetivo: validar a leitura de profundidade (§7) antes da arte final.
@@ -353,3 +353,78 @@ Formas lisas em 05/07/15/13 para os 4 estágios do tile, losango da área desenh
 
 ### Brief-padrão para pedir uma ilustração
 > **Asset:** [nome] · **Canvas:** [W×H] · **Pivô:** [x,y] · **Área:** [n] · **Rampas:** [lista de índices] · **Luz:** NO (lua) · **Contorno:** [seletivo/sem] · **Frames/tags:** [..] · **Referência de tom:** macabro aconchegante, chibi, sem gore · **Critério de pronto:** checklist §11.5.
+
+## 13. Assets do v1.0 (GDD 2.0)
+
+> Acrescentado em 27/10/2026 com o GDD 2.0. Substitui a lista do §12 para o jogo completo; o §12 fica como histórico do M0/M1. Paleta fechada e regras dos §2–§11 valem para tudo. A letra [A]–[D] é o marco jogável em que o asset precisa estar pronto (GDD §19; plano em [06_PLANO_V1.md](06_PLANO_V1.md)). Ids já no `assets/MANIFEST.md` estão marcados com ✔.
+
+### 13.1 Kit por estágio
+Todo estágio repete o **mesmo contrato de atlas** do estágio 1/2 (layout de colunas, pivôs e `_lit`), para o código só trocar caminhos no `StageData`.
+
+| Peça | Id por estágio (N = 1…5) | Observação |
+|---|---|---|
+| Tiles | `tiles_aN` + `_lit` (colunas 0–3 = S0–S3; coluna 4+ = camadas próprias do estágio) | Estágio 1 ganha a coluna da **Ossada** (S1-like com ossinhos 21/22 e rachaduras; o fundo S3 igual) [A]; a Ossada aparece em todos os estágios, então cada `tiles_aN` traz a sua coluna Ossada |
+| Rachaduras · regeneração | `cracks_aN`, `regen_aN` (+ `_lit`) | Uma linha de rachadura por camada |
+| Covas | `grave_aN`, `grave_open_aN` (+ `_lit`) | Caixão no material do estágio (tábua simples no 2, pedra lavrada no 3, mogno com alças 26 no 4, vidro de névoa 05/08 no 5) |
+| Lápides | `lapide_aN` (célula 16×24, pivô (8, 23)) com **7 colunas**: 0 foto oval · 1 cruz de pedra · 2 musgo · 3 rachada · 4 coroa de flores · 5 anjo de pedra · 6 flutuante | Colunas sem uso no estágio podem ficar vazias. O tipo precisa ser **legível sem tooltip** (silhueta e 1 cor-assinatura: cruz 07/08, musgo 10/11, rachadura 01 em zigue-zague, coroa 32/26, anjo 08 com asas, flutuante com sombra destacada 2 px abaixo) |
+| Obstáculo | `rocha` ✔ (1, 3–5) · `poca_lama` ✔ (2) | Ocupa o tile inteiro, como a rocha |
+| Bloco do diorama · cerca · tufos · placa | `bloco_aN`, `cerca_aN`, `tufos_aN`, `placa_aN` | Mesmas células do estágio 1 |
+| Fundo do turno | `bg_aN_chao`, `bg_aN_props`, `bg_aN_mata` (672×392, canto em (−16, −16)) | Contrato do §5 da UI/UX; decoração com luma ≤ 105 |
+
+**Ambientação (detalha o §6):**
+| Estágio | Chão do fundo | Props do fundo | Elementos novos na grade | Luz |
+|---|---|---|---|---|
+| 1 · Paróquia | grama-funda 09/10 | Cerquinha de ferro, lápides, velas | Vela de Finados no tile (`vela_campo` 32×24, chama 3f), moeda dourada (`moeda_ouro` 8×8, 4f giro), alminha errante (reusa `alma_fila`) [A] | Lua cheia |
+| 2 · Indigentes | campo aberto 09, névoa 04/05 | Fileiras de cruzes sem nome, árvores secas, corvos ✔ | Fantasma travesso (`fantasma` 16×16, idle 4f + tapar 4f + pop 3f), cruz de madeira cavável (`cruz_madeira` ✔ + rachaduras), ossário (`ossario` 32×32: vazio/meio/cheio + esvaziar 4f), baú (`bau` 16×16 fechado/abrindo 4f + brilho sutil 2f) [B] | Lua velada (céu 03, mais névoa) |
+| 3 · Catacumbas | pedra 02/03 com junta 04 | Paredes de nichos com crânios (21/22 em ≤ 10% da área), teias 05, raízes 18/19 | Raiz (`raiz` 32×24: reta NO, reta NE, canto ×4, ponta ×2; HP rachadura 2), **atlas escuro** `tiles_a3_dark` (1 degrau abaixo, usado fora da luz) [C] | **Sem lua**: só a lanterna; fora da luz os tiles usam `_dark` |
+| 4 · Barões | grama aparada 11 com mármore 07/08 | Mausoléus com colunas, anjos de pedra, vitrais 28/30/32 em pontos pequenos | Baú dos Barões (`bau_baroes` 32×24 1×2, ouro 25/26, abrir 4f) [D] | Lua cheia fria, vitrais emissivos |
+| 5 · Jardim das Almas | ecto 27 escuro com flores 28/29 | Lápides flutuantes, flores luminosas, a fila de almas no horizonte | **Névoa** sobre tiles (`nevoa_tile` 32×24, xadrez 05/08 em 3 frames: entra, cheia, sai), 3 fantasmas [D] | Céu "ao contrário": 03 com estrelas 30 embaixo, ecto 28 no alto |
+
+### 13.2 Fichas dos chefes
+| Chefe | Canvas · pivô | Ocupa | Leitura / silhueta | Paleta | Tags (frames) | Marco |
+|---|---|---|---|---|---|---|
+| **Caixão Fujão** ✔ | 64×48 · (32, 32) | 2×2 | Caixão em pé, olhinhos e sorriso de travessura | Caixão 18/19/20, pregos 26 | `idle` 4 · `sink` 6 · `emerge` 6 · `hit` 1 · `defeat` 6 · + `boss_caixao_buraco` ✔ | A |
+| **Seu Damião** (chefe) | 24×32 · (12, 31) | 1×1, andando | O fantasma da ficha §8.2 com a pá fantasma no ombro e uma **trilha** de pegadas ecto | Corpo 30/23 em xadrez nas bordas, chapéu 18, pá 28 | `walk` 4 (por eixo iso, espelhado) · `fill` 4 (tapa buraco) · `hit` 1 · `defeat` 6 (vira aliado: tira o chapéu) · `trail` (pegada 16×8, 3f de sumir) | B |
+| **A Raiz-Mãe** | núcleo 64×64 · (32, 48) · bulbo 32×32 · (16, 24) | núcleo 2×2 + 4 bulbos 1×1 | Bulbo de raiz com "coração" pulsando; bulbos como cebolas com olhinho | Raiz 18/19/20 e 14/15, coração 31/32 (único vermelho grande do jogo, ≤ 8% do sprite), olhos 26 | núcleo `idle` 4 (pulso) · `shield` 2 (imune) · `hit` 1 · `defeat` 8 · bulbo `idle` 2 · `hit` 1 · `pop` 4; raiz de ligação reusa `raiz` | C |
+| **O Mausoléu Vivo** | 128×96 · (64, 80) | 4×4 | Mausoléu com colunas e porta-boca, vitral-olho | Mármore 06/07/08, ouro 25/26, vitral 28/30 | `idle` 4 · `phase1..3` (1 frame cada, com rachaduras crescentes) · `spawn` 4 (porta abre) · `hit` 1 · `defeat` 8 · **herdeiro** 16×16 (fantasma com cartola) `idle` 4 · `pop` 3 | D |
+| **A Cova da Dona Ceifa** | 96×96 · (48, 80) | 3×6 | Cova gigante com a lápide de Dona Ceifa (foice gravada, óculos); as camadas aparecem na borda | Terra/camadas das 6 rampas, lápide 07/08 | `layer0..5` (topo de cada camada) · `regen` 3 · `hit` 1 · `open` 8 (abre e mostra o "colchão") | D |
+| Ícones de chefe | 16×16 | — | Rosto de cada chefe para a barra e a placa Enfrentar | — | `icon_boss_caixao` ✔, `icon_boss_damiao`, `icon_boss_raiz`, `icon_boss_mausoleu`, `icon_boss_ceifa` | A–D |
+
+Flash de dano = todas as cores por 23 por 1 frame (§9.2), igual para todos.
+
+### 13.3 Personagens, retratos e final
+- Retratos 48×48 (`idle`/`talk`): `portrait_dona_ceifa` ✔, `portrait_tiao` ✔, `portrait_madame_ossada` ✔, `portrait_coveiro` ✔, `portrait_mascate` ✔, **`portrait_damiao`** [C].
+- Sprites na superfície do hub (pivô na base): `mascate` ✔ [B]; `madame_ossada` 24×32 (`idle` 4, bola de cristal piscando) [B]; `damiao_hub` 24×32 sentado no poço (`idle` 4) [C]; `tiao` ✔ reusado na placa [A].
+- Ajudantes 16×16 (`idle` 2 + `act` 4): `tita` [B], `gato_breu` [C], `cao_ossinho` [D], `morcegos` (dois 8×8 em oito) [D].
+- **Cena final** [D]: `end_bg` (Jardim, 640×360, 3 variações de céu: noite 02/03, aurora 04/05, amanhecer com sol 26/23 — trocadas em passos), `end_ceifa` (48×48: tira os óculos 4f, deita 6f), `end_coveiro` (32×32: pega a foice 6f), `end_souls` (reusa `alma`), `title_ceifa_ferias` (Dona Ceifa de chapéu de praia 24×32 para o título pós-final).
+
+### 13.4 UI nova
+| Id | Tamanho | Descrição | Marco |
+|---|---|---|---|
+| `frame_at` · `frame_r` · `frame_d` | 32×32 (sobre o medalhão do ramo) | Aro de ativo (4 raios 26), de regra (pontos 28 em 8 direções) e de desbloqueio (cadeado aberto 8×8) | A |
+| `frame_master_<ramo>` (×6) + `frame_master_shadow` | 40×40 | Medalhão grande com raízes abraçando, na cor do ramo; silhueta 02 | A |
+| `frame_sealed` | 32×32 | Pedra 06/07, raiz cortada e "×" 8×8 | A |
+| `root_y` | 8×4 tira | Raiz em "Y" da encruzilhada (mesmo estilo de `tree_roots`) | A |
+| `tree_soil_wide` · `tree_sky_wide` · `tree_grass_wide` | 1936×848 · 1936×176 · 1936×16 | Árvore v2 (mundo 1936×1024); pode ser montado por tiles de 64 px | A |
+| `minimap_frame` | 104×56 | Moldura de madeira do minimapa | A |
+| `hud_stomp` · `hud_flare` | 20×20 (+ estado apagado) | Bota pisando a terra; fósforo com chama | A · B |
+| `hud_active_frame` · `hud_pips` | 28×28 · 4×4 | Plaqueta do ativo e pips de recarga | A |
+| `barra_chefe` | 9-slice 24×10 | Moldura da barra do chefe; preenchimento 31/32, "fantasma" 22 | A |
+| `panel_stone` ✔ | — | Placa "Enfrentar", confirmações | A |
+| `chapter_card` | 9-slice | Pergaminho do Fim do Capítulo com fita 32 | A |
+| `hub_selector` | 96×64 | Placa com 5 lanternas (acesa/selecionada/apagada) e nomes | A |
+| Construções `bld_<id>_ruina` / `bld_<id>` | 48–96 × 48–96, base | Portão, Casa, Capelinha, Barraca do Mascate [B]; Poço, Canteiro, Torre [C]; Galinheiro, Jazigo, Coreto [D] | B–D |
+| `shop_slot` · `shop_tabs` | 24×24 · 20×20 | Casa da prateleira (normal/foco/comprado/equipado) e abas | B |
+| Ícones de item `icon_item_<id>` | 16×16 | 6 pás + 14 amuletos (GDD §8) | B (5) · C (12) · D (20) |
+| `ui_card_comum` · `ui_card_raro` · `ui_card_lendario` | 64×88 | Molduras das cartas (§10.4), costas `ui_card_back` | B |
+| `card_art_<id>` | 32×32 | 24 ilustrações (GDD §7) | B (8) · C (16) · D (24) |
+| `icon_epitaph_<id>` | 12×12 | Mini-ícone da fileira do HUD | B |
+| `icon_milestone_<id>` + `toast_frame` | 16×16 · 9-slice | 20 marcos | C |
+| `icon_key_1..5` | 16×16 · 32×32 (Resumo) | Chaves da Cripta, giro 4f | A |
+| FX | — | `fx_stomp` (anel 4f), `fx_flare` (anel xadrez 3f), `fx_coin_rain`, `fx_bone_rain`, `fx_constellation` (3 estrelas 30 ligando os fogos-fátuos) | A–C |
+
+### 13.5 Ordem de produção por marco
+- **A:** coluna Ossada no `tiles_a1`; `lapide` com colunas 0–2 legíveis por tipo; `vela_campo`, `moeda_ouro`; molduras de tipo/mestra/selado; árvore larga; minimapa; HUD do Pisão; barra e ícone do chefe; chave 1; placa do seletor; cartão de capítulo; ruínas em silhueta da superfície.
+- **B:** estágio 2 completo ✔ (falta a coluna Ossada do `tiles_a2` e as colunas 3 da `lapide_a2`); Seu Damião chefe; Mascate ✔, Madame Ossada no hub; 4 construções; loja; cartas (3 molduras + 8 ilustrações); Tita; fantasma, ossário, baú; Clarão no HUD.
+- **C:** estágio 3 completo + `_dark`; Raiz-Mãe; Damião no hub e retrato; 3 construções; 7 itens; 8 cartas; Gato; raiz; Mausoléu 3×3 do CX (`mausoleu_cx` 96×72); marcos e toast.
+- **D:** estágios 4 e 5; Mausoléu Vivo e herdeiros; Cova da Dona Ceifa; 3 construções; 8 itens; 8 cartas; Cão e Morcegos; baú dos barões; névoa; lápides 5–6; cena final; Dona Ceifa de férias no título.

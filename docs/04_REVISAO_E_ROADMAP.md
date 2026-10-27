@@ -1,5 +1,6 @@
 # Revisão do jogo e roadmap de melhorias
 
+> ⚠️ **Superado pelo [GDD 2.0](01_GDD.md) e pelo [06_PLANO_V1.md](06_PLANO_V1.md) onde houver conflito** (27/10/2026). Mudanças principais: Raízes-mestras todas compráveis (Almas, ×3 cada), só 3 encruzilhadas, campo começa em 5×5, Cobre por ponto cresce com a profundidade, hub na superfície da Árvore, 5 estágios no v1.0 e marcos jogáveis A–D. Este documento fica como registro da análise.
 > Versão 1.0 · 27/10/2026 · Análise de design (não altera o GDD por si só: o que for aprovado aqui entra no [01_GDD.md](01_GDD.md), [02_DIRECAO_DE_ARTE.md](02_DIRECAO_DE_ARTE.md) e [03_UI_UX.md](03_UI_UX.md) pelo designer-chefe).
 > Base: código e dados do commit `d50b3e1` (branch `claude/confident-mayer-0au1lp`), mais os dois manifestos. A tela-título está **em implementação** (UI/UX §9 e §9.6) e foi tratada como tal. Números de economia vêm de uma simulação em Python que reproduz `scenes/run/model/run_state.gd` e `field_model.gd` (método no Apêndice A); não havia Godot executável no container.
 
