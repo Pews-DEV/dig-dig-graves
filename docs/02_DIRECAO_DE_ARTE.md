@@ -167,7 +167,7 @@ Velas, fogos-fátuos, almas, lua e janelas acesas **não recebem sombra** do lua
 | Ajudantes | 16×16 | Base | — |
 | Coveiro (hub) | 16×24 | Base | — |
 | Dona Ceifa / Madame Ossada / Seu Damião | 24×32 | Base | — |
-| Tião, o Corvo | 12×12 | Base | — |
+| Tião, o Corvo | 12×12 (tela-título: 16×16, pivô (8, 15), para caber o pulinho e o grasnado) | Base | — |
 | Retratos de diálogo | 48×48 | — | Busto, fundo transparente |
 | Cursor (pá) | **24×24** (v1.1; antes 16×16) | Ponta da lâmina em (3, 20) | Pá de bico com alça em D. A área é desenhada por código |
 | Chefe: Caixão Fujão | 64×48 | Base central | Ocupa 2×2 tiles |
