@@ -124,7 +124,7 @@ func _on_focus(b: Button) -> void:
 	Audio.play(&"ui_wisp_slide")
 	for other: Button in _buttons.values():
 		var focused := other == b
-		var danger := other == _buttons[TitleMenuModel.BURY]
+		var danger: bool = other == _buttons[TitleMenuModel.BURY]
 		if focused:
 			other.add_theme_stylebox_override("normal", TitleArt.danger_style(&"hover") if danger else UiKit.button_style(&"hover", 10))
 		elif danger:
