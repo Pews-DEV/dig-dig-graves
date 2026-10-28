@@ -68,9 +68,7 @@ func rescan() -> void:
 	var files := PackedStringArray()
 	for dir: String in [SFX_DIR, MUSIC_DIR]:
 		_list_recursive(dir, files)
-	# The Markdown manifest is not a Godot resource, so it may be absent from exported PCKs.
-	# In that case, accept the packaged audio files instead of silently disabling all audio.
-	bank.index_paths(files, func(id: String) -> bool: return _manifest_text.is_empty() or _manifest_text.contains(id))
+	bank.index_paths(files, func(id: String) -> bool: return _manifest_text.contains(id))
 
 
 func _list_recursive(dir: String, out: PackedStringArray) -> void:
