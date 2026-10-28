@@ -1,7 +1,7 @@
 # Dig Dig Graves — Registro de decisões (em discussão)
 
-> Rascunho de decisões de design tomadas em conversa com o dono do jogo, a partir da §7 do [04_REVISAO_E_ROADMAP.md](04_REVISAO_E_ROADMAP.md).
-> **Nada aqui está implementado nem foi passado ao GDD ainda.** Quando o martelo for batido, cada item aprovado entra no [01_GDD.md](01_GDD.md) (e na DA/UI-UX quando couber) e vira tarefa do M0.5 em diante.
+> Rascunho de decisões de design tomadas em conversa com o dono do jogo, a partir da §7 do [04_REVISAO_E_ROADMAP.md](../review/04_REVISAO_E_ROADMAP.md).
+> **Nada aqui está implementado nem foi passado ao GDD ainda.** Quando o martelo for batido, cada item aprovado entra no [01_GDD.md](../core/01_GDD.md) (e na DA/UI-UX quando couber) e vira tarefa do M0.5 em diante.
 
 Legenda de status: ✅ **Aprovado** (o dono do jogo concordou) · 🟡 **Proposto** (recomendação do designer-chefe, aguardando o "ok") · ❓ **Em aberto** (falta escolher).
 
@@ -44,7 +44,7 @@ Pedido do dono do jogo: o jogador escolhe uma direção, mas quem tiver tempo e 
 
 **Referências do gênero:**
 - **Nodebuster:** inimigo roxo grande no fim de cada fase; derrotá-lo dá um *core* (moeda rara) e libera a fase seguinte. É um **portão de progresso**, não um combate elaborado. Crítica comum: dá pouca recompensa (lição: a recompensa do nosso chefe tem que ser grande e visível).
-- **SuperReap:** chefe ao fim de cada estágio, liberando pontos especiais e o próximo nível (fonte: [00_PESQUISA_SUPERREAP.md](00_PESQUISA_SUPERREAP.md)).
+- **SuperReap:** chefe ao fim de cada estágio, liberando pontos especiais e o próximo nível (fonte: [00_PESQUISA_SUPERREAP.md](../research/00_PESQUISA_SUPERREAP.md)).
 - **Legion Breaker** (mesmo nicho): demo de 30–60 min com 3 chefes pequenos, para dar ritmo de marcos.
 
 **Chefe do estágio 1 (GDD §10): o Caixão Fujão.** Caixão 2×2 com barra de vida; a cada 4 s afunda e reaparece em outro lugar (o jogador o persegue com a pá). Derrotado: Chave da Cripta (abre o estágio 2), Almas e a liberação dos nós do estágio seguinte.

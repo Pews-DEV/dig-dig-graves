@@ -1,7 +1,7 @@
 # Dig Dig Graves — Game Design Document
 
 > **Versão 2.0** · 27/10/2026 · Engine: Godot 4.7 (GL Compatibility) · Status: produção do v1.0 em marcos jogáveis
-> Documentos irmãos: [02_DIRECAO_DE_ARTE.md](02_DIRECAO_DE_ARTE.md) (visual), [03_UI_UX.md](03_UI_UX.md) (interface, animação e som), [06_PLANO_V1.md](06_PLANO_V1.md) (plano de produção em pacotes), [07_HISTORIA.md](07_HISTORIA.md) (tratamento narrativo), [05_DECISOES_PENDENTES.md](05_DECISOES_PENDENTES.md) (D0–D12, aprovadas e incorporadas aqui) e [04_REVISAO_E_ROADMAP.md](04_REVISAO_E_ROADMAP.md) (análise que originou esta versão; superada por esta onde houver conflito).
+> Documentos irmãos: [02_DIRECAO_DE_ARTE.md](../design/02_DIRECAO_DE_ARTE.md) (visual), [03_UI_UX.md](../design/03_UI_UX.md) (interface, animação e som), [06_PLANO_V1.md](../planning/06_PLANO_V1.md) (plano de produção em pacotes), [07_HISTORIA.md](../narrative/07_HISTORIA.md) (tratamento narrativo), [05_DECISOES_PENDENTES.md](../decisions/05_DECISOES_PENDENTES.md) (D0–D12, aprovadas e incorporadas aqui) e [04_REVISAO_E_ROADMAP.md](../review/04_REVISAO_E_ROADMAP.md) (análise que originou esta versão; superada por esta onde houver conflito).
 > Todos os números são **valores de balanceamento prontos para `.tres`**, calibrados por simulação (§14). O formato das fórmulas é decisão de design; os coeficientes se ajustam em playtest.
 
 **Changelog 2.0 (em relação à 1.1)**
@@ -125,7 +125,7 @@ O antigo coveiro, Seu Damião, sumiu. Sem covas, as almas formam uma **fila** na
 | Ajudantes | Toupeira Tita, Gato Breu, Cão Ossinho, Morcegos Gêmeos (§9) | B–D | Mascotes |
 
 ### 3.4 Narrativa em pílulas
-Sem cutscenes longas: **balões de 1–4 falas** com retrato 48×48 (UI/UX §14). ~80 falas no total, em `DialogueData` (§18.3). Gatilhos: 1º turno, 1ª cova, 1º nó, 1ª Inquietação cheia de cada estágio, início e vitória de cada Noite do Chefe, 1ª entrada em cada estágio, 1ª visita ao Mascate, N02, final. O arco, os motivos recorrentes e a orientação de voz estão em [07_HISTORIA.md](07_HISTORIA.md); divergência de mecânica ou escopo é resolvida por este GDD.
+Sem cutscenes longas: **balões de 1–4 falas** com retrato 48×48 (UI/UX §14). ~80 falas no total, em `DialogueData` (§18.3). Gatilhos: 1º turno, 1ª cova, 1º nó, 1ª Inquietação cheia de cada estágio, início e vitória de cada Noite do Chefe, 1ª entrada em cada estágio, 1ª visita ao Mascate, N02, final. O arco, os motivos recorrentes e a orientação de voz estão em [07_HISTORIA.md](../narrative/07_HISTORIA.md); divergência de mecânica ou escopo é resolvida por este GDD.
 
 ## 4. Mecânica principal: o Turno da Noite
 
@@ -700,7 +700,7 @@ Duração por estágio: **40,3** · 45 · 50 · 42 · 51 min. Renda por noite (s
 
 ## 15. Telas, fluxo e UI
 
-Fonte da verdade: [03_UI_UX.md](03_UI_UX.md) §10–§20. Resumo do fluxo do v1.0:
+Fonte da verdade: [03_UI_UX.md](../design/03_UI_UX.md) §10–§20. Resumo do fluxo do v1.0:
 ```
 Título ─Novo Jogo─► 1º TURNO ─► Resumo ─► ÁRVORE/HUB (superfície + raízes)
    └─Continuar──────────────────────────► ÁRVORE/HUB
@@ -793,7 +793,7 @@ Configuração da v1.1 mantida (640×360, integer, Nearest, snap). Campo desenha
 
 ## 19. Marcos jogáveis e escopo
 
-Cada marco é um **build completo**: do título ao fim do capítulo, sem placeholder visível no que entra, sem crash, save compatível com o marco anterior. Dentro de cada marco o trabalho corre em **ondas** (W1 código de regras → W2 conteúdo/estágio → W3 meta → W4 noite → W5 polimento), detalhadas em [06_PLANO_V1.md](06_PLANO_V1.md).
+Cada marco é um **build completo**: do título ao fim do capítulo, sem placeholder visível no que entra, sem crash, save compatível com o marco anterior. Dentro de cada marco o trabalho corre em **ondas** (W1 código de regras → W2 conteúdo/estágio → W3 meta → W4 noite → W5 polimento), detalhadas em [06_PLANO_V1.md](../planning/06_PLANO_V1.md).
 
 ### 19.1 Marco A · "Capítulo 1: O Cemitério da Paróquia" (~40–60 min)
 - **Conteúdo:** título → estágio 1 com a economia nova (§4.3–4.7, D1–D3, D10); árvore de **44 nós** (todos os A), com **EX e LX** (Raízes-mestras em Almas), encruzilhada E12, **Pisão**, **Cava-Funda**, Ossada; lápides com efeito (3 tipos), velas, moeda de ouro, alminhas; Ficha do Coveiro; câmera nova da Árvore (atalhos, Centralizar, minimapa); Inquietação → **Enfrentar o Caixão Fujão** (ação na estação Próxima Noite do Pátio) → Noite do Chefe → vitória → diálogo com retrato (Dona Ceifa, Tião) → Resumo especial → **"Fim do Capítulo 1"** com Créditos e Continuar cavando; pausa com Abandonar/Voltar ao título; auto-pisão; save v2 com migração.

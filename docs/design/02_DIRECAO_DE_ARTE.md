@@ -1,6 +1,6 @@
 # Dig Dig Graves — Direção de Arte
 
-> Versão 1.1 · 27/10/2026 (§13: assets do v1.0) · Complementa o [01_GDD.md](01_GDD.md).
+> Versão 1.1 · 27/10/2026 (§13: assets do v1.0) · Complementa o [01_GDD.md](../core/01_GDD.md).
 > Este documento é a **fonte da verdade** para qualquer ilustração do jogo, feita à mão ou via ferramentas (Aseprite/MCP). Se um asset contradiz este documento, quem está errado é o asset.
 > Paleta em arquivo: [palette/lua-de-cova-32.gpl](palette/lua-de-cova-32.gpl) (abre no Aseprite e no GIMP) e [palette/lua-de-cova-32.hex](palette/lua-de-cova-32.hex).
 
@@ -356,7 +356,7 @@ Formas lisas em 05/07/15/13 para os 4 estágios do tile, losango da área desenh
 
 ## 13. Assets do v1.0 (GDD 2.0)
 
-> Acrescentado em 27/10/2026 com o GDD 2.0. Substitui a lista do §12 para o jogo completo; o §12 fica como histórico do M0/M1. Paleta fechada e regras dos §2–§11 valem para tudo. A letra [A]–[D] é o marco jogável em que o asset precisa estar pronto (GDD §19; plano em [06_PLANO_V1.md](06_PLANO_V1.md)). Ids já no `assets/MANIFEST.md` estão marcados com ✔.
+> Acrescentado em 27/10/2026 com o GDD 2.0. Substitui a lista do §12 para o jogo completo; o §12 fica como histórico do M0/M1. Paleta fechada e regras dos §2–§11 valem para tudo. A letra [A]–[D] é o marco jogável em que o asset precisa estar pronto (GDD §19; plano em [06_PLANO_V1.md](../planning/06_PLANO_V1.md)). Ids já no `assets/MANIFEST.md` estão marcados com ✔.
 
 ### 13.1 Kit por estágio
 Todo estágio repete o **mesmo contrato de atlas** do estágio 1/2 (layout de colunas, pivôs e `_lit`), para o código só trocar caminhos no `StageData`.

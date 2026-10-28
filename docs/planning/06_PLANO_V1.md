@@ -1,6 +1,6 @@
 # Dig Dig Graves — Plano de produção do v1.0
 
-> Versão 1.0 · 27/10/2026 · Implementa o [01_GDD.md](01_GDD.md) **2.0**, a [03_UI_UX.md](03_UI_UX.md) Parte 2 (§10–§20) e a [02_DIRECAO_DE_ARTE.md](02_DIRECAO_DE_ARTE.md) §13. Onde este plano e o [04_REVISAO_E_ROADMAP.md](04_REVISAO_E_ROADMAP.md) divergirem, vale este plano.
+> Versão 1.0 · 27/10/2026 · Implementa o [01_GDD.md](../core/01_GDD.md) **2.0**, a [03_UI_UX.md](../design/03_UI_UX.md) Parte 2 (§10–§20) e a [02_DIRECAO_DE_ARTE.md](../design/02_DIRECAO_DE_ARTE.md) §13. Onde este plano e o [04_REVISAO_E_ROADMAP.md](../review/04_REVISAO_E_ROADMAP.md) divergirem, vale este plano.
 > Quem edita este documento é o orquestrador. Os agentes leem o pacote deles, as seções citadas da spec e o manifesto.
 
 ---

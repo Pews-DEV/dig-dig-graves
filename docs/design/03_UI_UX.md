@@ -1,6 +1,6 @@
 # Dig Dig Graves — UI, UX e Animação
 
-> Versão 2.0 · 27/10/2026 (Parte 2: telas do v1.0, §10–§20) · Complementa o [01_GDD.md](01_GDD.md) (§15–16) e a [02_DIRECAO_DE_ARTE.md](02_DIRECAO_DE_ARTE.md) (§9–10).
+> Versão 2.0 · 27/10/2026 (Parte 2: telas do v1.0, §10–§20) · Complementa o [01_GDD.md](../core/01_GDD.md) (§15–16) e a [02_DIRECAO_DE_ARTE.md](02_DIRECAO_DE_ARTE.md) (§9–10).
 > Motivo: o primeiro build jogável tinha texto ilegível, HUD solto no vazio, cena sem ambientação e nenhuma animação de interface. Este documento é a fonte da verdade para **como a interface se parece, se move e soa**. Nada na tela fica parado sem motivo.
 
 ---
@@ -229,7 +229,7 @@ Reaproveitados: `fogo_fatuo` (cursor do menu), `fx_tree_petals` (pétalas), `fx_
 
 # Parte 2 · Telas do v1.0 (GDD 2.0)
 
-> Acrescentado em 27/10/2026 junto com o GDD 2.0. Vale tudo da Parte 1 (§1–§9): fontes, kit de madeira/pergaminho/pedra, catálogo de juice (§6), cortina de terra, "reduzir movimento"/"reduzir flashes". Ids de som citados estão no `assets/AUDIO_MANIFEST.md` ou na lista de ids novos do [06_PLANO_V1.md](06_PLANO_V1.md) §8 (marcados com \*). Ids de arte novos: DA §13. A letra entre colchetes diz em que marco a tela entra: [A], [B], [C], [D].
+> Acrescentado em 27/10/2026 junto com o GDD 2.0. Vale tudo da Parte 1 (§1–§9): fontes, kit de madeira/pergaminho/pedra, catálogo de juice (§6), cortina de terra, "reduzir movimento"/"reduzir flashes". Ids de som citados estão no `assets/AUDIO_MANIFEST.md` ou na lista de ids novos do [06_PLANO_V1.md](../planning/06_PLANO_V1.md) §8 (marcados com \*). Ids de arte novos: DA §13. A letra entre colchetes diz em que marco a tela entra: [A], [B], [C], [D].
 
 ## 10. Pátio de navegação na superfície da Árvore [A estrutura · B construções]
 

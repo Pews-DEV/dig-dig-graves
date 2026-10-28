@@ -1,6 +1,6 @@
 # Roteiro de playtest — Marco A
 
-Use uma cópia limpa do jogo por participante. Não explique as mecânicas durante a sessão; observe e anote. O teste cobre os gates de `01_GDD.md §19.1` e `06_PLANO_V1.md §3`.
+Use uma cópia limpa do jogo por participante. Não explique as mecânicas durante a sessão; observe e anote. O teste cobre os gates de `../core/01_GDD.md §19.1` e `../planning/06_PLANO_V1.md §3`.
 
 ## Preparação
 
