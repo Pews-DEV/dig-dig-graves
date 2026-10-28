@@ -37,6 +37,11 @@ func _ready() -> void:
 	field_view.position = Vector2.ZERO
 	field_view.setup(state.field, Game.area)
 	field_view.frame_in(Hud.FREE_TOP, Hud.FREE_BOTTOM)
+	var center_cell := Vector2i(state.field.size >> 1, state.field.size >> 1)
+	var center_viewport := field_view.content.get_global_transform_with_canvas() * field_view.cell_center(center_cell)
+	get_viewport().warp_mouse(center_viewport)
+	field_view.cursor.position = field_view.cell_center(center_cell)
+	front_fx.front = true
 	var block_bottom := field_view.content.position.y + field_view.block.base_y(field_view.block.split_x)
 	front_fx.fog_y = [block_bottom - 32.0, block_bottom - 6.0]
 	field_view.attach_run(state)
