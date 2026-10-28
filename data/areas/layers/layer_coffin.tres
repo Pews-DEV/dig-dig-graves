@@ -1,15 +1,11 @@
-[gd_resource type="Resource" script_class="LayerData" format=3]
+[gd_resource type="Resource" script_class="LayerData" format=3 uid="uid://d3okb613buub1"]
 
-[ext_resource type="Script" path="res://data/types/layer_data.gd" id="1_layer"]
+[ext_resource type="Script" uid="uid://dhfiq3digftqh" path="res://data/types/layer_data.gd" id="1_layer"]
 
 [resource]
 script = ExtResource("1_layer")
 id = &"coffin"
 display_name = "Caixão"
-hp = 1.0
-copper = 0.0
-xp = 0.0
-bone_chance = 0.0
 stage_column = 3
 particle_colors = PackedInt32Array(20, 19, 18)
 sfx_key = &"dig_coffin"

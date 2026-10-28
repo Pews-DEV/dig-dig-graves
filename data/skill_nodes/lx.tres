@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://br3di3rgglx0h"]
+
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+stat = &"oil_max"
+value = 8.0
+
+[sub_resource type="Resource" id="StatModifier_1"]
+script = ExtResource("2_mod")
+stat = &"constellation"
+value = 1.0
+
+[resource]
+script = ExtResource("1_node")
+id = &"LX"
+display_name = "Lua que Não se Põe"
+description = "+8 s de óleo e Constelação: pegar 3 fogos-fátuos em menos de 6 s para o óleo por 8 s"
+branch = 2
+kind = &"M"
+base_cost = 1500.0
+cost_growth = 3.0
+currency = &"souls"
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0"), SubResource("StatModifier_1")])
+requires = Array[Dictionary]([{
+"id": &"L08",
+"level": 5
+}, {
+"id": &"L09",
+"level": 3
+}, {
+"id": &"L10",
+"level": 3
+}])
+flags = Array[StringName]([&"constellation"])
+grid = Vector2i(-5, 6)
+tree_position = Vector2(528, 624)
+icon_cell = Vector2i(0, 3)

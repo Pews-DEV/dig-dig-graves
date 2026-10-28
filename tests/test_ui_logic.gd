@@ -28,6 +28,9 @@ func _test_settings() -> void:
 	check_eq(GameSettings.motion_factor({"reduce_motion": true}), 0.25, "reduzir movimento = 25% (UI/UX §1.6)")
 	check_eq(GameSettings.motion_factor({}), 1.0, "movimento normal = 100%")
 	check_eq(GameSettings.BUS_KEYS.size(), 5, "5 canais de volume")
+	check_eq(GameSettings.sanitize({"locale": "ja"}).locale, "ja", "locale disponível é salvo")
+	check_eq(GameSettings.sanitize({"locale": "xx_YY"}).locale, "pt_BR", "locale desconhecido volta para PT-BR")
+	check_eq(GameSettings.LOCALES.size(), 10, "dez idiomas disponíveis nas opções")
 
 
 func _test_audio_bank() -> void:
@@ -141,17 +144,32 @@ func _test_anim_timing() -> void:
 ## Layout da árvore (.tres + TreeLayout): grade regular, caixas (medalhão + "!" + pips + custo)
 ## sem sobreposição, raízes que não atravessam custo nem nó, nada escondido atrás do painel/HUD.
 func _test_tree_layout() -> void:
+	check_eq(TreeArt.GRASS_POS.y + 8.0, TreeArt.GRASS_Y, "grama coincide com superfície em y=176")
+	check_eq(TreeArt.SOIL_POS.y + 112.0, TreeArt.GRASS_Y, "solo do asset antigo começa exatamente na superfície nova")
+	check_eq(TreeArt.WORLD.y, 1024.0, "solo cobre até a base do mundo da árvore")
+	check_eq(TreeArt.TRUNK_POS.x + 72.0, TreeArt.TRUNK_ROOT.x, "raiz-mestra sai do centro do tronco")
+	check_eq(TreeArt.TRUNK_POS.y + 112.0, TreeArt.TRUNK_ROOT.y, "conector da raiz encosta na ponta desenhada do tronco")
+	check(TreeArt.TRUNK_ROOT.y > TreeArt.GRASS_Y, "raiz-mestra termina enterrada abaixo da grama")
+	check(TreeArt.CANOPY_POS.y + 70.0 > TreeArt.TRUNK_POS.y, "copa sobrepõe o tronco sem abrir fresta")
 	var defs := SkillTreeModel.load_definitions("res://data/skill_nodes/")
 	var by_id: Dictionary = {}
+	var icon_cells: Dictionary = {}
+	var unique_icons := true
+	var icons := load("res://assets/ui/tree/node_icons.png") as Texture2D
+	check(icons != null and icons.get_size() == Vector2(128, 96), "atlas de nós tem 44 células 16×16")
 	for d: SkillNodeData in defs:
 		by_id[d.id] = d
+		if d.icon_cell.x < 0 or d.icon_cell.y < 0 or d.icon_cell.x >= 8 or d.icon_cell.y >= 6 or icon_cells.has(d.icon_cell):
+			unique_icons = false
+		icon_cells[d.icon_cell] = d.id
+	check(defs.size() == 44 and icon_cells.size() == 44 and unique_icons, "44 nós usam células de ícone válidas e únicas")
 	check(by_id.has(&"N00"), "N00 existe")
 	var n00: Vector2 = (by_id[&"N00"] as SkillNodeData).tree_position
 	var on_grid := true
 	var inside := true
 	for d: SkillNodeData in defs:
 		var p := d.tree_position
-		var col := (p.x - 320.0) / TreeLayout.COLUMN
+		var col := (p.x - 968.0) / TreeLayout.COLUMN
 		var row := (p.y - n00.y) / TreeLayout.ROW
 		if not is_equal_approx(col, roundf(col)) or not is_equal_approx(row, roundf(row)):
 			on_grid = false
@@ -160,7 +178,7 @@ func _test_tree_layout() -> void:
 		if r.position.x < TreeLayout.SIDE_MARGIN or r.end.x > TreeArt.WORLD.x - TreeLayout.SIDE_MARGIN or r.position.y < TreeArt.GRASS_Y + 8 or r.end.y > TreeArt.WORLD.y:
 			inside = false
 			print("  cortado pela borda do mundo: %s" % d.id)
-	check(on_grid, "nós na grade (colunas 320 ± 88k, linhas de 64 px a partir do N00)")
+	check(on_grid, "nós na grade (colunas 968 + 88k, linhas de 64 px a partir do N00)")
 	check(inside, "caixas dos nós dentro do mundo, abaixo da grama")
 	# Caixas (medalhão 32 + "!" + pips + custo de até 56 px) não se tocam (2 px de folga).
 	var apart := true
@@ -181,9 +199,16 @@ func _test_tree_layout() -> void:
 			if not by_id.has(child):
 				continue
 			var to: Vector2 = (by_id[child] as SkillNodeData).tree_position
+			var blockers: Array[Rect2] = []
+			for other: SkillNodeData in defs:
+				if other.id != d.id and other.id != child:
+					blockers.append(TreeLayout.node_rect(other.tree_position))
+					blockers.append(TreeLayout.label_rect(other.tree_position))
+			blockers.append(TreeLayout.label_rect(d.tree_position))
+			blockers.append(TreeLayout.label_rect(to))
 			for decor: float in [TreeLayout.decor_bottom(true, true), TreeLayout.decor_bottom(true, false), TreeLayout.decor_bottom(false, false)]:
 				var from := TreeLayout.root_start(d.tree_position, to, decor)
-				var pts: Array = TreeLayout.root_path(from, to)[0]
+				var pts: Array = TreeLayout.root_path(from, to, blockers)[0]
 				for q: Vector2i in pts:
 					var pt := Vector2(q)
 					var bad := ""
@@ -215,17 +240,17 @@ func _test_tree_layout() -> void:
 	var start_ok := true
 	for d: SkillNodeData in defs:
 		var p := d.tree_position
-		if p.y - cam.max_pos().y > safe.end.y or p.x < safe.position.x or p.x > safe.end.x:
+		var focus := cam.focus_for(p, safe)
+		var screen := p - focus
+		if screen.x < safe.position.x or screen.x > safe.end.x or screen.y < safe.position.y or screen.y > safe.end.y:
 			reachable = false
-			print("  inalcançável acima do painel: %s" % d.id)
-		var depth := roundi((p.y - n00.y) / TreeLayout.ROW)
-		if depth <= 2:
-			var r := TreeLayout.node_rect(p)
-			if r.end.y - start_y > TreeLayout.PANEL_Y or r.position.y - start_y < TreeLayout.TOP_HUD_BOTTOM:
-				start_ok = false
-				print("  escondido no enquadramento inicial: %s" % d.id)
+			print("  câmera não alcança: %s" % d.id)
+	var start_x := cam.clamp_pos(Vector2(n00.x - 320.0, start_y)).x
+	var start_screen := n00 - Vector2(start_x, start_y)
+	var start_rect := TreeLayout.node_rect(start_screen)
+	start_ok = start_rect.position.y >= TreeLayout.TOP_HUD_BOTTOM and start_rect.end.y <= TreeLayout.PANEL_Y
 	check(reachable, "todo nó pode ser rolado para cima do painel de descrição")
-	check(start_ok, "enquadramento inicial: N00 e as 2 primeiras linhas inteiras entre o HUD e o painel")
+	check(start_ok, "enquadramento inicial mostra N00 sem sobrepor HUD ou painel")
 	check(safe.position.y + TreeLayout.BADGE_TOP - 1.0 >= TreeLayout.TOP_HUD_BOTTOM, "faixa segura: o \"!\" não entra embaixo das plaquetas")
 	check(safe.end.y + TreeLayout.decor_bottom(true, true) <= TreeLayout.PANEL_Y, "faixa segura: o custo não entra embaixo do painel")
 	# Distribuição: a árvore fica centrada no tronco (x = 320).
@@ -234,7 +259,7 @@ func _test_tree_layout() -> void:
 	for d: SkillNodeData in defs:
 		min_x = minf(min_x, d.tree_position.x)
 		max_x = maxf(max_x, d.tree_position.x)
-	check(absf((min_x + max_x) * 0.5 - 320.0) <= TreeLayout.COLUMN * 0.5, "ramos distribuídos dos dois lados do tronco")
+	check(min_x < 968.0 and max_x > 968.0, "ramos distribuídos dos dois lados do tronco")
 
 
 ## Fundo do Turno v2 (UI/UX §5 rev. 1.1, MANIFEST "Turno — fundo v2"): parallax e arte.

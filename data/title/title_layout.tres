@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="TitleLayoutData" format=3]
+[gd_resource type="Resource" script_class="TitleLayoutData" format=3 uid="uid://b1oas0u1kplnn"]
 
-[ext_resource type="Script" path="res://data/types/title_layout_data.gd" id="1_title"]
+[ext_resource type="Script" uid="uid://bpgaf1ltu033m" path="res://data/types/title_layout_data.gd" id="1_title"]
 
 [resource]
 script = ExtResource("1_title")
+soul_path = null

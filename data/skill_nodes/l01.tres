@@ -1,23 +1,28 @@
-[gd_resource type="Resource" script_class="SkillNodeData" format=3]
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://c6mwscw7h8wix"]
 
-[ext_resource type="Script" path="res://data/types/stat_modifier.gd" id="1_fej1y"]
-[ext_resource type="Script" path="res://data/types/skill_node_data.gd" id="2_ebw5c"]
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
 
-[sub_resource type="Resource" id="Resource_y7w4f"]
-script = ExtResource("1_fej1y")
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
 stat = &"oil_max"
-value = 3.0
+value = 2.0
 
 [resource]
-script = ExtResource("2_ebw5c")
+script = ExtResource("1_node")
 id = &"L01"
 display_name = "Pavio Longo"
-description = "+3 s de óleo por nível."
+description = "+2 s de óleo"
 branch = 2
 max_level = 10
-base_cost = 15.0
-cost_growth = 1.5
-modifiers_per_level = Array[ExtResource("1_fej1y")]([SubResource("Resource_y7w4f")])
-children = Array[StringName]([&"C02"])
-tree_position = Vector2(320, 240)
+base_cost = 8.0
+cost_growth = 1.42
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+children = Array[StringName]([&"L02", &"L04"])
+requires = Array[Dictionary]([{
+"id": &"N00",
+"level": 1
+}])
+grid = Vector2i(-5, 1)
+tree_position = Vector2(528, 304)
 icon_cell = Vector2i(1, 1)

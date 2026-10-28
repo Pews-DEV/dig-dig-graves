@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3 uid="uid://pplew5jya6u1"]
+
+[ext_resource type="Script" uid="uid://dv65slcj4sifl" path="res://data/types/dialogue_data.gd" id="1_dialogue"]
+
+[resource]
+script = ExtResource("1_dialogue")
+id = &"unrest_full"
+lines = Array[Dictionary]([{
+"name": "Dona Ceifa",
+"speaker": &"ceifa",
+"text": "A terra está tremendo. O Caixão Fujão despertou lá embaixo."
+}, {
+"name": "Tião",
+"speaker": &"tiao",
+"text": "Quando estiver pronto, aperte Enfrentar. A gente espera aqui."
+}])

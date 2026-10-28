@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="BossData" format=3 uid="uid://b7vrvt6dsaeqm"]
+
+[ext_resource type="Script" uid="uid://fb1582dkurvg" path="res://data/types/boss_data.gd" id="1_boss"]
+
+[resource]
+script = ExtResource("1_boss")
+id = &"caixao_fujao"
+display_name = "O Caixão Fujão"

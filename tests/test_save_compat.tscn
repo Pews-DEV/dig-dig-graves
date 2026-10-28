@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b3fscvh85832j"]
+
+[ext_resource type="Script" uid="uid://cm7jtqwqy44l4" path="res://tests/test_save_compat.gd" id="1_compat"]
+
+[node name="SaveCompatTest" type="Node" unique_id=533905277]
+script = ExtResource("1_compat")

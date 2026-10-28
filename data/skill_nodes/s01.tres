@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://bg6lmlklrasqh"]
+
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+stat = &"all_mult"
+value = 0.05
+
+[resource]
+script = ExtResource("1_node")
+id = &"S01"
+display_name = "Descanso Eterno"
+description = "+5% de Cobre, Ossos e Almas"
+branch = 6
+max_level = 10
+base_cost = 3.0
+cost_growth = 1.6
+currency = &"souls"
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+children = Array[StringName]([&"S04", &"S07"])
+requires = Array[Dictionary]([{
+"id": &"N00",
+"level": 1
+}])
+reveal_trigger = &"first_soul"
+grid = Vector2i(-2, 1)
+tree_position = Vector2(792, 304)
+icon_cell = Vector2i(7, 2)

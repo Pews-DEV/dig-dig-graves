@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://bxnuy7wiyfcd4"]
+
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+stat = &"gold_coin"
+value = 1.0
+
+[resource]
+script = ExtResource("1_node")
+id = &"F09"
+display_name = "Moeda de Ouro"
+description = "Uma moeda dourada pula no campo (a cada 20 s, −3 s por nível); tocar = +5% do Cobre do turno"
+branch = 3
+kind = &"D"
+max_level = 3
+base_cost = 900.0
+cost_growth = 2.0
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+requires = Array[Dictionary]([{
+"id": &"F01",
+"level": 2
+}])
+flags = Array[StringName]([&"gold_coin"])
+grid = Vector2i(3, 2)
+tree_position = Vector2(1232, 368)
+icon_cell = Vector2i(7, 4)

@@ -1,24 +1,29 @@
-[gd_resource type="Resource" script_class="SkillNodeData" format=3]
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://cndbt3gd37p38"]
 
-[ext_resource type="Script" path="res://data/types/stat_modifier.gd" id="1_4hxef"]
-[ext_resource type="Script" path="res://data/types/skill_node_data.gd" id="2_8xyin"]
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
 
-[sub_resource type="Resource" id="Resource_ht8ic"]
-script = ExtResource("1_4hxef")
-stat = &"regen_time"
-op = 1
-value = 0.88
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+stat = &"grave_count"
+value = 1.0
 
 [resource]
-script = ExtResource("2_8xyin")
+script = ExtResource("1_node")
 id = &"C02"
-display_name = "Terra Fofa"
-description = "−12% no tempo de regeneração por nível."
+display_name = "Mais Covas"
+description = "+1 cova simultânea"
 branch = 4
-max_level = 6
-base_cost = 60.0
-cost_growth = 1.6
-modifiers_per_level = Array[ExtResource("1_4hxef")]([SubResource("Resource_ht8ic")])
-children = Array[StringName]([&"C03"])
-tree_position = Vector2(320, 304)
+max_level = 3
+base_cost = 20.0
+cost_growth = 4.0
+currency = &"bones"
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+children = Array[StringName]([&"C04", &"C10"])
+requires = Array[Dictionary]([{
+"id": &"C01",
+"level": 1
+}])
+grid = Vector2i(4, 2)
+tree_position = Vector2(1320, 368)
 icon_cell = Vector2i(2, 2)

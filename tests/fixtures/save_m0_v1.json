@@ -1,0 +1,39 @@
+{
+	"version": 1,
+	"currencies": {
+		"copper": 20.0,
+		"bones": 4.0,
+		"souls": 0.0
+	},
+	"tree": {
+		"E01": 2,
+		"E03": 2
+	},
+	"progress": {
+		"turns_played": 8,
+		"area": 1,
+		"stage_unlocked": 1,
+		"unrest": {
+			"1": 0.8
+		},
+		"seen_nodes": ["E01", "E03"],
+		"boss_1_won": false,
+		"boss_1_attempts": 1,
+		"chapter_1_end_seen": false,
+		"dialogue_seen": ["first_dig"]
+	},
+	"settings": {
+		"vol_music": 0.42,
+		"auto_stomp": true,
+		"locale": "en",
+		"reduce_motion": true
+	},
+	"telemetry": [
+		{
+			"duration": 18.5,
+			"copper": 24,
+			"graves_opened": 1,
+			"nodes_bought": ["E01"]
+		}
+	]
+}

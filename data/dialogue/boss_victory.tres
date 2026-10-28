@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3 uid="uid://dae0fyw805ffr"]
+
+[ext_resource type="Script" uid="uid://dv65slcj4sifl" path="res://data/types/dialogue_data.gd" id="1_dialogue"]
+
+[resource]
+script = ExtResource("1_dialogue")
+id = &"boss_victory"
+lines = Array[Dictionary]([{
+"name": "Tião",
+"speaker": &"tiao",
+"text": "Ele parou! E deixou uma chave antiga no lugar."
+}, {
+"name": "Dona Ceifa",
+"speaker": &"ceifa",
+"text": "A Chave da Cripta abre o caminho para outro campo. O cemitério já respira melhor."
+}, {
+"name": "Coveiro",
+"speaker": &"coveiro",
+"text": "E ainda temos muito chão pela frente."
+}])

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://wtxk164a2oai"]
+
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+stat = &"ossuary_layer"
+value = 1.0
+
+[resource]
+script = ExtResource("1_node")
+id = &"C08"
+display_name = "Cova Funda"
+description = "Nova camada Ossada no fundo de todos os tiles (14 HP, 42 Cobre, 15% de Osso)"
+branch = 4
+kind = &"D"
+base_cost = 1200.0
+currency = &"bones"
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+requires = Array[Dictionary]([{
+"id": &"C04",
+"level": 2
+}])
+flags = Array[StringName]([&"ossuary_layer"])
+grid = Vector2i(4, 4)
+tree_position = Vector2(1320, 496)
+icon_cell = Vector2i(2, 5)

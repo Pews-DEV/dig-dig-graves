@@ -8,6 +8,9 @@ enum Branch { CENTER, DIG, LANTERN, FORTUNE, CEMETERY, HELPERS, SOULS, LUNAR }
 @export var display_name: String
 @export_multiline var description: String
 @export var branch: Branch = Branch.CENTER
+## GDD §6.2: moldura e regras semânticas do nó.
+@export var kind: StringName = &"P"
+@export var exclusive_group: StringName = &""
 @export var max_level: int = 1
 ## GDD §6.2: custo(nível) = base × crescimento^nível, arredondado para cima.
 @export var base_cost: float = 0.0
@@ -19,6 +22,14 @@ enum Branch { CENTER, DIG, LANTERN, FORTUNE, CEMETERY, HELPERS, SOULS, LUNAR }
 @export var unlock_flags: Array[StringName] = []
 ## Nós revelados quando este é comprado (topologia da árvore).
 @export var children: Array[StringName] = []
+## Pré-requisitos com nível mínimo: [{"id": &"E01", "level": 2}].
+@export var requires: Array[Dictionary] = []
+## Alternativas de pré-requisito (basta possuir um dos ids).
+@export var requires_any: Array[StringName] = []
+@export var reveal_trigger: StringName = &""
+@export var flags: Array[StringName] = []
+@export var grid: Vector2i = Vector2i.ZERO
+@export var required_stage: int = 1
 ## Centro do medalhão no mundo da Árvore (640×720, grama em y = 112). Grade de TreeLayout:
 ## colunas 320 ± 88k, linhas de 64 px a partir do N00 (y = 176).
 @export var tree_position: Vector2 = Vector2.ZERO

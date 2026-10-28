@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3 uid="uid://7grp66jjofgj"]
+
+[ext_resource type="Script" uid="uid://dv65slcj4sifl" path="res://data/types/dialogue_data.gd" id="1_dialogue"]
+
+[resource]
+script = ExtResource("1_dialogue")
+id = &"boss_intro"
+lines = Array[Dictionary]([{
+"name": "Dona Ceifa",
+"speaker": &"ceifa",
+"text": "A terra chamou o Caixão Fujão. Ele não vai ficar quieto por muito tempo."
+}, {
+"name": "Coveiro",
+"speaker": &"coveiro",
+"text": "Então vou precisar acertar enquanto ele aparece."
+}, {
+"name": "Dona Ceifa",
+"speaker": &"ceifa",
+"text": "Isso mesmo. Acerte o caixão e cuide do óleo da lanterna."
+}])

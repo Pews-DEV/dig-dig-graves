@@ -1,17 +1,18 @@
 class_name TreeArt
 extends RefCounted
-## Arte da Árvore aconchegante (MANIFEST tree_* / fx_tree_*). Mundo de 640×720, grama em y = 112.
+## Arte da Árvore aconchegante (MANIFEST tree_* / fx_tree_*). Mundo de 1936×1024.
 ## Cada textura vem do manifesto; ausente = null e quem desenha usa o placeholder.
 
 const DIR := "res://assets/ui/tree/"
-const WORLD := Vector2(640, 720)
-const GRASS_Y := 112
-const TRUNK_ROOT := Vector2(320, 148)  # MANIFEST tree_trunk: raiz-mestra que liga ao N00
+const WORLD := Vector2(1936, 1024)
+const GRASS_Y := 176
+const TRUNK_ROOT := Vector2(968, 212)  # ponta central do tronco, ligada ao N00
+const SOIL_POS := Vector2(0, 64)  # asset antigo começa a desenhar o solo na linha y=112.
 const SKY_PARALLAX := 0.5
-const CANOPY_POS := Vector2(112, 0)
+const CANOPY_POS := Vector2(760, 64)
 const CANOPY_FRAME := Vector2(416, 100)
-const TRUNK_POS := Vector2(248, 36)
-const GRASS_POS := Vector2(0, 104)
+const TRUNK_POS := Vector2(896, 100)
+const GRASS_POS := Vector2(0, 168)
 
 static var _cache: Dictionary = {}
 

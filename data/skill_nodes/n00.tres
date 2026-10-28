@@ -1,14 +1,15 @@
-[gd_resource type="Resource" script_class="SkillNodeData" format=3]
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://bc2ig5hnxfpqc"]
 
-[ext_resource type="Script" path="res://data/types/stat_modifier.gd" id="1_bl5dw"]
-[ext_resource type="Script" path="res://data/types/skill_node_data.gd" id="2_82o5a"]
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
 
 [resource]
-script = ExtResource("2_82o5a")
+script = ExtResource("1_node")
 id = &"N00"
 display_name = "Pá Velha"
-description = "Início. Libera os 3 primeiros nós."
-children = Array[StringName]([&"E01", &"L01", &"F01"])
-tree_position = Vector2(320, 176)
-starts_owned = true
+description = "Início. Revela E01, L01, F01 e C01"
+kind = &""
+children = Array[StringName]([&"N01", &"E01", &"L01", &"S01", &"F01", &"C01"])
+tree_position = Vector2(968, 240)
 icon_cell = Vector2i(0, 0)
+starts_owned = true

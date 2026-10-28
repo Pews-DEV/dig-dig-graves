@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3 uid="uid://lvrynvixmh0j"]
+
+[ext_resource type="Script" uid="uid://dv65slcj4sifl" path="res://data/types/dialogue_data.gd" id="1_dialogue"]
+
+[resource]
+script = ExtResource("1_dialogue")
+id = &"chapter_end"
+lines = Array[Dictionary]([{
+"name": "Dona Ceifa",
+"speaker": &"ceifa",
+"text": "O primeiro campo está em paz. Obrigada por cuidar destas covas."
+}, {
+"name": "Coveiro",
+"speaker": &"coveiro",
+"text": "Vou continuar cavando. Ainda há raízes que precisam de mim."
+}])

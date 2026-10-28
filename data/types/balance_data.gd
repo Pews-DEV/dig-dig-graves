@@ -7,26 +7,63 @@ extends Resource
 	&"damage": 1.0,
 	&"pulse_interval": 1.0,
 	&"radius": 1.0,
+	&"area_step": 0.0,
+	&"excess_carries": 0.0,
+	&"stomp_enabled": 0.0,
+	&"stomp_cd": 8.0,
+	&"stomp_mult": 4.0,
+	&"stomp_auto": 0.0,
+	&"stomp_ring": 0.0,
+	&"deep_mult": 1.0,
+	&"double_hit": 0.0,
+	&"all_mult": 1.0,
+	&"soul_mult": 1.0,
+	&"oil_burn": 1.0,
+	&"oil_per_grave": 0.0,
+	&"oil_grave_cap": 0.0,
+	&"wisp_rate": 1.0,
+	&"wisp_life": 5.0,
+	&"grave_reward": 1.0,
+	&"grave_interest": 0.0,
+	&"inheritance": 0.0,
+	&"unrest_mult": 1.0,
+	&"second_wind": 0.0,
+	&"constellation": 0.0,
+	&"candles": 0.0,
+	&"gold_coin": 0.0,
+	&"wanderers": 0.0,
+	&"boss_damage": 1.0,
 	&"crit_chance": 0.0,
 	&"crit_mult": 2.0,
 	&"oil_max": 15.0,
 	&"copper_mult": 1.0,
 	&"bone_chance": 0.0,
-	&"regen_time": 25.0,
-	&"field_size": 12.0,
+	&"regen_time": 18.0,
+	&"field_size": 5.0,
 	&"xp_mult": 1.0,
-	&"grave_count": 2.0,
+	&"grave_count": 1.0,
 	&"wisp_oil": 2.0,
+	&"wisp_decay": 0.8,
 }
 ## GDD §14.4 / §4.7: limites.
 @export var stat_min: Dictionary = {
 	&"pulse_interval": 0.15,
 	&"radius": 0.0,
+	&"area_step": 0.0,
+	&"field_size": 5.0,
 	&"regen_time": 6.0,
 	&"crit_chance": 0.0,
 }
 @export var stat_max: Dictionary = {
 	&"radius": 4.0,
+	&"area_step": 10.0,
+	&"excess_carries": 1.0,
+	&"stomp_enabled": 1.0,
+	&"stomp_auto": 1.0,
+	&"stomp_ring": 1.0,
+	&"double_hit": 1.0,
+	&"second_wind": 1.0,
+	&"constellation": 1.0,
 	&"crit_chance": 1.0,
 	&"field_size": 18.0,
 	&"grave_count": 7.0,
@@ -43,13 +80,14 @@ extends Resource
 
 @export_group("Covas (GDD §4.6)")
 @export var coffin_hp_mult: float = 2.0
-@export var grave_copper: float = 25.0
+@export var grave_copper: float = 30.0
 @export var grave_souls: float = 1.0
 @export var grave_bones_min: int = 2
 @export var grave_bones_max: int = 5
 @export var grave_xp: float = 15.0
 ## Fração da Inquietação (0–1) somada por cova aberta.
 @export var grave_unrest: float = 0.10
+@export var graves_for_unrest: float = 900.0
 ## Segundos que a Cova Aberta fica visível antes de fechar.
 @export var grave_open_time: float = 3.0
 

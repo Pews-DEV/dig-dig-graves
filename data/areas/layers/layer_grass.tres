@@ -1,13 +1,13 @@
-[gd_resource type="Resource" script_class="LayerData" format=3]
+[gd_resource type="Resource" script_class="LayerData" format=3 uid="uid://bgo7sc0fsvfdc"]
 
-[ext_resource type="Script" path="res://data/types/layer_data.gd" id="1_qgu60"]
+[ext_resource type="Script" uid="uid://dhfiq3digftqh" path="res://data/types/layer_data.gd" id="1_qgu60"]
 
 [resource]
 script = ExtResource("1_qgu60")
 id = &"grass"
 display_name = "Grama"
 hp = 2.0
-copper = 1.0
+copper = 2.0
 xp = 1.0
 particle_colors = PackedInt32Array(12, 11, 10)
 sfx_key = &"dig_grass"

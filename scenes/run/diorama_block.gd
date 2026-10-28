@@ -178,7 +178,7 @@ func _draw_fence() -> void:
 	var iron := Palette.color(Palette.OUTLINE)
 	var shine := Palette.color(Palette.STONE_DARK)
 	for px: int in range(min_x + 6, max_x - 5):
-		var section := ((px - min_x) / 40) % 3
+		var section := floori(float(px - min_x) / 40.0) % 3
 		if section == 1:
 			continue
 		var top := int((columns[px] as Vector2i).x) - 3

@@ -4,21 +4,30 @@ extends Node
 
 const SKILL_NODES_DIR := "res://data/skill_nodes/"
 const BALANCE_PATH := "res://data/balance.tres"
-const AREA_PATHS: Dictionary = {1: "res://data/areas/area_1.tres"}
+const AREA_PATHS: Dictionary = {1: "res://data/stages/stage_1.tres"}
+const BOSS_PATH := "res://data/bosses/caixao_fujao.tres"
 const TOOL_PATHS: Dictionary = {&"shovel": "res://data/tools/tool_shovel.tres"}
 
 const SCENE_RUN := "res://scenes/run/run.tscn"
 const SCENE_SUMMARY := "res://scenes/run/turn_summary.tscn"
 const SCENE_TREE := "res://scenes/tree/skill_tree.tscn"
 const SCENE_TITLE := "res://scenes/title/title_screen.tscn"
+const SCENE_CHAPTER_END := "res://scenes/ui/chapter_end.tscn"
 
 const TELEMETRY_KEEP := 50
 
 var balance: BalanceData
 var area: AreaData
+var boss_data: BossData
 var tool: ToolData
 var tree: SkillTreeModel
 var turns_played: int = 0
+var boss_run: bool = false
+var boss_1_won: bool = false
+var boss_1_attempts: int = 0
+var stage_unlocked: int = 1
+var chapter_1_end_seen: bool = false
+var dialogue_seen: Dictionary = {}
 ## GDD §10: Inquietação por área (0–1), persiste entre turnos.
 var unrest: Dictionary = {}
 var last_result: TurnResult
@@ -50,6 +59,7 @@ func _ready() -> void:
 		SaveManager.delete_save()
 	balance = load(BALANCE_PATH) as BalanceData
 	area = load(AREA_PATHS[1]) as AreaData
+	boss_data = load(BOSS_PATH) as BossData
 	tool = load(TOOL_PATHS[&"shovel"]) as ToolData
 	tree = SkillTreeModel.new(SkillTreeModel.load_definitions(SKILL_NODES_DIR))
 	Stats.setup(balance)
@@ -58,6 +68,7 @@ func _ready() -> void:
 	_build_curtain()
 	get_tree().node_added.connect(_on_node_added)
 	load_game()
+	TranslationServer.set_locale(str(settings.get("locale", "pt_BR")))
 	Audio.apply_settings(settings)
 	if font_test:
 		var sample := FontSample.new()
@@ -74,12 +85,55 @@ func set_setting(key: String, value: Variant) -> void:
 	var merged := settings.duplicate()
 	merged[key] = value
 	settings = GameSettings.sanitize(merged)
+	if key == "locale":
+		TranslationServer.set_locale(str(settings.locale))
 	Audio.apply_settings(settings)
 	Events.settings_changed.emit()
 
 
 func mark_seen(id: StringName) -> void:
 	seen_nodes[id] = true
+
+
+func dialogue_was_seen(id: StringName) -> bool:
+	return bool(dialogue_seen.get(id, false))
+
+
+func mark_dialogue_seen(id: StringName) -> void:
+	dialogue_seen[id] = true
+	save_game()
+
+
+func show_dialogue(id: StringName) -> void:
+	var path := "res://data/dialogue/" + String(id) + ".tres"
+	if not ResourceLoader.exists(path):
+		return
+	var data := load(path) as DialogueData
+	if data == null or (data.once and dialogue_was_seen(id)):
+		return
+	var box := DialogueBox.new()
+	get_tree().root.add_child.call_deferred(box)
+	await get_tree().process_frame
+	await box.play_id(id)
+	box.queue_free()
+	if data.once:
+		mark_dialogue_seen(id)
+
+
+func show_tip(id: StringName) -> void:
+	var path := "res://data/dialogue/" + String(id) + ".tres"
+	if not ResourceLoader.exists(path):
+		return
+	var data := load(path) as DialogueData
+	if data == null or (data.once and dialogue_was_seen(id)):
+		return
+	var box := DialogueBox.new()
+	get_tree().root.add_child.call_deferred(box)
+	await get_tree().process_frame
+	await box.show_tip_id(id)
+	box.queue_free()
+	if data.once:
+		mark_dialogue_seen(id)
 
 
 func unrest_of(area_id: int) -> float:
@@ -114,13 +168,26 @@ func buy_node(id: StringName) -> bool:
 func finish_turn(result: TurnResult) -> void:
 	last_result = result
 	turns_played += 1
+	if result.boss_encounter:
+		boss_1_attempts += 1
+		boss_run = false
+		if result.boss_victory:
+			boss_1_won = true
+			if boss_data.unlocks.has(&"stage_2"):
+				stage_unlocked = maxi(stage_unlocked, 2)
+			tree.set_trigger(&"boss_1")
+	if turns_played >= 2:
+		tree.set_trigger(&"turn_2")
+	if result.souls > 0.0:
+		tree.set_trigger(&"first_soul")
 	Economy.add(Economy.COPPER, result.copper_total())
 	Economy.add(Economy.BONES, result.bones)
 	Economy.add(Economy.SOULS, result.souls)
-	unrest[result.area_id] = result.unrest_end
+	unrest[result.area_id] = 0.0 if result.boss_encounter and result.boss_victory else result.unrest_end
 	telemetry.append({
 		"turn": turns_played, "area": result.area_id, "duration": snappedf(result.duration, 0.01),
 		"copper": snappedf(result.copper_total(), 0.01), "nodes_bought": nodes_bought_since_turn,
+		"graves_opened": result.graves_opened,
 	})
 	while telemetry.size() > TELEMETRY_KEEP:
 		telemetry.pop_front()
@@ -143,6 +210,14 @@ func _check_dry_streak() -> void:
 # --- Fluxo de telas ----------------------------------------------------------
 
 func goto_run() -> void:
+	boss_run = false
+	_change_scene(SCENE_RUN)
+
+
+func goto_boss() -> void:
+	if unrest_of(area.id) < 1.0 - 0.000001:
+		return
+	boss_run = true
 	_change_scene(SCENE_RUN)
 
 
@@ -152,6 +227,12 @@ func goto_summary() -> void:
 
 func goto_tree() -> void:
 	_change_scene(SCENE_TREE)
+
+
+func goto_chapter_end() -> void:
+	chapter_1_end_seen = true
+	save_game()
+	_change_scene(SCENE_CHAPTER_END)
 
 
 ## Tela-título (UI/UX §9). `curtain = false` no boot: a própria abertura sai do preto.
@@ -203,7 +284,7 @@ func to_save_dict() -> Dictionary:
 	return {
 		"currencies": Economy.to_dict(),
 		"tree": tree.to_save(),
-		"progress": {"turns_played": turns_played, "area": area.id, "unrest": _unrest_to_save(), "seen_nodes": seen_nodes.keys().map(func(k: StringName) -> String: return String(k))},
+		"progress": {"turns_played": turns_played, "area": area.id, "stage_unlocked": stage_unlocked, "unrest": _unrest_to_save(), "seen_nodes": seen_nodes.keys().map(func(k: StringName) -> String: return String(k)), "boss_1_won": boss_1_won, "boss_1_attempts": boss_1_attempts, "chapter_1_end_seen": chapter_1_end_seen, "dialogue_seen": dialogue_seen.keys().map(func(k: StringName) -> String: return String(k))},
 		"settings": settings.duplicate(),
 		"telemetry": telemetry.duplicate(true),
 	}
@@ -214,11 +295,24 @@ func apply_save_dict(data: Dictionary) -> void:
 	tree.load_save(data.get("tree", {}) as Dictionary)
 	var progress: Dictionary = data.get("progress", {})
 	turns_played = int(progress.get("turns_played", 0))
+	boss_1_won = bool(progress.get("boss_1_won", false))
+	boss_1_attempts = int(progress.get("boss_1_attempts", 0))
+	stage_unlocked = maxi(1, int(progress.get("stage_unlocked", 1)))
+	chapter_1_end_seen = bool(progress.get("chapter_1_end_seen", false))
+	dialogue_seen.clear()
+	for dialogue_id: Variant in progress.get("dialogue_seen", []):
+		dialogue_seen[StringName(str(dialogue_id))] = true
+	if turns_played >= 2:
+		tree.set_trigger(&"turn_2")
+	if boss_1_won:
+		tree.set_trigger(&"boss_1")
 	unrest.clear()
 	var saved_unrest: Dictionary = progress.get("unrest", {})
 	for k: Variant in saved_unrest:
 		unrest[int(str(k))] = clampf(float(saved_unrest[k]), 0.0, 1.0)
 	settings = GameSettings.sanitize(data.get("settings", {}) as Dictionary)
+	if Economy.get_amount(Economy.SOULS) > 0.0:
+		tree.set_trigger(&"first_soul")
 	seen_nodes.clear()
 	for id: Variant in progress.get("seen_nodes", []):
 		seen_nodes[StringName(str(id))] = true
@@ -256,6 +350,12 @@ func _reset_progress() -> void:
 	Economy.reset()
 	tree.reset()
 	turns_played = 0
+	boss_run = false
+	boss_1_won = false
+	boss_1_attempts = 0
+	stage_unlocked = 1
+	chapter_1_end_seen = false
+	dialogue_seen.clear()
 	unrest.clear()
 	seen_nodes.clear()
 	telemetry.clear()

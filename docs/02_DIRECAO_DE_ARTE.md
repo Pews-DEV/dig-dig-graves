@@ -343,7 +343,7 @@ Formas lisas em 05/07/15/13 para os 4 estágios do tile, losango da área desenh
 5. HUD: barra de óleo (lanterna como ícone), barra de XP, barra de Inquietação, números
 6. Fogo-fátuo (4f), alma subindo (6f)
 7. Carta de Epitáfio (3 molduras) + 12 ilustrações 32×32
-8. Árvore: fundo, raízes, 7 molduras de medalhão, ~25 ícones de nó
+8. Árvore: fundo, raízes, 7 molduras de medalhão, 44 ícones de nó do Marco A
 9. Chefe Caixão Fujão (idle 4, afundar 6, emergir 6, dano 1)
 10. Ajudantes Toupeira Tita e Gato Breu
 11. Personagens: Dona Ceifa, Madame Ossada, Tião (sprite + retrato 48×48)
@@ -412,7 +412,6 @@ Flash de dano = todas as cores por 23 por 1 frame (§9.2), igual para todos.
 | `barra_chefe` | 9-slice 24×10 | Moldura da barra do chefe; preenchimento 31/32, "fantasma" 22 | A |
 | `panel_stone` ✔ | — | Placa "Enfrentar", confirmações | A |
 | `chapter_card` | 9-slice | Pergaminho do Fim do Capítulo com fita 32 | A |
-| `hub_selector` | 96×64 | Placa com 5 lanternas (acesa/selecionada/apagada) e nomes | A |
 | Construções `bld_<id>_ruina` / `bld_<id>` | 48–96 × 48–96, base | Portão, Casa, Capelinha, Barraca do Mascate [B]; Poço, Canteiro, Torre [C]; Galinheiro, Jazigo, Coreto [D] | B–D |
 | `shop_slot` · `shop_tabs` | 24×24 · 20×20 | Casa da prateleira (normal/foco/comprado/equipado) e abas | B |
 | Ícones de item `icon_item_<id>` | 16×16 | 6 pás + 14 amuletos (GDD §8) | B (5) · C (12) · D (20) |
@@ -424,7 +423,7 @@ Flash de dano = todas as cores por 23 por 1 frame (§9.2), igual para todos.
 | FX | — | `fx_stomp` (anel 4f), `fx_flare` (anel xadrez 3f), `fx_coin_rain`, `fx_bone_rain`, `fx_constellation` (3 estrelas 30 ligando os fogos-fátuos) | A–C |
 
 ### 13.5 Ordem de produção por marco
-- **A:** coluna Ossada no `tiles_a1`; `lapide` com colunas 0–2 legíveis por tipo; `vela_campo`, `moeda_ouro`; molduras de tipo/mestra/selado; árvore larga; minimapa; HUD do Pisão; barra e ícone do chefe; chave 1; placa do seletor; cartão de capítulo; ruínas em silhueta da superfície.
+- **A:** coluna Ossada no `tiles_a1`; `lapide` com colunas 0–2 legíveis por tipo; `vela_campo`, `moeda_ouro`; molduras de tipo/mestra/selado; árvore larga; minimapa; HUD do Pisão; barra e ícone do chefe; chave 1; quatro destinos do Pátio como estações de UI; cartão de capítulo.
 - **B:** estágio 2 completo ✔ (falta a coluna Ossada do `tiles_a2` e as colunas 3 da `lapide_a2`); Seu Damião chefe; Mascate ✔, Madame Ossada no hub; 4 construções; loja; cartas (3 molduras + 8 ilustrações); Tita; fantasma, ossário, baú; Clarão no HUD.
 - **C:** estágio 3 completo + `_dark`; Raiz-Mãe; Damião no hub e retrato; 3 construções; 7 itens; 8 cartas; Gato; raiz; Mausoléu 3×3 do CX (`mausoleu_cx` 96×72); marcos e toast.
 - **D:** estágios 4 e 5; Mausoléu Vivo e herdeiros; Cova da Dona Ceifa; 3 construções; 8 itens; 8 cartas; Cão e Morcegos; baú dos barões; névoa; lápides 5–6; cena final; Dona Ceifa de férias no título.

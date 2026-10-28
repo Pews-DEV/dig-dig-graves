@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3 uid="uid://lmp6gpleu1di"]
+
+[ext_resource type="Script" uid="uid://dv65slcj4sifl" path="res://data/types/dialogue_data.gd" id="1_dialogue"]
+
+[resource]
+script = ExtResource("1_dialogue")
+id = &"first_grave"
+lines = Array[Dictionary]([{
+"name": "Tião",
+"speaker": &"tiao",
+"text": "Uma cova! Cobre, ossos e uma alma. A inquietação também cresce."
+}])

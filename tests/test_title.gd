@@ -3,7 +3,7 @@ extends "res://tests/test_case.gd"
 ## do contrato §9.6, leitura do manifesto/JSON do Aseprite com fallback, créditos e "Enterrar".
 ## Uso: godot --headless --path . -s res://tests/test_title.gd
 
-const TEST_SAVE := "user://test_title_save.json"
+const TEST_SAVE := "res://.test_title_save.json"
 
 
 func _initialize() -> void:
@@ -223,7 +223,7 @@ func _test_bury() -> void:
 	check(SaveIO.bury(TEST_SAVE), "enterrar retorna ok")
 	check(not FileAccess.file_exists(TEST_SAVE), "save some depois de enterrar")
 	var buried := SaveIO.buried_path(TEST_SAVE)
-	check_eq(buried, "user://test_title_save_buried.json", "cópia enterrada ao lado")
+	check_eq(buried, "res://.test_title_save_buried.json", "cópia enterrada ao lado")
 	check_eq(int((SaveIO.read(buried).get("progress", {}) as Dictionary).get("turns_played", 0)), 3, "cópia enterrada guarda o progresso")
 	check(SaveIO.bury(TEST_SAVE), "enterrar sem save não falha")
 	SaveIO.delete(buried)

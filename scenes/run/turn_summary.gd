@@ -34,11 +34,19 @@ func _ready() -> void:
 
 	var title := Label.new()
 	title.theme_type_variation = &"PanelTitle"
-	title.text = "Fim da noite %d" % Game.turns_played
+	if r.boss_encounter:
+		title.text = "O Caixão Fujão"
+	else:
+		title.text = "Fim da noite %d" % Game.turns_played
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
 	var reason := Label.new()
-	reason.text = "O óleo acabou." if r.end_reason == &"oil" else "O sol nasceu."
+	if r.boss_victory:
+		reason.text = "Chefe derrotado · Chave I encontrada"
+	elif r.boss_encounter:
+		reason.text = "O Caixão fugiu · faltaram %s de vida" % NumberFormat.format(r.boss_hp_remaining)
+	else:
+		reason.text = "O óleo acabou." if r.end_reason == &"oil" else "O sol nasceu."
 	reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	reason.add_theme_color_override("font_color", Palette.color(Palette.BONE_SHADOW))
 	box.add_child(reason)
@@ -49,6 +57,10 @@ func _ready() -> void:
 	_add_row(list, "Cobre", r.copper_mined, ResourceIcon.Kind.COPPER)
 	_add_row(list, "Ossos", r.bones, ResourceIcon.Kind.BONES)
 	_add_row(list, "Almas", r.souls, ResourceIcon.Kind.SOULS)
+	if r.boss_encounter:
+		_add_row(list, "Dano no chefe", r.boss_damage_dealt)
+		if r.boss_victory:
+			_add_row(list, "Chave I", 1.0, ResourceIcon.Kind.KEY)
 	_add_row(list, "Covas abertas", r.graves_opened)
 	_add_row(list, "Camadas quebradas", r.layers_broken)
 	_add_row(list, "Maior crítico", r.max_crit)
@@ -67,10 +79,15 @@ func _ready() -> void:
 	_buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	_buttons.modulate.a = 0.0
 	add_child(_buttons)
-	var tree_btn := _big_button("Árvore", Game.goto_tree)
+	var tree_action: Callable = Game.goto_tree
+	var tree_text := "Árvore"
+	if r.boss_victory and not Game.chapter_1_end_seen:
+		tree_text = "Ver o cemitério"
+	var tree_btn := _big_button(tree_text, tree_action)
 	var again_btn := _big_button("Mais uma noite", Game.goto_run)
 	_buttons.add_child(tree_btn)
-	_buttons.add_child(again_btn)
+	if not (r.boss_victory and not Game.chapter_1_end_seen):
+		_buttons.add_child(again_btn)
 	tree_btn.grab_focus()
 	# UI/UX §6: o botão certo "chama" — Árvore se dá para comprar algo; senão, mais uma noite.
 	var info := Game.tree.cheapest_pending(Economy.balances)

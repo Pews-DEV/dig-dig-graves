@@ -71,74 +71,71 @@ Quantidades por sistema e marco: GDD §1.1.
 **A-W1-ECON · Economia v2 e modelo do campo** — `godot-dev`
 - Spec: GDD §4.2–4.5, §4.6 (covas, sem tipos), §4.7, §5, §14.4, §18.2, §18.4; DA §7.
 - Possui: `data/types/balance_data.gd`, `layer_data.gd`, `tool_data.gd`, `stat_modifier.gd`; `data/balance.tres`; `data/areas/layers/*.tres` (+ `layer_ossada.tres`); `scenes/run/model/field_model.gd`, `run_state.gd`, `turn_result.gd`; `autoload/stat_sheet.gd`, `stats.gd`, `economy.gd`; `tests/test_economy_v2.gd`, `tests/sim_campaign.gd` (novos), `tests/sim_first_turn.gd`, `tests/test_core.gd`.
-- Faz: campo 5×5 (teto 18); `area_step` + `ToolData.cells(anchor, w, h, rot)` (RECT/LINE/CROSS/DIAMOND); Cobre por ponto da §4.3; Ossada como camada extra por flag; `apply_damage(carry)` (Cava-Funda); crítico por tile; caixão 1,5×; covas 1 → teto 7; fogo-fátuo 80% e stats `wisp_*`; teto do óleo de cova; Campo Limpo "desde o último"; amanhecer; stats e flags novos da §18.2 com rótulos na Ficha; **Pisão no modelo** (`use_stomp()`, recarga, ×4, anel, auto a cada 8); `sim_campaign.gd` (porta a simulação do GDD §14 para Godot, roda o estágio 1 com política gulosa e imprime os marcos de tempo).
+- Faz: campo 5×5 (teto 18); `area_step` + `ToolData.cells(anchor, w, h, rot)` (RECT/LINE/CROSS/DIAMOND); Cobre por ponto da §4.3; Ossada como camada extra por flag; `apply_damage(carry)` (Cava-Funda); crítico por tile; caixão 1,5×; covas 1 → teto 7; fogo-fátuo 80% e stats `wisp_*`; teto do óleo de cova; Campo Limpo "desde o último"; amanhecer; stats e flags novos da §18.2 com rótulos na Ficha; **Pisão no modelo** (`use_stomp()`, recarga, ×4, anel, auto a cada 8); `sim_campaign.gd` (porta a simulação do GDD §14 para Godot, roda o estágio 1 com política gulosa e imprime os marcos de tempo para cinco sementes reproduzíveis por padrão; `MARCO_A_TEST_SEED` seleciona uma semente e `MARCO_A_TEST_SEEDS` aceita uma lista separada por vírgulas).
 - Assets: consome `dig_bone` ✔.
 - Pronto: `test_economy_v2` cobre área por passos (0–10), carry, Cobre por ponto, teto de óleo, decaimento 0,8, Campo Limpo; `sim_first_turn` dá 24 ± 5 Cobre; `sim_campaign` (estágio 1, sem chefe) chega a área 3×3 entre 25 e 35 min.
 - Depende de: nada.
 
 **A-W1-ARVORE · Árvore v2 (44 nós do marco A)** — `godot-dev`
 - Spec: GDD §6 (tabelas, só Marco A), §15; UI/UX §7, §18; DA §10.3, §13.4.
-- Possui: `data/types/skill_node_data.gd`; `data/skill_nodes/*.tres` (apaga os 11 antigos, cria os 44 A); `scenes/tree/*` (inclui novos `tree_minimap.gd`); `tests/test_tree_v2.gd` (novo), `tests/test_ui_logic.gd` (partes da árvore).
-- Faz: campos `kind`, `exclusive_group`, `requires`, `reveal_trigger`, `required_stage`, `flags`, `grid`; posição = (968 + 88k, 240 + 64r); mundo 1936×1024 com arte provisória repetindo a atual; Raízes-mestras em Almas 1.500 × 3ⁿ; encruzilhada com selagem; revelação por gatilho; estados selado/oculto/sem dinheiro; minimapa, atalhos 1–7, Home, Shift+roda; molduras por tipo (placeholder até ART-A2).
-- Assets: consome `frame_*`, `tree_*_wide`, `minimap_frame`, `root_y` (ART-A2), `seal` ✔, `node_buy` ✔, `root_grow` ✔.
-- Pronto: 44 nós com custo/efeito da tabela; nenhuma caixa sobreposta (teste de `TreeLayout` com os 100 `grid` do GDD); comprar E12a sela E12b; 2ª mestra custa 4.500.
+- Possui: `data/types/skill_node_data.gd`; `data/skill_nodes/*.tres` (44 nós A); `scenes/tree/*` (inclui `tree_minimap.gd`); `tests/test_ui_logic.gd`, `tests/test_tree_minimap_runtime.gd`.
+- Faz: campos `kind`, `exclusive_group`, `requires`, `reveal_trigger`, `required_stage`, `flags`, `grid`; posição = (968 + 88k, 240 + 64r); mundo 1936×1024 com os assets `tree_*` existentes; raízes desenhadas em pixel por `RootLayer` com rotações verificadas contra caixas dos nós; Raízes-mestras em Almas 1.500 × 3ⁿ; encruzilhada com selagem; revelação por gatilho; estados selado/oculto/sem dinheiro; minimapa clicável e arrastável, atalhos 1–7, Home e Shift+roda.
+- Assets: consome `medallions32`, `node_icons`, `pips`, `fx_tree_new_badge`, `minimap_frame`, `seal`, `node_buy` e `root_grow`.
+- Pronto: 44 nós com custo/efeito da tabela; nenhuma caixa sobreposta (teste de `TreeLayout`); comprar E12a sela E12b; 2ª mestra custa 4.500; minimapa enquadra o mundo, carrega sua moldura e move a câmera por clique/arrasto.
 - Depende de: lista de stats/flags do GDD §18.2 (não bloqueia; os ids já estão fixados).
-
 **A-W1-HUD · Entrada, Pisão no HUD e áudio do turno** — `godot-dev` ⚙
 - Spec: GDD §4.4, §16; UI/UX §13.1 (marco A), §13.3.
 - Possui: `scenes/run/run.gd`, `hud.gd`, `hud_lantern.gd`, `hud_medal.gd`, novo `scenes/run/actives_hud.gd`; `autoload/audio_bank.gd`; `project.godot` (ações `stomp`, `flare`, `face_boss`, `tree_branch_1..7`, `tree_home`); `scenes/ui/options_menu.gd` (opção auto-pisão); `tests/test_hud_actives.gd`.
 - Faz: clique/Q/A chamam `use_stomp()`; plaqueta do ativo com pips e estados; anel `fx_stomp` + tremor; barra de XP oculta no marco A (flag `epitaphs`); opção **auto-pisão**.
-- Assets: `hud_stomp`, `hud_active_frame`, `hud_pips`, `fx_stomp` (ART-A2); `stomp` ✔, `stomp_ready`* (SND-A).
+- Assets: `hud_stomp`, `hud_active_frame`, `hud_pips`, `fx_stomp` (ART-A2); `stomp` ✔, `stomp_ready` ✔ (SND-A).
 - Pronto: Pisão jogável por mouse, teclado e auto-pisão; sem input quando pausado.
 - Depende de: A-W1-ECON (API `use_stomp()`; combinar a assinatura no início).
 
 ### W2 · Estágio data-driven, chefe e fluxo (código) — 2 pacotes em paralelo
 **A-W2-CHEFE · StageData, Inquietação e Noite do Chefe com o Caixão Fujão** — `godot-dev` ⚙
 - Spec: GDD §4.11, §10.1 (linha 1), §10.2 (chefe 1), §18.3; UI/UX §13.2.
-- Possui: `data/types/stage_data.gd`, `boss_data.gd` (+ `area_data.gd` como alias de compatibilidade); `data/stages/stage_1.tres`; `data/bosses/caixao_fujao.tres`; `scenes/run/model/boss_state.gd`; `scenes/run/model/run_state.gd` (passa a ele nesta onda), `field_model.gd`; `scenes/run/boss_view.gd`; `scenes/run/hud.gd` (barra do chefe); `autoload/progress.gd` (novo) + `project.godot` (autoload); `tests/test_boss.gd`.
+- Possui: `data/types/stage_data.gd`, `boss_data.gd` (+ `area_data.gd` como alias de compatibilidade); `data/stages/stage_1.tres`; `data/bosses/caixao_fujao.tres`; `scenes/run/model/boss_state.gd`; `scenes/run/model/run_state.gd` (passa a ele nesta onda), `field_model.gd`; `scenes/run/boss_view.gd`; `scenes/run/hud.gd` (barra do chefe); `autoload/progress.gd` (novo) + `project.godot` (autoload); `tests/test_boss_hop.gd`, `tests/test_boss_outcomes.tscn`.
 - Faz: `StageData` com multiplicadores separados de Cobre/Ossos/Almas, N de covas para a Inquietação; `Progress` guarda Inquietação por estágio, chefes vencidos/tentativas, estágio liberado; `BossState` com comportamento `HOP` (4 s, 0,6 s invulnerável); dano por tiles sobrepostos; fuga com HP cheio; vitória com prêmios e `unlocks`; revanche 20%; tremores (+25% Almas).
-- Assets: `boss_caixao_fujao` ✔, `boss_caixao_buraco` ✔, `icon_boss_caixao` ✔, `barra_chefe`, `icon_key_1` (ART-A2); `mus_boss` ✔, `stinger_boss_appear` ✔, `boss_hit/sink/emerge/defeat` ✔, `jingle_boss_win` ✔, `boss_flee`* (SND-A).
-- Pronto: `test_boss` cobre HOP, fuga, vitória, revanche, Inquietação persistente; chefe vencível em `sim_campaign` aos 35–45 min.
+- Assets: `boss_caixao_fujao` ✔, `boss_caixao_buraco` ✔, `icon_boss_caixao` ✔, `barra_chefe`, `icon_key_1` (ART-A2); `mus_boss` ✔, `stinger_boss_appear` ✔, `boss_hit/sink/emerge/defeat` ✔, `jingle_boss_win` ✔, `boss_flee` ✔ (SND-A).
+- Pronto: `test_boss_hop` cobre HOP; `test_boss_outcomes` cobre fuga, vitória, prêmios, desbloqueio, persistência e revanche; chefe vencível em `sim_campaign` aos 35–45 min.
 - Depende de: A-W1-ECON fechado.
 
 **A-W2-FLUXO · Diálogo, Resumo especial, Fim do Capítulo e pausa** — `godot-dev`
 - Spec: GDD §3.4, §13.2, §15; UI/UX §13.3, §14, §15, §19.1, §20.
-- Possui: `data/types/dialogue_data.gd`; `data/dialogue/*.tres` (≈14 falas do A: 1º turno, 1ª cova, 1º nó, Inquietação cheia, início/vitória do chefe, fim do capítulo); `scenes/ui/dialogue_box.gd` (+ `.tscn`), `scenes/ui/chapter_end.gd` (+ `.tscn`), `scenes/ui/confirm_stone.gd`; `scenes/run/turn_summary.gd`; `autoload/game.gd`; `scenes/ui/options_menu.gd` (pausa: Abandonar/Voltar ao título — recebe de A-W1-HUD ao fechar W1); `tests/test_dialogue.gd`.
+- Possui: `data/types/dialogue_data.gd`; `data/dialogue/*.tres` (≈14 falas do A: 1º turno, 1ª cova, 1º nó, Inquietação cheia, início/vitória do chefe, fim do capítulo); `scenes/ui/dialogue_box.gd` (+ `.tscn`), `scenes/ui/chapter_end.gd` (+ `.tscn`), `scenes/ui/confirm_stone.gd`; `scenes/run/turn_summary.gd`; `autoload/game.gd`; `scenes/ui/options_menu.gd` (pausa: Abandonar/Voltar ao título — recebe de A-W1-HUD ao fechar W1); `tests/test_dialogue_runtime.tscn`, `test_chapter_end_runtime.tscn`, `test_chapter_end_flow.tscn`.
 - Faz: balão bloqueante e dica; máquina de escrever 40 c/s com `dialog_blip_*`; Resumo especial e faixa de derrota; "Fim do Capítulo 1" (1× por save) com Créditos e Continuar cavando; fluxo completo da UI/UX §20 para o marco A.
-- Assets: `portrait_dona_ceifa` ✔, `portrait_tiao` ✔, `portrait_coveiro` ✔, `balao` ✔, `balao_rabicho` ✔, `chapter_card`, `icon_key_1` (ART-A2); `dialog_blip_ceifa/tiao` ✔, `jingle_chapter_end`*, `key_get`* (SND-A).
+- Assets: `portrait_dona_ceifa` ✔, `portrait_tiao` ✔, `portrait_coveiro` ✔, `balao` ✔, `balao_rabicho` ✔, `chapter_card` ✔, `icon_key_1` ✔; `dialog_blip_ceifa/tiao` ✔, `jingle_chapter_end` ✔, `key_get` ✔.
 - Pronto: dá para pular qualquer conversa; nenhuma tela sem volta; textos revisados (acentos).
 - Depende de: A-W2-CHEFE (sinais de vitória/derrota) — combinar os sinais em `Events` no início da onda.
 
 ### W3 · Meta mínima (código)
-**A-W3-HUB · Superfície da Árvore: seletor (1 estágio) e placa Enfrentar** — `godot-dev`
-- Spec: GDD §10.3, §11 (só estrutura); UI/UX §10.1, §10.3–10.5.
-- Possui: `scenes/hub/hub_surface.gd`, `stage_selector.gd`, `face_button.gd` (novos); `scenes/tree/skill_tree_screen.gd` (recebe de A-W1-ARVORE: monta a superfície e a barra de topo).
-- Faz: superfície com ipê, placa com 5 lanternas (1 acesa), ruínas em silhueta "Em breve"; "Cavar ▶" com seletor compacto; placa "Enfrentar" com entrada/ocioso/clique; revelação pós-chefe (câmera, lanterna 2 aparece em silhueta "Capítulo 2: em breve").
-- Assets: `hub_selector`, `bld_*_ruina` (silhuetas), `panel_stone` ✔, `tiao` ✔; `unrest_warning` ✔, `stage_select`*.
-- Pronto: o fluxo Árvore → Enfrentar → Noite do Chefe funciona só pelo hub; Home volta à superfície.
+**A-W3-HUB · Pátio de navegação da Árvore** — `godot-dev`
+- Spec: GDD §10.3, §11; UI/UX §10.1, §10.3–10.5.
+- Possui: `scenes/tree/skill_tree_screen.gd`; estações do Pátio em overlay sobre o cenário.
+- Faz: entrada no Pátio com carteira e quatro destinos: Raízes/Talentos, Próxima Noite (Paróquia, início em um clique), Loja (bloqueada até B) e Fazenda (futuro); ação de Enfrentar vinculada à Próxima Noite quando a Inquietação chega a 100%; botão Pátio retorna da Árvore ao enquadramento inicial. Sem seletor de estágios no Marco A.
+- Assets: cenário e kit visual existentes; estações são UI; `unrest_warning` ✔.
+- Pronto: Pátio → Árvore → Pátio e Pátio → Noite funcionam; opções e carteira permanecem acessíveis; destinos futuros são claramente desabilitados.
 - Depende de: A-W2-CHEFE (Progress).
-
-### W4 · Tabuleiro vivo do estágio 1 (código)
 **A-W4-TABULEIRO · Lápides com efeito, velas, moeda de ouro, alminhas** — `godot-dev`
 - Spec: GDD §4.6 (tipos 0–2), §4.8 (linhas do marco A); DA §13.1.
-- Possui: `data/types/board_element_data.gd`; `data/board/*.tres` (vela, moeda, alminha, rocha); `scenes/run/model/board_elements.gd` (novo), `run_state.gd`, `field_model.gd` (recebem de A-W2-CHEFE); `scenes/run/element_views.gd` (novo), `grave_view.gd`, `field_decor.gd`; `tests/test_board.gd`.
-- Faz: tipo de lápide sorteado por peso do `StageData`, com ícone e tooltip; vela (aura de regen/Cobre); moeda de ouro (F09); alminhas (S04); `Kind` novos no `FieldModel`.
+- Possui: `AreaData.grave_type_weights`; `run_state.gd`, `field_model.gd` (recebem de A-W2-CHEFE); `grave_view.gd` e `hud.gd`; `tests/test_grave_types.gd`.
+- Faz: tipo de lápide sorteado por peso da `AreaData` (StageData herda), com sprite e tooltip; Cruz de pedra (+1 Alma); Lápide com musgo (Caixão 1,5× mais duro e Ossos ×2); vela (aura de regen/Cobre); moeda de ouro (F09); alminhas (S04); `Kind` novos no `FieldModel`.
 - Assets: `lapide` (colunas 0–2 legíveis), `vela_campo`, `moeda_ouro`, `alma_fila` ✔ (ART-A1); `tombstone_effect` ✔, `coin_gold` ✔, `soul_wander` ✔.
-- Pronto: em 30 s de noite aos 20 min o jogador vê ≥ 3 elementos e o efeito de cada um sem ler texto (playtest).
+- Pronto: testes verificam pesos, sprites e efeitos dos três tipos; em playtest, aos 20 min, o jogador vê ≥ 3 elementos em 30 s e entende seus efeitos sem ler texto.
 - Depende de: A-W2-CHEFE fechado.
 
 ### W5 · Polimento e fechamento
-**A-W5-SAVE · Save v2 e migração** — `godot-dev` · Possui `autoload/save_io.gd`, `save_manager.gd`, `tests/test_save_migration.gd`, `tests/test_save_compat.gd`. Faz o GDD §18.5 (v1 → v2 com devolução do gasto). Pronto: save da branch `demo` abre e devolve o gasto; ida e volta de save mantém tudo do marco A.
+**A-W5-SAVE · Save v2 e migração** — `godot-dev` · Possui `autoload/save_io.gd`, `save_manager.gd`, `tests/test_save_migration.gd`, `tests/test_save_atomicity.gd`, `tests/test_save_compat.tscn` e `tests/fixtures/save_m0_v1.json`. Faz o GDD §18.5 (v1 → v2 com devolução do gasto). Pronto: fixture M0 é carregada pelo jogo, devolve o gasto da árvore e faz round-trip em v2 preservando moedas, opções, telemetria e progresso compatível.
 **A-W5-POLISH · Ritmo, juice e revisão** — `godot-dev` (+ orquestrador) · Possui `data/balance.tres`, `data/skill_nodes/*.tres`, `data/stages/stage_1.tres` (ajuste fino), `tests/sim_campaign.gd`. Faz as regras do GDD §14.3 com 3 playtests; confere todos os sons/sprites do marco; nenhum `push_warning` novo. Pronto: critério do marco.
 
 ### Arte e som do marco A (paralelo ao W1–W4)
 | Pacote | Dono | Produz (ids) | Consumido por | Pronto até |
 |---|---|---|---|---|
-| **ART-A1 · Tabuleiro do estágio 1** | pixel-artist | coluna Ossada em `tiles_a1`/`_lit`/`cracks_a1`/`regen_a1`; `lapide` com colunas 0–2 revisadas para leitura do tipo; `vela_campo`; `moeda_ouro`; `icon_key_1` (16 e 32, giro 4f) | A-W1-ECON, A-W4, A-W2-FLUXO | fim do W3 |
-| **ART-A2 · Árvore larga, HUD e superfície** | pixel-artist | `frame_at/r/d`, `frame_master_*` (×6 + sombra), `frame_sealed`, `root_y`, `tree_soil_wide`, `tree_sky_wide`, `tree_grass_wide`, `minimap_frame`, `hud_stomp`, `hud_active_frame`, `hud_pips`, `fx_stomp`, `barra_chefe`, `hub_selector`, `chapter_card`, silhuetas `bld_*_ruina` (9) | A-W1-ARVORE, A-W1-HUD, A-W2, A-W3 | fim do W3 |
+| **ART-A1 · Tabuleiro do estágio 1** | pixel-artist | coluna Ossada em `tiles_a1`/`_lit`/`cracks_a1`/`regen_a1`; `lapide` com colunas 0–2 revisadas para leitura do tipo; `vela_campo`; `moeda_ouro`; `icon_key_1` (16 e 32, giro 4f) | A-W1-ECON, A-W4, A-W2-FLUXO | ✔ entregue |
+| **ART-A2 · Árvore larga, HUD, Pátio e encerramento** | pixel-artist | `frame_at/r/d`, `frame_master_*` (×6 + sombra), `frame_sealed`, `root_y`, `tree_soil_wide`, `tree_sky_wide`, `tree_grass_wide`, `minimap_frame`, `hud_stomp`, `hud_active_frame`, `hud_pips`, `fx_stomp`, `barra_chefe`, `chapter_card` | A-W1-ARVORE, A-W1-HUD, A-W2, A-W3 | ✔ entregue |
 | ART-A3 · Chefe 1 e retratos | pixel-artist | ✔ já entregue (`boss_caixao_*`, `icon_boss_caixao`, retratos, `balao`) | A-W2 | ✔ |
-| **ART-A4 · Ícones de nó** | pixel-artist | ícones 16×16 dos 44 nós do A (reaproveitar os 25 de `tree_node_icons`; ~20 novos) em `tree_node_icons` (ampliar o atlas) | A-W1-ARVORE | fim do W2 |
-| **SND-A · Faltantes do capítulo 1** | sound-designer | `stomp_ready`, `boss_flee`, `key_get`, `stage_select`, `jingle_chapter_end`, `constellation`, `second_wind` (lista §6) | A-W1-HUD, A-W2, A-W3 | fim do W3 |
+| **ART-A4 · Ícones de nó** | pixel-artist | 44 ícones 16×16 exclusivos, catalogados em `assets/MANIFEST.md` e integrados à árvore | A-W1-ARVORE | ✔ entregue |
+| **SND-A · Áudio do capítulo 1** | sound-designer | `stomp_ready`, `boss_flee`, `key_get`, `stage_select`, `jingle_chapter_end`, `constellation`, `second_wind` conferidos no manifesto e no disco | A-W1-HUD, A-W2, A-W3 | ✔ entregue |
 
 ---
 
@@ -163,7 +160,7 @@ Quantidades por sistema e marco: GDD §1.1.
 **B-W4-ELEM · Tita, baús e Ossário** — `godot-dev` · Spec GDD §9 (Tita), §4.8 (baú, ossário) · Possui `scenes/run/model/helpers.gd`, `scenes/run/helper_views.gd`, `scenes/run/model/board_elements.gd` (recebe de B-W2-EST2), `scenes/run/element_views.gd`, `data/board/bau.tres`, `ossario.tres`, `tests/test_helpers.gd` · Assets `tita`, `bau`, `ossario` (ART-B4); `helper_mole` ✔, `chest_open` ✔, `bone_rain` ✔ · Pronto: Tita cava; baú pode dar amuleto não comprado.
 
 ### W5
-**B-W5-POLISH** — `godot-dev` + orquestrador · Possui `data/**/*.tres` (ajuste), `autoload/game.gd`, `scenes/ui/chapter_end.gd`, `scenes/run/turn_summary.gd`, `autoload/save_io.gd`, `tests/test_save_compat.gd`, `tests/sim_campaign.gd` · Faz "Fim do Capítulo 2", diálogos do B (~20 falas), revisão de ritmo §14.3, compatibilidade A → B.
+**B-W5-POLISH** — `godot-dev` + orquestrador · Possui `data/**/*.tres` (ajuste), `autoload/game.gd`, `scenes/ui/chapter_end.gd`, `scenes/run/turn_summary.gd`, `autoload/save_io.gd`, `tests/test_save_compat.tscn`, `tests/sim_campaign.gd` · Faz "Fim do Capítulo 2", diálogos do B (~20 falas), revisão de ritmo §14.3, compatibilidade A → B.
 
 ### Arte e som do marco B
 | Pacote | Dono | Produz | Pronto até |
@@ -236,7 +233,7 @@ Quantidades por sistema e marco: GDD §1.1.
 
 > **Asset:** `hud_stomp` · **Canvas:** 20×20 · **Rampas:** Terra 14–17, Noite 05–07 · **Contorno:** 01 · **Frames/tags:** `ready`, `cooldown` (05/06) · **Referência:** bota de coveiro pisando um torrão com 3 riscos de impacto · **Critério:** §11.5.
 
-> **Asset:** `hub_selector` · **Canvas:** 96×64 · **Pivô:** base (48, 63) · **Rampas:** Caixão 18–20, Lanterna 24–26 · **Contorno:** seletivo · **Frames/tags:** por lanterna: `off`, `on` (3f chama), `selected` · **Referência:** placa de beira de estrada com 5 lanternas penduradas por arame e nomes entalhados · **Critério:** §11.5; os nomes ficam no código (m5x7), a placa traz só as áreas.
+> **Asset:** `chapter_card` · **Canvas:** 48×48 · **9-slice:** margens 8/8/8/8 · **Rampas:** Pergaminho 21–23, fita 31–32, contorno 01 e rebites 17 · **Frames/tags:** estático · **Referência:** cartão do capítulo preso por fita; centro liso para conteúdo dinâmico · **Critério:** UI/UX §19.1; mantém leitura a 1× e permite títulos localizados sem texto rasterizado.
 
 > **Asset:** `tree_soil_wide` / `tree_sky_wide` / `tree_grass_wide` · **Canvas:** 1936×848 / 1936×176 / 1936×16 · **Rampas:** as do `tree_soil` atual · **Referência:** estender o corte de solo existente para o mundo largo, com 3 "veios" verticais mais escuros separando as faixas dos ramos (sem linhas duras) · **Critério:** emendas invisíveis; dá para montar por blocos de 64 px.
 
@@ -277,7 +274,7 @@ Quantidades por sistema e marco: GDD §1.1.
 | `mus_shop` | Loja do Mascate | ✔ | B |
 | `mus_ending` | Cena final | ✔ | D |
 | `jingle_summary` · `jingle_boss_win` | Resumo · vitória sobre chefe | ✔ | A |
-| `jingle_chapter_end` | Fim do Capítulo (5–8 s, cita `mus_title`) | **Falta** | A |
+| `jingle_chapter_end` | Fim do Capítulo (5–8 s, cita `mus_title`) | ✔ | A |
 | `credits_roll` | Créditos (arranjo calmo de `mus_title`, loop) | **Falta** | D |
 | `stinger_grave` · `stinger_level` · `stinger_boss_appear` · `stinger_stage_unlock` | Cova · nível · chefe surge · estágio liberado | ✔ | A |
 
@@ -296,9 +293,9 @@ Quantidades por sistema e marco: GDD §1.1.
 | `dig_bone` · `dig_mud` · `dig_stone` · `dig_marble` · `dig_mist` | Ossada · lama · pedra · mármore · névoa | ✔ | A · B · C · D · D |
 | `pickup_copper/bone/soul` · `wisp_collect` · `oil_tick` · `oil_out` · `grave_open` | Turno base | ✔ | A |
 | `stomp` · `flare` | Ativos | ✔ | A · B |
-| `stomp_ready` · `flare_ready` | Ativo recarregado (tique baixo, nunca cansativo) | **Falta** | A · B |
-| `second_wind` | Segundo Fôlego (chama reacendendo) | **Falta** | A |
-| `constellation` | Constelação da LX (3 estrelas tilintando + o tempo "para") | **Falta** | A |
+| `stomp_ready` · `flare_ready` | Ativo recarregado (tique baixo, nunca cansativo) | A: ✔; B: **Falta** | A · B |
+| `second_wind` | Segundo Fôlego (chama reacendendo) | ✔ | A |
+| `constellation` | Constelação da LX (3 estrelas tilintando + o tempo "para") | ✔ | A |
 | `coin_gold` · `soul_wander` · `tombstone_effect` | Moeda de ouro · alminha · lápide com efeito | ✔ | A |
 | `coin_rain` | Chuva de Moedas (FX) | **Falta** | B |
 | `chest_open` · `bone_rain` | Baú · Ossário cheio | ✔ | B |
@@ -308,11 +305,11 @@ Quantidades por sistema e marco: GDD §1.1.
 | `combo` | Vala Comum: 2 covas em ≤ 3 s | **Falta** | C |
 | `mist_fade` | Tiles entrando/saindo da névoa | **Falta** | D |
 | `boss_hit` · `boss_sink` · `boss_emerge` · `boss_defeat` | Chefe | ✔ | A |
-| `boss_flee` | Chefe foge (óleo acabou) | **Falta** | A |
+| `boss_flee` | Chefe foge (óleo acabou) | ✔ | A |
 | `boss_phase` | Fase/bulbo/camada do chefe | **Falta** | C |
 | `heir_spawn` | Herdeiros do Mausoléu saindo | **Falta** | D |
 | `ceifa_layer` | Camada da Cova da Dona Ceifa quebrada / regenerando | **Falta** | D |
-| `key_get` | Chave da Cripta pousa no Resumo e entra no seletor | **Falta** | A |
+| `key_get` | Chave da Cripta pousa no Resumo e entra no seletor | ✔ | A |
 | `unrest_warning` | "A terra treme" | ✔ | A |
 | `card_flip` · `card_pick` · `card_legendary` | Epitáfios | ✔ | B |
 | `card_reroll` | Embaralhar | **Falta** | B |
@@ -321,7 +318,7 @@ Quantidades por sistema e marco: GDD §1.1.
 | `build_complete` | Construção restaurada | ✔ | B |
 | `seal` · `respec` · `milestone` | Raiz selada/mestra · Replantar · marco | ✔ | A · B · C |
 | `ui_toast` | Toast de marco entrando (bem leve; o `milestone` toca no centro) | **Falta** | C |
-| `stage_select` | Trocar estágio no seletor | **Falta** | A |
+| `stage_select` | Trocar estágio no seletor | ✔ | A |
 | `helper_mole` · `helper_cat` | Tita · Gato | ✔ | B · C |
 | `helper_dog` · `helper_bats` | Cão Ossinho · Morcegos | **Falta** | D |
 | `dialog_blip` · `dialog_blip_ossada/ceifa/tiao/mascate` | Vozes | ✔ | A |
@@ -336,8 +333,10 @@ Quantidades por sistema e marco: GDD §1.1.
 | `tests/test_economy_v2.gd` | Área por passos, carry, Cobre por ponto, óleo (decay, tetos), Campo Limpo, ativos | A (amplia em B–D) |
 | `tests/sim_campaign.gd` | Campanha simulada com o `RunState` real; imprime os marcos da GDD §14.2 e falha se o chefe do estágio sair da faixa ±25% | A (estágio 1) → D (5 estágios) |
 | `tests/test_tree_v2.gd` | Grade sem colisão (100 `grid`), pré-requisitos com nível, selagem, ×3 das mestras, Replantar, Duas Raízes | A → D |
-| `tests/test_boss.gd` | HOP, TRAIL, BULBS, PHASES, CYCLE; fuga e revanche | A → D |
+| `tests/test_boss_hop.gd` · `tests/test_boss_outcomes.tscn` · `test_boss.gd` (B–D) | HOP; fuga, vitória, prêmios, persistência e revanche em A; outros comportamentos em B–D | A → D |
 | `tests/test_board.gd` | Lápides por peso, vela, moeda, alminha, fantasma, cruz, poça, ossário, baú, raiz, névoa | A → D |
 | `tests/test_dialogue.gd` · `test_epitaphs.gd` · `test_shop.gd` · `test_hub.gd` · `test_helpers.gd` · `test_milestones.gd` | Sistemas de cada marco | A · B · B · B · B · C |
-| `tests/test_save_migration.gd` · `test_save_compat.gd` | v1 → v2; save do marco anterior abre no atual | A → D |
+| `tests/test_save_migration.gd` · `test_save_atomicity.gd` · `test_save_compat.tscn` | v1 → v2, gravação recuperável; fixture M0 aplicada ao jogo e round-trip do save compatível | A → D |
 | `tests/test_core.gd` · `test_ui_logic.gd` · `test_title.gd` | Já existentes; atualizar onde o comportamento mudou | A |
+| `tests/test_chapter_end_runtime.tscn` · `test_chapter_end_flow.tscn` | Cartão 9-slice, Créditos, retorno ao Pátio e início de nova escavação | A |
+| `tests/test_hall_skill_panel_runtime.tscn` | Detalhes das skills ocultos no Pátio e restaurados nas Raízes | A |

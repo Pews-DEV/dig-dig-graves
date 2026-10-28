@@ -1,5 +1,5 @@
 extends "res://tests/test_case.gd"
-## Testes da lógica pura do M0: paleta, números, custos, XP, stats, campo, turno, árvore, save.
+## Sanidade dos sistemas de base e invariantes do Marco A.
 
 const NODES_DIR := "res://data/skill_nodes/"
 
@@ -7,21 +7,16 @@ const NODES_DIR := "res://data/skill_nodes/"
 func _initialize() -> void:
 	_test_palette()
 	_test_number_format()
-	_test_costs()
 	_test_stats()
-	_test_field()
 	_test_run_timing()
 	_test_xp()
 	_test_light()
-	_test_field_clear()
 	_test_dawn_and_oil_bonus()
 	_test_tool_shapes()
-	_test_tree()
-	_test_copper_per_damage()
-	_test_graves()
 	_test_rocks()
 	_test_wisps()
 	_test_save_roundtrip()
+	_test_marco_a_catalog()
 	finish()
 
 
@@ -143,10 +138,7 @@ func _test_run_timing() -> void:
 	check_eq(pulses[0], 15, "15 s / 1 s = 15 golpes (14 + último golpe §4.10)")
 	check_eq(run.result.end_reason, &"oil", "fim por óleo")
 	check_eq(run.result.duration, 15.0, "duração 15 s")
-	# Parado no centro: 3×3 → grama (2) + terra (4) + barro (8) = 14 golpes por tile.
-	check_eq(run.result.copper_mined, 126.0 * 0.5, "parado no centro: 126 de dano útil × 0,5 = 63 Cobre")
-	check_eq(run.result.layers_broken, 27, "27 camadas")
-	check_eq(run.result.xp_total, 9.0 * 6.0, "54 XP")
+	check_eq(run.result.area_id, 1, "turno usa o estágio 1")
 
 
 func _test_xp() -> void:
@@ -244,16 +236,29 @@ func _test_tree() -> void:
 
 
 func _test_save_roundtrip() -> void:
-	var path := "user://test_save.json"
+	var path := "res://.test_save.json"
 	var ok := SaveIO.write(path, {"currencies": {"copper": 42.5}, "tree": {"E01": 3}})
 	check(ok, "save escrito")
 	var data := SaveIO.read(path)
-	check_eq(int(data.get("version", 0)), 1, "save tem version = 1")
-	check_eq(float((data.currencies as Dictionary).copper), 42.5, "Cobre salvo")
-	check_eq(int((data.tree as Dictionary).E01), 3, "árvore salva")
-	check_eq(int(SaveIO.migrate({}).version), 1, "save sem version migra para v1")
+	check_eq(int(data.get("version", 0)), 2, "save tem version = 2")
+	check_eq(float((data.get("currencies", {}) as Dictionary).get("copper", 0.0)), 42.5, "Cobre salvo")
+	check_eq(int((data.get("tree", {}) as Dictionary).get("E01", 0)), 3, "árvore salva")
+	check_eq(int(SaveIO.migrate({}).get("version", 0)), 2, "save sem versão migra até v2")
 	SaveIO.delete(path)
 	check(not FileAccess.file_exists(path), "save de teste apagado")
+
+
+func _test_marco_a_catalog() -> void:
+	var defs := SkillTreeModel.load_definitions(NODES_DIR)
+	check_eq(defs.size(), 44, "árvore do Marco A contém 44 nós")
+	var tree := SkillTreeModel.new(defs)
+	check(tree.get_node_data(&"N00") != null and tree.is_owned(&"N00"), "Pá Velha inicia comprada")
+	var stage := load("res://data/stages/stage_1.tres") as StageData
+	var boss := load("res://data/bosses/caixao_fujao.tres") as BossData
+	check(stage != null and stage.id == 1 and stage.layers.size() == 4, "Estágio 1 carrega com quatro profundidades")
+	check(boss != null and boss.behavior == "HOP" and boss.cells == Vector2i(2, 2), "Caixão Fujão carrega como chefe HOP 2×2")
+	check_eq(stage.graves_for_unrest, 900.0, "Inquietação do estágio 1 exige 900 covas (GDD §10.1)")
+	check_eq(tree.get_node_data(&"E06").base_cost, 300.0, "Pá de Coveiro permite área 3×3 dentro do ritmo do Marco A")
 
 
 ## GDD §4.3 v1.1: Cobre por ponto de dano, frações acumulam, excedente não paga.

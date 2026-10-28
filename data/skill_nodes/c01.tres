@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://cn0gc64hbiyv7"]
+
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+stat = &"field_size"
+value = 1.0
+
+[resource]
+script = ExtResource("1_node")
+id = &"C01"
+display_name = "Campo Maior"
+description = "+1 de lado no campo (5 → 10)"
+branch = 4
+kind = &"D"
+max_level = 5
+base_cost = 3.0
+cost_growth = 3.0
+currency = &"bones"
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+children = Array[StringName]([&"C02", &"C03"])
+requires = Array[Dictionary]([{
+"id": &"N00",
+"level": 1
+}])
+grid = Vector2i(5, 1)
+tree_position = Vector2(1408, 304)
+icon_cell = Vector2i(1, 2)

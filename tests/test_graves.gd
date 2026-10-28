@@ -3,7 +3,7 @@ extends "res://tests/test_case.gd"
 ## inteiro, abre inteiro e some inteiro, nos 2 eixos, com e sem luz.
 ## Uso: godot --headless --path . -s res://tests/test_graves.gd
 
-const HEAD := Vector2i(5, 5)
+const HEAD := Vector2i(2, 2)
 const BIG := 100000.0
 
 
@@ -116,7 +116,7 @@ func _test_uneven_progress_in_turn() -> void:
 	var cells: Array = g.cells
 	var head: Vector2i = cells[0]
 	var foot: Vector2i = cells[1]
-	var only_foot := foot + RunState.GRAVE_DIRS[1]
+	var only_foot := foot
 	var area := run.area_cells(only_foot)
 	check(area.has(foot) and not area.has(head), "cursor além dos pés: área pega só uma metade")
 	var opened := [0]
@@ -133,8 +133,9 @@ func _test_uneven_progress_in_turn() -> void:
 	check(run.field.top_layer(foot) == null and not run.field.is_hole(foot), "pés esperam a cabeça (fundo de buraco)")
 	check(run.field.is_intact(head), "cabeça intocada")
 	var pulses := 0
-	while opened[0] == 0 and pulses < 200:
+	while opened[0] == 0 and pulses < 400:
 		run.advance(1.0, head)
+		run.advance(1.0, foot)
 		pulses += 1
 		whole = whole and _grave_whole(run.field, g)
 	check(whole, "cavando a cova toda: caixão sempre inteiro")
@@ -158,8 +159,9 @@ func _test_regen_and_field_clear() -> void:
 	var regen_at: Dictionary = {}
 	run.tile_regenerated.connect(func(c: Vector2i) -> void: regen_at[c] = run.elapsed)
 	var guard := 0
-	while not bool(g.open) and guard < 200:
+	while not bool(g.open) and guard < 400:
 		run.advance(1.0, head)
+		run.advance(1.0, foot)
 		guard += 1
 	check(bool(g.open), "cova abriu")
 	var timer := run.balance.grave_open_time
@@ -181,16 +183,16 @@ func _test_regen_and_field_clear() -> void:
 ## Não há save no meio do turno (o RunState não é persistido): o que vai para o disco entre
 ## turnos é a Inquietação. Ao carregar, cada cova nasce inteira e ligada.
 func _test_save_load() -> void:
-	var path := "user://test_graves_save.json"
+	var path := "res://.test_graves_save.json"
 	var run := _make_run({StatSheet.GRAVE_COUNT: 2.0})
 	var g0: Dictionary = run.graves[0]
 	var c0: Array = g0.cells
 	_dig_soil(run.field, c0[0] as Vector2i)  # metade adiantada no turno abandonado
-	check(SaveIO.write(path, {"unrest": {String(run.area.id): 0.4}}), "save escrito")
+	check(SaveIO.write(path, {"unrest": {str(run.area.id): 0.4}}), "save escrito")
 	var data := SaveIO.read(path)
 	SaveIO.delete(path)
 	var unrest_map: Dictionary = data.get("unrest", {})
-	var unrest: float = float(unrest_map.get(String(run.area.id), 0.0))
+	var unrest: float = float(unrest_map.get(str(run.area.id), 0.0))
 	check_eq(unrest, 0.4, "Inquietação volta do save")
 	var stats := base_stats({StatSheet.GRAVE_COUNT: 2.0, StatSheet.RADIUS: 1.0})
 	var loaded := RunState.new(load_area(), load_tool(), clean_balance(), stats, 78, unrest)

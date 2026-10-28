@@ -1,22 +1,28 @@
-[gd_resource type="Resource" script_class="SkillNodeData" format=3]
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://bd1xjak2vmfvl"]
 
-[ext_resource type="Script" path="res://data/types/stat_modifier.gd" id="1_e2lj0"]
-[ext_resource type="Script" path="res://data/types/skill_node_data.gd" id="2_wbe6e"]
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
 
-[sub_resource type="Resource" id="Resource_6naeh"]
-script = ExtResource("1_e2lj0")
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
 stat = &"bone_chance"
 value = 0.02
 
 [resource]
-script = ExtResource("2_wbe6e")
+script = ExtResource("1_node")
 id = &"F02"
 display_name = "Faro de Osso"
-description = "+2 p.p. de chance de Osso por nível."
+description = "+2 p.p. de chance de Osso (Terra, Barro, Ossada e camadas fundas)"
 branch = 3
-max_level = 10
-base_cost = 40.0
-cost_growth = 1.55
-modifiers_per_level = Array[ExtResource("1_e2lj0")]([SubResource("Resource_6naeh")])
-tree_position = Vector2(496, 304)
+max_level = 8
+base_cost = 50.0
+cost_growth = 1.65
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+children = Array[StringName]([&"F04", &"F05"])
+requires = Array[Dictionary]([{
+"id": &"F01",
+"level": 1
+}])
+grid = Vector2i(1, 2)
+tree_position = Vector2(1056, 368)
 icon_cell = Vector2i(6, 1)

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://bpmue72y2oad4"]
+
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+stat = &"pulse_interval"
+op = 1
+value = 0.96
+
+[resource]
+script = ExtResource("1_node")
+id = &"E09"
+display_name = "Ombro de Ferro"
+description = "−4% no intervalo do golpe"
+branch = 1
+max_level = 6
+base_cost = 25000.0
+cost_growth = 1.8
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+children = Array[StringName]([&"EX"])
+requires = Array[Dictionary]([{
+"id": &"E08",
+"level": 1
+}])
+grid = Vector2i(-9, 7)
+tree_position = Vector2(176, 688)
+icon_cell = Vector2i(4, 3)

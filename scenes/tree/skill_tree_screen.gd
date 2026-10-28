@@ -6,11 +6,11 @@ extends Control
 
 const PANEL_H := 58
 const PANEL_Y := TreeLayout.PANEL_Y  # = 360 − 6 − PANEL_H
-const DIG_BUTTON_POS := Vector2(548, 6)
-const START_CAM := Vector2(0, 48)
+const START_CAM := Vector2(648, 0)
 const WHEEL_STEP := 40.0
 const DRAG_THRESHOLD := 3.0
 const COMBO_RESET := 0.6
+const TreeMinimapScript = preload("res://scenes/tree/tree_minimap.gd")
 
 var _cam := TreeCamera.new(Vector2(640, 360), Rect2(Vector2.ZERO, TreeArt.WORLD))
 var _sky: TreeAmbience.SkyLayer
@@ -26,7 +26,12 @@ var _wallet_icons: Dictionary = {}  # currency -> ResourceIcon
 var _wallet_shown: Dictionary = {}  # currency -> valor exibido
 var _dig_btn: Button
 var _options: OptionsMenu
+var _stat_sheet: StatSheetPanel
 var _overlay: Control
+var _hall: Control
+var _hall_toggle: Button
+var _boss_btn: Button
+var _minimap: Control
 
 var _panel: PanelContainer
 var _panel_shown: bool = false
@@ -64,19 +69,29 @@ func _ready() -> void:
 	_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_overlay)
 	_build_wallet()
-	_build_dig_button()
+	_build_hall()
+	_build_hall_toggle()
+	_build_minimap()
 	_build_info_panel()
 	_options = OptionsMenu.new()
 	_options.title_text = "Opções"
 	_options.show_title_button = true
 	add_child(_options)
 	_options.title_requested.connect(func() -> void: Game.goto_title())
+	_stat_sheet = StatSheetPanel.new()
+	add_child(_stat_sheet)
 
 	Events.currency_changed.connect(_on_currency_changed)
+	Events.unrest_filled.connect(_on_unrest_filled)
 	var n00 := Game.tree.get_node_data(&"N00")
-	_cam.pos = _cam.clamp_pos(START_CAM if n00 == null else Vector2(0, TreeLayout.start_camera_y(n00.tree_position.y)))
+	_cam.pos = _cam.clamp_pos(START_CAM if n00 == null else Vector2(n00.tree_position.x - 320.0, TreeLayout.start_camera_y(n00.tree_position.y)))
 	_refresh(false)
 	_apply_camera()
+	if Game.last_result != null and Game.last_result.boss_victory and not Game.chapter_1_end_seen:
+		await _show_chapter_unlock()
+		return
+	if Game.unrest_of(Game.area.id) >= 1.0 - 0.000001 and not Game.dialogue_was_seen(&"unrest_full"):
+		await Game.show_dialogue(&"unrest_full")
 	if Game.autopilot:
 		_run_autopilot()
 
@@ -84,9 +99,18 @@ func _ready() -> void:
 # --- Montagem do mundo ---------------------------------------------------------------
 
 func _build_world() -> void:
+	var deep_soil := ColorRect.new()
+	deep_soil.color = Palette.color(Palette.OUTLINE)
+	deep_soil.position = Vector2(0, TreeArt.GRASS_Y)
+	deep_soil.size = Vector2(TreeArt.WORLD.x, TreeArt.WORLD.y - TreeArt.GRASS_Y)
+	deep_soil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_world.add_child(deep_soil)
 	var soil := TreeArt.tex("tree_soil.png")
 	if soil != null:
-		_add_tex(soil, Vector2.ZERO)
+		var x := 0.0
+		while x < TreeArt.WORLD.x:
+			_add_tex(soil, TreeArt.SOIL_POS + Vector2(x, 0))
+			x += soil.get_width()
 	else:
 		var fallback := _SoilFallback.new()
 		_world.add_child(fallback)
@@ -95,7 +119,10 @@ func _build_world() -> void:
 		_add_tex(trunk, TreeArt.TRUNK_POS)
 	var grass := TreeArt.tex("tree_grass.png")
 	if grass != null:
-		_add_tex(grass, TreeArt.GRASS_POS)
+		var grass_x := 0.0
+		while grass_x < TreeArt.WORLD.x:
+			_add_tex(grass, TreeArt.GRASS_POS + Vector2(grass_x, 0))
+			grass_x += grass.get_width()
 	_world.add_child(TreeAmbience.Canopy.new())
 	_roots = RootLayer.new()
 	_world.add_child(_roots)
@@ -113,6 +140,14 @@ func _build_world() -> void:
 	_fx = TreeFx.new()
 	_world.add_child(_fx)
 	_world.add_child(TreeAmbience.new())
+	# Hall de navegação sobre o cenário; a árvore continua sendo um destino separado.
+
+
+func _show_chapter_unlock() -> void:
+	Audio.play(&"key_get")
+	Audio.play(&"stinger_stage_unlock")
+	await get_tree().create_timer(2.3).timeout
+	Game.goto_chapter_end()
 
 
 func _add_tex(t: Texture2D, pos: Vector2) -> void:
@@ -128,11 +163,11 @@ class _SoilFallback:
 	extends Node2D
 
 	func _draw() -> void:
-		draw_rect(Rect2(0, 112, 640, 146), Palette.color(Palette.DIRT_DARK))
-		draw_rect(Rect2(0, 258, 640, 190), Palette.color(Palette.DIRT_BOTTOM))
-		draw_rect(Rect2(0, 448, 640, 272), Palette.color(Palette.OUTLINE))
-		draw_rect(Rect2(0, 108, 640, 5), Palette.color(Palette.GRASS_DARK))
-		draw_rect(Rect2(312, 40, 16, 110), Palette.color(Palette.COFFIN_DARK))
+		draw_rect(Rect2(0, TreeArt.GRASS_Y, TreeArt.WORLD.x, 146), Palette.color(Palette.DIRT_DARK))
+		draw_rect(Rect2(0, TreeArt.GRASS_Y + 146, TreeArt.WORLD.x, 190), Palette.color(Palette.DIRT_BOTTOM))
+		draw_rect(Rect2(0, TreeArt.GRASS_Y + 336, TreeArt.WORLD.x, TreeArt.WORLD.y - TreeArt.GRASS_Y - 336), Palette.color(Palette.OUTLINE))
+		draw_rect(Rect2(0, TreeArt.GRASS_Y - 4, TreeArt.WORLD.x, 5), Palette.color(Palette.GRASS_DARK))
+		draw_rect(Rect2(TreeArt.TRUNK_POS.x + 64, TreeArt.TRUNK_POS.y, 16, 112), Palette.color(Palette.COFFIN_DARK))
 
 
 # --- Interface fixa ----------------------------------------------------------------------
@@ -177,26 +212,107 @@ func _build_wallet() -> void:
 	Juice.slide_in(holder, Vector2(0, -28))
 
 
-## "Cavar ▶" (GDD §15.1): fixo no canto, 1 clique para o próximo turno.
-func _build_dig_button() -> void:
-	_dig_btn = Button.new()
-	_dig_btn.theme_type_variation = &"BigButton"
-	_dig_btn.text = "Cavar"
-	_dig_btn.icon = UiKit.play_icon()
-	_dig_btn.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_dig_btn.position = DIG_BUTTON_POS
-	_dig_btn.custom_minimum_size = Vector2(86, 0)
-	_dig_btn.pressed.connect(Game.goto_run)
-	_overlay.add_child(_dig_btn)
-	Juice.slide_in(_dig_btn, Vector2(0, -28), 0.04)
+## Hall navega pelos destinos do cemitério; a escavação começa em um clique.
+func _build_hall() -> void:
+	_hall = Control.new()
+	_hall.anchor_left = 0.5
+	_hall.anchor_top = 0.5
+	_hall.anchor_right = 0.5
+	_hall.anchor_bottom = 0.5
+	_hall.position = Vector2(-250, 18)
+	_hall.size = Vector2(500, 150)
+	_hall.mouse_filter = Control.MOUSE_FILTER_STOP
+	_overlay.add_child(_hall)
+	var panel := PanelContainer.new()
+	panel.theme_type_variation = &"ParchmentPanel"
+	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	_hall.add_child(panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 6)
+	panel.add_child(column)
+	var title := Label.new()
+	title.text = tr("PÁTIO DO BOM DESCANSO")
+	title.theme_type_variation = &"ParchmentTitle"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(title)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 8)
+	column.add_child(row)
+	_add_hall_station(row, "Raízes", "Talentos", _open_skill_tree)
+	_dig_btn = _add_hall_station(row, "Próxima Noite", "Paróquia · Cavar", Game.goto_run)
+	_add_hall_station(row, "Loja", "Capítulo 2", Callable(), true)
+	_add_hall_station(row, "Fazenda", "Em breve", Callable(), true)
+	_boss_btn = Button.new()
+	_boss_btn.theme_type_variation = &"BigButton"
+	_boss_btn.custom_minimum_size = Vector2(220, 28)
+	_boss_btn.text = tr("Enfrentar o Caixão Fujão")
+	_boss_btn.visible = Game.unrest_of(Game.area.id) >= 1.0 - 0.000001
+	_boss_btn.pressed.connect(Game.goto_boss)
+	column.add_child(_boss_btn)
+	Juice.slide_in(_hall, Vector2(0, 12), 0.06)
+
+
+func _add_hall_station(row: HBoxContainer, name: String, detail: String, action: Callable, locked: bool = false) -> Button:
+	var button := Button.new()
+	button.theme_type_variation = &"BigButton"
+	button.custom_minimum_size = Vector2(112, 78)
+	button.text = tr(name) + "\n" + tr(detail)
+	button.disabled = locked
+	if not locked and action.is_valid():
+		button.pressed.connect(action)
+	row.add_child(button)
+	return button
+
+func _build_hall_toggle() -> void:
+	_hall_toggle = Button.new()
+	_hall_toggle.theme_type_variation = &"BigButton"
+	_hall_toggle.text = "Pátio"
+	_hall_toggle.position = Vector2(548, 6)
+	_hall_toggle.custom_minimum_size = Vector2(86, 0)
+	_hall_toggle.visible = false
+	_hall_toggle.pressed.connect(_show_hall)
+	_overlay.add_child(_hall_toggle)
+
+
+func _on_unrest_filled(area_id: int) -> void:
+	if area_id == Game.area.id:
+		_boss_btn.visible = true
+
+
+func _open_skill_tree() -> void:
+	_hall.visible = false
+	_hall_toggle.visible = true
+	_minimap.visible = true
+	_panel.visible = _panel_shown
+	_scroll_to_node(&"N00")
+
+
+func _show_hall() -> void:
+	_hall.visible = true
+	_hall_toggle.visible = false
+	_minimap.visible = false
+	_panel.visible = false
+	_cam.scroll_to(_cam.clamp_pos(START_CAM))
+
+func _build_minimap() -> void:
+	_minimap = TreeMinimapScript.new()
+	_minimap.position = Vector2(6, 306)
+	_minimap.setup(Game.tree, TreeArt.WORLD, _cam.view)
+	_minimap.visible = false
+	_minimap.connect("jump_requested", func(world_point: Vector2) -> void:
+		_cam.scroll_to(_cam.center_on(world_point, _cam.view * 0.5))
+	)
+	_overlay.add_child(_minimap)
 
 
 func _build_info_panel() -> void:
 	_panel = PanelContainer.new()
 	_panel.theme_type_variation = &"ParchmentPanel"
-	_panel.position = Vector2(6, 360)
-	_panel.size = Vector2(628, PANEL_H)
-	_panel.custom_minimum_size = Vector2(628, PANEL_H)
+	_panel.position = Vector2(108, 360)
+	_panel.size = Vector2(526, PANEL_H)
+	_panel.custom_minimum_size = Vector2(526, PANEL_H)
 	_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	_panel.visible = false
 	_overlay.add_child(_panel)
@@ -258,9 +374,9 @@ func _gui_input(event: InputEvent) -> void:
 				if _drag_moved:
 					_cam.release(_drag_vel)
 		elif mb.pressed and mb.button_index == MOUSE_BUTTON_WHEEL_UP:
-			_cam.scroll_by(Vector2(0, -WHEEL_STEP))
+			_cam.scroll_by(Vector2(-WHEEL_STEP if mb.shift_pressed else 0, -WHEEL_STEP if not mb.shift_pressed else 0))
 		elif mb.pressed and mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			_cam.scroll_by(Vector2(0, WHEEL_STEP))
+			_cam.scroll_by(Vector2(WHEEL_STEP if mb.shift_pressed else 0, WHEEL_STEP if not mb.shift_pressed else 0))
 		accept_event()
 		return
 	var mm := event as InputEventMouseMotion
@@ -274,14 +390,45 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"toggle_stats"):
+		get_viewport().set_input_as_handled()
+		_stat_sheet.toggle()
+		return
 	if event.is_action_pressed(&"pause") and not _options.is_open():
 		get_viewport().set_input_as_handled()
 		_options.open()
+		return
+	if event.is_action_pressed(&"face_boss") and Game.unrest_of(Game.area.id) >= 1.0 - 0.000001:
+		get_viewport().set_input_as_handled()
+		Game.goto_boss()
+		return
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo:
+		return
+	if key.keycode == KEY_HOME:
+		_scroll_to_node(&"N00")
+		return
+	if key.keycode >= KEY_1 and key.keycode <= KEY_7:
+		_focus_branch(key.keycode - KEY_0)
+
+
+func _focus_branch(branch_id: int) -> void:
+	var candidate: StringName = &""
+	var candidate_y := INF
+	for id: StringName in Game.tree.order:
+		var data := Game.tree.get_node_data(id)
+		if int(data.branch) == branch_id and Game.tree.is_revealed(id) and data.tree_position.y < candidate_y:
+			candidate = id
+			candidate_y = data.tree_position.y
+	if candidate != &"":
+		_scroll_to_node(candidate)
 
 
 func _process(delta: float) -> void:
 	_cam.step(delta)
 	_apply_camera()
+	if _minimap != null and _minimap.visible:
+		_minimap.call("set_camera_pos", _cam.pos)
 	if _combo > 0:
 		_combo_t += delta
 		if _combo_t > COMBO_RESET:
@@ -305,6 +452,10 @@ func _scroll_to_node(id: StringName) -> void:
 # --- Compra e foco ---------------------------------------------------------------------
 
 func _on_hovered(id: StringName) -> void:
+	# O mundo da árvore continua sob o Pátio; não permita que um nó sob o cursor
+	# reabra o painel de detalhes enquanto o jogador está no hall.
+	if _hall.visible:
+		return
 	if Game.tree.is_revealed(id) and not Game.seen_nodes.has(id):
 		Game.mark_seen(id)
 	_set_focus(id)
@@ -329,6 +480,8 @@ func _on_buy_requested(id: StringName) -> void:
 		Juice.pop(_panel, 0.03, 0.14)
 	_scroll_to_node(id)
 	_refresh(true)
+	if not Game.dialogue_was_seen(&"first_node"):
+		await Game.show_dialogue(&"first_node")
 
 
 ## O custo "voa" do nó até o contador da carteira (que conta para baixo).
@@ -365,10 +518,13 @@ func _set_focus(id: StringName) -> void:
 	for other: StringName in _buttons:
 		(_buttons[other] as SkillNodeButton).focused = other == id
 	_refresh_info()
+	if _hall.visible:
+		_panel.visible = false
+		return
 	if not _panel_shown and Game.tree.is_revealed(id):
 		_panel_shown = true
 		_panel.visible = true
-		_panel.position = Vector2(6, 360)
+		_panel.position = Vector2(108, 360)
 		Audio.play(&"ui_panel_open")
 		var t := _panel.create_tween()
 		t.tween_property(_panel, "position:y", float(PANEL_Y), Juice.PANEL_OPEN).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -422,7 +578,8 @@ func _refresh(animate: bool) -> void:
 			_scroll_to_node(fresh[0])
 	_refresh_buttons_affordability()
 	_refresh_info()
-
+	if _minimap != null:
+		_minimap.queue_redraw()
 
 func _refresh_buttons_affordability() -> void:
 	var info := Game.tree.cheapest_pending(Economy.balances)
@@ -448,8 +605,18 @@ func _root_list() -> Array[Dictionary]:
 				continue
 			var to := tree.get_node_data(child).tree_position
 			var from := TreeLayout.root_start(d.tree_position, to, TreeLayout.decor_bottom_for(tree, id))
+			var blockers: Array[Rect2] = []
+			for other: StringName in _buttons:
+				if other == id or other == child:
+					continue
+				if tree.is_revealed(other):
+					var other_pos: Vector2 = tree.get_node_data(other).tree_position
+					blockers.append(TreeLayout.node_rect(other_pos))
+					blockers.append(TreeLayout.label_rect(other_pos))
+			blockers.append(TreeLayout.label_rect(d.tree_position))
+			blockers.append(TreeLayout.label_rect(to))
 			out.append({"key": String(id) + ">" + String(child), "from": from,
-				"to": to, "bought": tree.is_owned(child)})
+				"to": to, "bought": tree.is_owned(child), "obstacles": blockers})
 	return out
 
 

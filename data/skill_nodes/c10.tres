@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://cqmjs8o6dsjhx"]
+
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+stat = &"unrest_mult"
+value = 0.1
+
+[resource]
+script = ExtResource("1_node")
+id = &"C10"
+display_name = "Chamado dos Mortos"
+description = "+10% de Inquietação por cova (o chefe chega antes)"
+branch = 4
+max_level = 5
+base_cost = 3.0
+cost_growth = 1.7
+currency = &"souls"
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+requires = Array[Dictionary]([{
+"id": &"C02",
+"level": 1
+}])
+grid = Vector2i(5, 3)
+tree_position = Vector2(1408, 432)
+icon_cell = Vector2i(3, 5)

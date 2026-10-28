@@ -21,6 +21,8 @@ var fill_texture_path: String = "":
 		fill_texture_path = v
 		_fill_tex = AssetManifest.texture(v) if not v.is_empty() else null
 		queue_redraw()
+var frame_texture_path: String = "res://assets/ui/hud/barra_moldura.png"
+var frame_margin: int = 3
 
 ## Cor sólida que substitui a textura de preenchimento (alertas pulsando). 0 = desligado.
 var override_color: int = 0:
@@ -42,20 +44,22 @@ const FILL_HEIGHT := 4
 ## Altura da barra quando a moldura de arte está disponível.
 const ART_HEIGHT := 10
 
-static var _frame_style: StyleBoxTexture
-static var _frame_checked: bool = false
+static var _frame_styles: Dictionary = {}
 var _fill_tex: Texture2D
 
 
-static func frame_style() -> StyleBoxTexture:
-	if not _frame_checked:
-		_frame_checked = true
-		var tex := AssetManifest.texture(FRAME_PATH)
-		if tex != null:
-			_frame_style = StyleBoxTexture.new()
-			_frame_style.texture = tex
-			_frame_style.set_texture_margin_all(FRAME_MARGIN)
-	return _frame_style
+static func frame_style(texture_path: String = FRAME_PATH, margin: int = FRAME_MARGIN) -> StyleBoxTexture:
+	var key := "%s:%d" % [texture_path, margin]
+	if _frame_styles.has(key):
+		return _frame_styles[key] as StyleBoxTexture
+	var style: StyleBoxTexture
+	var tex := AssetManifest.texture(texture_path)
+	if tex != null:
+		style = StyleBoxTexture.new()
+		style.texture = tex
+		style.set_texture_margin_all(margin)
+	_frame_styles[key] = style
+	return style
 
 
 static func uses_art() -> bool:
@@ -68,13 +72,13 @@ func _init() -> void:
 
 func _draw() -> void:
 	var r := Rect2(Vector2.ZERO, size.floor())
-	var style := frame_style()
+	var style := frame_style(frame_texture_path, frame_margin)
 	var fill_rect: Rect2
 	var inner_w: float
 	if style != null:
 		draw_style_box(style, r)
-		inner_w = r.size.x - FRAME_MARGIN * 2
-		fill_rect = Rect2(FRAME_MARGIN, FRAME_MARGIN, floorf(inner_w * value), FILL_HEIGHT)
+		inner_w = r.size.x - frame_margin * 2
+		fill_rect = Rect2(frame_margin, frame_margin, floorf(inner_w * value), FILL_HEIGHT)
 	else:
 		draw_rect(r, Palette.color(Palette.OUTLINE))
 		var inner := r.grow(-1)

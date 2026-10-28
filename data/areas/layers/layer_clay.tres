@@ -1,14 +1,15 @@
-[gd_resource type="Resource" script_class="LayerData" format=3]
+[gd_resource type="Resource" script_class="LayerData" format=3 uid="uid://bkvahu0tlfuo3"]
 
-[ext_resource type="Script" path="res://data/types/layer_data.gd" id="1_q4q1q"]
+[ext_resource type="Script" uid="uid://dhfiq3digftqh" path="res://data/types/layer_data.gd" id="1_q4q1q"]
 
 [resource]
 script = ExtResource("1_q4q1q")
 id = &"clay"
 display_name = "Barro"
 hp = 8.0
-copper = 4.0
+copper = 16.0
 xp = 3.0
+deep = true
 bone_chance = 0.06
 stage_column = 2
 particle_colors = PackedInt32Array(16, 15, 14)

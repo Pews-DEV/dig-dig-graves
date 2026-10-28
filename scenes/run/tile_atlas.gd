@@ -22,7 +22,7 @@ const GRAVE_ROW_CRACKED := 1
 const GRAVE_ROW_OPEN := 2
 ## MANIFEST grave_a1: linha "rachado" quando o HP do caixão < 50%.
 const GRAVE_CRACK_RATIO := 0.5
-const STAGES := 4
+const STAGES := 6
 ## Desloca a textura 32×24 para que o pivô (16,16) caia no centro da célula.
 const TEXTURE_ORIGIN := Vector2i(0, PIVOT.y - (CELL.y >> 1))
 ## Rachaduras (MANIFEST cracks_a1): célula 16×8 com canto em (8,13) da célula do tile.
@@ -31,7 +31,7 @@ const CRACK_OFFSET := Vector2(8, 13) - Vector2(PIVOT)
 
 var tile_set: TileSet
 ## Variantes preenchidas (linhas) por coluna S0..S3, detectadas no próprio atlas.
-var variants: PackedInt32Array = PackedInt32Array([1, 1, 1, 1])
+var variants: PackedInt32Array = PackedInt32Array([1, 1, 1, 1, 1, 1])
 var using_placeholder: bool = true
 var cracks: Texture2D
 var cracks_lit: Texture2D
@@ -183,6 +183,9 @@ static func make_placeholder() -> Image:
 	_draw_s1(img, CELL.x)
 	_draw_s2(img, CELL.x * 2)
 	_draw_s3(img, CELL.x * 3)
+	_draw_s3(img, CELL.x * 5)
+	for p: Vector2i in [Vector2i(12, 15), Vector2i(13, 15), Vector2i(19, 18), Vector2i(20, 18)]:
+		img.set_pixel(CELL.x * 5 + p.x, p.y, Palette.color(Palette.BONE))
 	return img
 
 

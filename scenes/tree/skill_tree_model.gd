@@ -9,6 +9,7 @@ var nodes: Dictionary = {}  # StringName -> SkillNodeData
 var order: Array[StringName] = []
 var levels: Dictionary = {}  # StringName -> int
 var _parents: Dictionary = {}  # StringName -> Array[StringName]
+var trigger_state: Dictionary = {}
 
 
 func _init(defs: Array[SkillNodeData] = []) -> void:
@@ -40,6 +41,7 @@ static func load_definitions(dir: String) -> Array[SkillNodeData]:
 
 func reset() -> void:
 	levels.clear()
+	trigger_state.clear()
 	for id: StringName in order:
 		levels[id] = 1 if (nodes[id] as SkillNodeData).starts_owned else 0
 
@@ -75,6 +77,22 @@ func is_revealed(id: StringName) -> bool:
 		return false
 	if d.starts_owned or is_owned(id):
 		return true
+	if d.reveal_trigger != &"" and not bool(trigger_state.get(d.reveal_trigger, false)):
+		return false
+	if not d.requires.is_empty() or not d.requires_any.is_empty():
+		for req: Dictionary in d.requires:
+			var req_id := StringName(str(req.get("id", "")))
+			if level_of(req_id) < int(req.get("level", 1)):
+				return false
+		if not d.requires_any.is_empty():
+			var has_any := false
+			for req_id: StringName in d.requires_any:
+				if is_owned(req_id):
+					has_any = true
+					break
+			if not has_any:
+				return false
+		return true
 	for p: StringName in parents_of(id):
 		if is_owned(p):
 			return true
@@ -95,6 +113,12 @@ func next_cost(id: StringName) -> float:
 	var d := get_node_data(id)
 	if d == null or is_maxed(id):
 		return INF
+	if d.kind == &"M":
+		var bought := 0
+		for other_id: StringName in order:
+			if get_node_data(other_id).kind == &"M" and is_owned(other_id):
+				bought += 1
+		return ceilf(d.base_cost * pow(d.cost_growth, bought))
 	return d.cost_at(level_of(id))
 
 
@@ -102,7 +126,16 @@ func can_buy(id: StringName, wallet: Dictionary) -> bool:
 	if not is_revealed(id) or is_maxed(id):
 		return false
 	var d := get_node_data(id)
+	if d.exclusive_group != &"":
+		for other_id: StringName in order:
+			var other := get_node_data(other_id)
+			if other_id != id and other.exclusive_group == d.exclusive_group and is_owned(other_id):
+				return false
 	return float(wallet.get(d.currency, 0.0)) >= next_cost(id)
+
+
+func set_trigger(trigger: StringName, enabled: bool = true) -> void:
+	trigger_state[trigger] = enabled
 
 
 ## Sobe 1 nível. Retorna os ids recém-revelados.
@@ -133,8 +166,10 @@ func collect_modifiers(override_id: StringName = &"", override_level: int = -1) 
 
 func has_flag(flag: StringName) -> bool:
 	for id: StringName in order:
-		if is_owned(id) and (nodes[id] as SkillNodeData).unlock_flags.has(flag):
-			return true
+		if is_owned(id):
+			var d := nodes[id] as SkillNodeData
+			if d.unlock_flags.has(flag) or d.flags.has(flag):
+				return true
 	return false
 
 

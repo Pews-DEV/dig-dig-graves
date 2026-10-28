@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://dw5ul8fawnaa4"]
+
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+stat = &"wanderers"
+value = 1.0
+
+[resource]
+script = ExtResource("1_node")
+id = &"S04"
+display_name = "Alminhas Errantes"
+description = "+1 alminha vagando no campo; tocar nela = +1 Alma"
+branch = 6
+kind = &"D"
+max_level = 3
+base_cost = 8.0
+cost_growth = 2.2
+currency = &"souls"
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+requires = Array[Dictionary]([{
+"id": &"S01",
+"level": 1
+}])
+flags = Array[StringName]([&"wanderers"])
+grid = Vector2i(-3, 2)
+tree_position = Vector2(704, 368)
+icon_cell = Vector2i(6, 2)

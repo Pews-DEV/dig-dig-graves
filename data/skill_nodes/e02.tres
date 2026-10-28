@@ -1,24 +1,29 @@
-[gd_resource type="Resource" script_class="SkillNodeData" format=3]
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://bnhmnn2cch56y"]
 
-[ext_resource type="Script" path="res://data/types/stat_modifier.gd" id="1_efa1e"]
-[ext_resource type="Script" path="res://data/types/skill_node_data.gd" id="2_syeyp"]
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
 
-[sub_resource type="Resource" id="Resource_yoexk"]
-script = ExtResource("1_efa1e")
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
 stat = &"pulse_interval"
 op = 1
-value = 0.94
+value = 0.95
 
 [resource]
-script = ExtResource("2_syeyp")
+script = ExtResource("1_node")
 id = &"E02"
 display_name = "Braço Firme"
-description = "−6% no intervalo do golpe por nível (multiplicativo)."
+description = "−5% no intervalo do golpe (mult.)"
 branch = 1
-max_level = 8
-base_cost = 25.0
-cost_growth = 1.55
-modifiers_per_level = Array[ExtResource("1_efa1e")]([SubResource("Resource_yoexk")])
-children = Array[StringName]([&"E03"])
-tree_position = Vector2(144, 304)
+max_level = 10
+base_cost = 30.0
+cost_growth = 1.6
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+children = Array[StringName]([&"E04", &"E10"])
+requires = Array[Dictionary]([{
+"id": &"E01",
+"level": 1
+}])
+grid = Vector2i(-9, 2)
+tree_position = Vector2(176, 368)
 icon_cell = Vector2i(4, 0)

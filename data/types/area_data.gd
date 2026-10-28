@@ -12,7 +12,14 @@ extends Resource
 @export var hp_mult: float = 1.0
 @export var reward_mult: float = 1.0
 @export var xp_mult: float = 1.0
-@export var base_field_size: int = 12
+@export var bones_mult: float = 1.0
+@export var souls_mult: float = 1.0
+@export var graves_for_unrest: float = 900.0
+## GDD §4.6: pesos para Foto oval, Cruz de pedra e Lápide com musgo.
+@export var grave_type_weights: PackedFloat32Array = PackedFloat32Array([50.0, 25.0, 25.0])
+@export var boss_path: String
+@export var music_id: StringName = &"mus_area1"
+@export var base_field_size: int = 5
 @export var max_field_size: int = 18
 ## Atlas de tiles (Direção de Arte §11.4). Só usado se registrado em assets/MANIFEST.md.
 @export_file("*.png") var tile_atlas_path: String

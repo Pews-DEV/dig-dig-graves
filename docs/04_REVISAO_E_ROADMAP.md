@@ -92,7 +92,7 @@ Evidências no formato `arquivo:linha` (commit `d50b3e1`). Há edições locais 
 | §16 | Controles: gamepad | ❌ | `run.gd:110–112` (só `mouse_cell()`) | Nenhum movimento de cursor por analógico |
 | §16 | Acessibilidade | 🟡 | `autoload/game_settings.gd:14–28`; `run.gd:80` | Volumes, tremor, flashes, movimento, tamanho dos números e pausa ao perder o foco ✅; daltônico ❌, auto-pisão ❌ |
 | §17 | Áudio do MVP | ✅ | `assets/AUDIO_MANIFEST.md`; `autoload/audio.gd`, `audio_bank.gd` | Música da Árvore, da Área 1, jingle, stingers, 25 SFX. Título em produção; chefe/hub ❌ |
-| DA §12 M1 | Itens 1–6, 8, 13 (tileset+lit, cursor 24, ícones, lápides/rocha/vela/crisântemo, HUD, fogo-fátuo/alma, Árvore, bordas A1) | ✅ | `assets/MANIFEST.md` | 25 ícones de nó desenhados, só 11 usados |
+| DA §12 M1 | Itens 1–6, 8, 13 (tileset+lit, cursor 24, ícones, lápides/rocha/vela/crisântemo, HUD, fogo-fátuo/alma, Árvore, bordas A1) | ✅ | `assets/MANIFEST.md` | Atlas com 44 células para os 44 nós do Marco A; validação automatizada de unicidade em `test_ui_logic.gd` |
 | DA §12 M1 | Itens 7, 9–12 (cartas, chefe, ajudantes, personagens, hub) | ❌ | — | Personagens do título estão sendo feitos agora (`b9b1992`) |
 | DA §12 M1 | Item 14 (logo) | 🟡 | `0f8cf26` | Em implementação |
 | UI/UX §4–§7 | HUD em plaquetas, diorama, catálogo de juice, Árvore aconchegante | ✅ | `hud.gd`, `diorama_block.gd`, `scenes/ui/juice.gd`, `tree_ambience.gd`, `tree_fx.gd` | O ponto mais forte do projeto |

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://ds6jssb41e8ap"]
+
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+stat = &"oil_max"
+value = 3.0
+
+[resource]
+script = ExtResource("1_node")
+id = &"L08"
+display_name = "Querosene"
+description = "+3 s de óleo"
+branch = 2
+max_level = 5
+base_cost = 6000.0
+cost_growth = 1.8
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+children = Array[StringName]([&"LX"])
+requires = Array[Dictionary]([{
+"id": &"L03",
+"level": 1
+}])
+grid = Vector2i(-3, 4)
+tree_position = Vector2(704, 496)
+icon_cell = Vector2i(4, 4)

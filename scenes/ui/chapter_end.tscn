@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://op3kphhmqemv"]
+
+[ext_resource type="Script" uid="uid://4eh6uxt2p6eu" path="res://scenes/ui/chapter_end.gd" id="1_chapter_end"]
+
+[node name="ChapterEnd" type="Control" unique_id=1739397663]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_chapter_end")

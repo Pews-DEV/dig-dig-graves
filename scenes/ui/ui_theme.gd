@@ -47,7 +47,8 @@ static func _load_font(path: String) -> Font:
 			f.hinting = TextServer.HINTING_NONE
 			f.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
 			f.generate_mipmaps = false
-			f.allow_system_fallback = false
+			# As fontes pixel incluídas cobrem latim; textos CJK usam fallback do sistema.
+			f.allow_system_fallback = true
 			return f
 	return ThemeDB.fallback_font
 

@@ -21,6 +21,7 @@ var show_title_button: bool = false
 var _resume: Button
 var _panel: PanelContainer
 var _float_btn: Button
+var _locale_btn: OptionButton
 var _is_open: bool = false
 
 
@@ -53,6 +54,21 @@ func _ready() -> void:
 	grid.add_theme_constant_override("h_separation", 10)
 	grid.add_theme_constant_override("v_separation", 3)
 	box.add_child(grid)
+	_label(grid, "Idioma")
+	_locale_btn = OptionButton.new()
+	_locale_btn.custom_minimum_size = Vector2(140, 0)
+	var selected_locale := str(Game.settings.get("locale", "pt_BR"))
+	var selected_index := 0
+	for i: int in GameSettings.LOCALES.size():
+		var language: Dictionary = GameSettings.LOCALES[i]
+		_locale_btn.add_item(str(language.label))
+		_locale_btn.set_item_metadata(i, str(language.code))
+		_locale_btn.set_item_auto_translate_mode(i, Node.AUTO_TRANSLATE_MODE_DISABLED)
+		if str(language.code) == selected_locale:
+			selected_index = i
+	_locale_btn.select(selected_index)
+	_locale_btn.item_selected.connect(_on_locale_selected)
+	grid.add_child(_locale_btn)
 	for row: Array in VOLUME_ROWS:
 		_slider_row(grid, String(row[0]), String(row[1]))
 	_slider_row(grid, "Tremor da tela", "shake_intensity")
@@ -64,6 +80,7 @@ func _ready() -> void:
 
 	box.add_child(_check("Reduzir movimento", "reduce_motion"))
 	box.add_child(_check("Reduzir flashes", "reduce_flashes"))
+	box.add_child(_check("Auto-pisão", "auto_stomp"))
 
 	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -151,6 +168,10 @@ func _check(text: String, key: String) -> CheckBox:
 func _toggle_float() -> void:
 	Game.set_setting("float_scale", 2 if int(Game.settings.get("float_scale", 1)) == 1 else 1)
 	_update_float_text()
+
+
+func _on_locale_selected(index: int) -> void:
+	Game.set_setting("locale", str(_locale_btn.get_item_metadata(index)))
 
 
 func _update_float_text() -> void:

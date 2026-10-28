@@ -11,6 +11,19 @@ const BUS_KEYS: Dictionary = {
 	&"Ambience": "vol_ambience",
 }
 
+const LOCALES: Array[Dictionary] = [
+	{"code": "pt_BR", "label": "Português (Brasil)"},
+	{"code": "en", "label": "English"},
+	{"code": "fr", "label": "Français"},
+	{"code": "it", "label": "Italiano"},
+	{"code": "de", "label": "Deutsch"},
+	{"code": "es_ES", "label": "Español (España)"},
+	{"code": "ja", "label": "日本語"},
+	{"code": "ko", "label": "한국어"},
+	{"code": "ru", "label": "Русский"},
+	{"code": "zh_CN", "label": "简体中文"},
+]
+
 const DEFAULTS: Dictionary = {
 	"vol_master": 0.8,
 	"vol_music": 0.7,
@@ -20,6 +33,8 @@ const DEFAULTS: Dictionary = {
 	"shake_intensity": 1.0,
 	"reduce_flashes": false,
 	"reduce_motion": false,
+	"auto_stomp": false,
+	"locale": "pt_BR",
 	## 1 = tamanho nativo da m6x11; 2 = dobro (múltiplo inteiro, UI/UX §2).
 	"float_scale": 1,
 }
@@ -42,6 +57,12 @@ static func sanitize(saved: Dictionary) -> Dictionary:
 				out[key] = clampi(int(v), 1, 2)
 			TYPE_FLOAT:
 				out[key] = clampf(float(v), 0.0, 1.0)
+			TYPE_STRING:
+				var candidate := str(v)
+				for locale: Dictionary in LOCALES:
+					if candidate == str(locale.code):
+						out[key] = candidate
+						break
 	return out
 
 

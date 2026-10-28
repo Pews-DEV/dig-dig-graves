@@ -23,18 +23,25 @@ var _hitstop: int = 0
 var _copper_pending: Dictionary = {}
 ## XP das quebras deste golpe: sobe como 1 número só no centro da área.
 var _pulse_xp: float = 0.0
+var _stat_sheet: StatSheetPanel
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	field_view.process_mode = Node.PROCESS_MODE_PAUSABLE
-	state = RunState.new(Game.area, Game.tool, Game.balance, Stats.snapshot(), 0, Game.unrest_of(Game.area.id))
+	var run_stats := Stats.snapshot()
+	run_stats["ossuary_layer"] = Game.tree.has_flag(&"ossuary_layer")
+	run_stats["auto_stomp_option"] = bool(Game.settings.get("auto_stomp", false))
+	run_stats["boss_1_won"] = Game.boss_1_won
+	state = RunState.new(Game.area, Game.tool, Game.balance, run_stats, 0, Game.unrest_of(Game.area.id), Game.boss_run, Game.boss_data)
 	field_view.position = Vector2.ZERO
 	field_view.setup(state.field, Game.area)
 	field_view.frame_in(Hud.FREE_TOP, Hud.FREE_BOTTOM)
 	var block_bottom := field_view.content.position.y + field_view.block.base_y(field_view.block.split_x)
 	front_fx.fog_y = [block_bottom - 32.0, block_bottom - 6.0]
 	field_view.attach_run(state)
+	_stat_sheet = StatSheetPanel.new()
+	add_child(_stat_sheet)
 	state.pulse_resolved.connect(_on_pulse_resolved)
 	state.layer_broken.connect(_on_layer_broken)
 	state.tile_regenerated.connect(_on_tile_regenerated)
@@ -43,21 +50,38 @@ func _ready() -> void:
 	state.leveled_up.connect(func(level: int) -> void: Events.run_level_up.emit(level))
 	state.grave_opened.connect(_on_grave_opened)
 	state.grave_closed.connect(_on_grave_closed)
+	state.gold_coin_collected.connect(_on_gold_coin_collected)
+	state.wanderer_collected.connect(_on_wanderer_collected)
 	state.unrest_changed.connect(func(v: float) -> void: Events.unrest_changed.emit(v))
 	state.unrest_filled.connect(func() -> void: Events.unrest_filled.emit(Game.area.id))
 	state.wisp_collected.connect(_on_wisp_collected)
 	state.oil_drained.connect(_on_oil_drained)
+	state.boss_changed.connect(func(hp: float, max_hp: float, _cells: Array[Vector2i]) -> void: hud.update_boss(hp, max_hp))
+	state.stomp_used.connect(func(cells: Array[Vector2i]) -> void: field_view.play_stomp(cells))
+	state.boss_hopped.connect(func(_old_cells: Array[Vector2i], _new_cells: Array[Vector2i]) -> void:
+		Audio.play(&"boss_sink")
+		Audio.play(&"boss_emerge"))
+	state.stomp_ready.connect(func() -> void: Audio.play(&"stomp_ready"))
 	state.finished.connect(_on_finished)
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 	hud.refresh(state)
+	hud.show_stomp(state)
 	hud.options().closed.connect(func() -> void: _set_paused(false))
 	# Pausa → "Voltar ao título" (UI/UX §9.4): o progresso já salvo fica; a noite em curso é abandonada.
 	hud.options().title_requested.connect(func() -> void:
 		_leaving = true  # a cortina despausa o jogo: o turno não pode andar durante a saída
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		Game.goto_title())
-	Audio.play_music(&"mus_area1")
+	if Game.boss_run:
+		hud.show_boss(state.boss_hp, state.boss_hp_max)
+		Audio.play_music(&"mus_boss")
+	else:
+		Audio.play_music(&"mus_area1")
 	Audio.play_ambience(&"amb_night")
+	if Game.boss_run:
+		await Game.show_dialogue(&"boss_intro")
+	elif Game.turns_played == 0:
+		await Game.show_dialogue(&"first_turn")
 	Events.turn_started.emit()
 	if Game.autopilot and OS.get_cmdline_user_args().has("--show-options"):
 		_demo_options()
@@ -76,6 +100,14 @@ func _exit_tree() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"toggle_stats") and not _paused and not _leaving and not state.ended:
+		get_viewport().set_input_as_handled()
+		_stat_sheet.toggle()
+		return
+	if event.is_action_pressed(&"stomp") and not _paused and not _leaving and not state.ended:
+		if state.use_stomp():
+			get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed(&"pause") and not state.ended and not _paused:
 		get_viewport().set_input_as_handled()
 		_set_paused(true)
@@ -98,7 +130,7 @@ func _set_paused(value: bool) -> void:
 
 
 func _process(delta: float) -> void:
-	if _paused or _leaving:
+	if _paused or _leaving or get_tree().paused:
 		return
 	if _hitstop > 0:
 		_hitstop -= 1
@@ -107,10 +139,12 @@ func _process(delta: float) -> void:
 		return
 	var cell := _cursor_cell(delta)
 	state.advance(delta, cell)
-	field_view.cursor.position = field_view.cell_center(cell)
+	field_view.cursor.position = field_view.cell_center(cell) if Game.autopilot else field_view.mouse_position()
 	field_view.outline.set_cells(state.area_cells(cell))
 	field_view.refresh(cell, state.light_radius())
 	hud.refresh(state)
+	var hovered_grave := state.grave_at(cell) if not Game.autopilot else {}
+	hud.update_grave_tooltip(hovered_grave, get_viewport().get_mouse_position())
 
 
 func _cursor_cell(delta: float) -> Vector2i:
@@ -134,6 +168,9 @@ func _on_pulse_resolved(report: Dictionary) -> void:
 	Events.pulse_resolved.emit(report)
 	field_view.outline.flash()
 	field_view.cursor.strike(state.pulse_interval())
+	if bool(report.get("stomp", false)):
+		field_view.shake(2.0, 0.12)
+		Audio.play(&"stomp")
 	var hits: Array = report.hits
 	var limit := Game.balance.max_floating_numbers
 	var total_shown := 0.0
@@ -214,6 +251,7 @@ func _on_field_cleared(bonus: float) -> void:
 
 func _on_grave_opened(grave: Dictionary, rewards: Dictionary) -> void:
 	Events.grave_opened.emit(grave, rewards)
+	Game.show_tip(&"first_grave")
 	var cells: Array = grave.cells
 	var mid := (field_view.cell_center(cells[0] as Vector2i) + field_view.cell_center(cells[1] as Vector2i)) * 0.5
 	field_view.numbers.spawn(mid - Vector2(0, 30), "+%s" % NumberFormat.format(float(rewards.copper)), Palette.LANTERN_BRIGHT, false)
@@ -246,6 +284,20 @@ func _on_wisp_collected(wisp: Dictionary, oil: float) -> void:
 	field_view.numbers.spawn(field_view.cell_center(wisp.cell as Vector2i) - Vector2(0, 16), "+%d s" % roundi(oil), Palette.ECTO_BRIGHT, false)
 
 
+func _on_gold_coin_collected(coin: Dictionary, copper: float) -> void:
+	var pos := field_view.cell_center(coin.cell as Vector2i)
+	Audio.play(&"coin_gold")
+	field_view.numbers.spawn(pos - Vector2(0, 18), "+%s" % NumberFormat.format(copper), Palette.LANTERN_BRIGHT, false)
+	hud.fly(ResourceIcon.Kind.COPPER, _to_screen(pos), copper)
+
+
+func _on_wanderer_collected(wanderer: Dictionary, souls: float) -> void:
+	var pos := field_view.cell_center(wanderer.cell as Vector2i)
+	Audio.play(&"soul_wander")
+	field_view.numbers.spawn(pos - Vector2(0, 18), "+%s alma" % NumberFormat.format(souls), Palette.SOUL, false)
+	hud.fly(ResourceIcon.Kind.SOULS, _to_screen(pos), souls)
+
+
 func _on_oil_drained(cells: Array[Vector2i], amount: float) -> void:
 	var each := amount / maxf(1.0, cells.size())
 	for c: Vector2i in cells:
@@ -258,7 +310,14 @@ func _on_finished(result: TurnResult) -> void:
 	hud.refresh(state)
 	if result.end_reason == &"oil":
 		Audio.play(&"oil_out")
-	hud.show_toast("O ÓLEO ACABOU" if result.end_reason == &"oil" else "O SOL NASCEU", 2.0)
+	if result.boss_encounter and result.boss_victory:
+		Audio.play(&"boss_defeat")
+		Audio.play_jingle(&"jingle_boss_win")
+		await Game.show_dialogue(&"boss_victory")
+	elif result.boss_encounter:
+		Audio.play(&"boss_flee")
+	var finish_text := "CHEFE VENCIDO!" if result.boss_victory else ("O ÓLEO ACABOU" if result.end_reason == &"oil" else "O SOL NASCEU")
+	hud.show_toast(finish_text, 2.0)
 	await get_tree().create_timer(SUMMARY_DELAY).timeout
 	hud.settle()
 	await hud.play_exit().finished

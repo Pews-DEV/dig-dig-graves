@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="LayerData" format=3 uid="uid://db4n5npko5s0p"]
+
+[ext_resource type="Script" uid="uid://dhfiq3digftqh" path="res://data/types/layer_data.gd" id="1_layer"]
+
+[resource]
+script = ExtResource("1_layer")
+id = &"ossada"
+display_name = "Ossada"
+hp = 14.0
+copper = 42.0
+xp = 4.0
+deep = true
+bone_chance = 0.15
+stage_column = 5
+particle_colors = PackedInt32Array(22, 21, 20)
+sfx_key = &"dig_bone"

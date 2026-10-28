@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://dp6qqo0rdg5gd"]
+
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+stat = &"grave_reward"
+value = 0.25
+
+[resource]
+script = ExtResource("1_node")
+id = &"C04"
+display_name = "Lápides Antigas"
+description = "+25% na recompensa das covas"
+branch = 4
+max_level = 6
+base_cost = 40.0
+cost_growth = 1.8
+currency = &"bones"
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+children = Array[StringName]([&"C08"])
+requires = Array[Dictionary]([{
+"id": &"C02",
+"level": 1
+}])
+grid = Vector2i(4, 3)
+tree_position = Vector2(1320, 432)
+icon_cell = Vector2i(4, 2)

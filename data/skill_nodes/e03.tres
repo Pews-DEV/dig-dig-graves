@@ -1,23 +1,30 @@
-[gd_resource type="Resource" script_class="SkillNodeData" format=3]
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://dwyp5djo1gmch"]
 
-[ext_resource type="Script" path="res://data/types/stat_modifier.gd" id="1_ii7g6"]
-[ext_resource type="Script" path="res://data/types/skill_node_data.gd" id="2_nqei8"]
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
 
-[sub_resource type="Resource" id="Resource_cxgk4"]
-script = ExtResource("1_ii7g6")
-stat = &"radius"
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+stat = &"area_step"
 value = 1.0
 
 [resource]
-script = ExtResource("2_nqei8")
+script = ExtResource("1_node")
 id = &"E03"
 display_name = "Pá Larga"
-description = "+1 de raio da área por nível."
+description = "+1 passo de área (1×1 → 1×2 → 2×2 → 2×3)"
 branch = 1
+kind = &"D"
 max_level = 3
-base_cost = 15.0
+base_cost = 5.0
 cost_growth = 6.0
 currency = &"bones"
-modifiers_per_level = Array[ExtResource("1_ii7g6")]([SubResource("Resource_cxgk4")])
-tree_position = Vector2(144, 368)
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+children = Array[StringName]([&"E13"])
+requires = Array[Dictionary]([{
+"id": &"E01",
+"level": 1
+}])
+grid = Vector2i(-7, 2)
+tree_position = Vector2(352, 368)
 icon_cell = Vector2i(5, 0)

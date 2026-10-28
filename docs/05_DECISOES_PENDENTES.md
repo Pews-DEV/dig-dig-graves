@@ -53,7 +53,7 @@ Pedido do dono do jogo: o jogador escolhe uma direção, mas quem tiver tempo e 
 1. A **Inquietação** sobe a cada cova aberta e persiste entre noites (já existe no código; hoje não faz nada em 100%).
 2. Em 100%, a Árvore mostra o botão **"Enfrentar o Caixão Fujão"** (com a caveira tremendo e a frase "A terra treme…"). O jogador escolhe **quando** ir.
 3. A Noite do Chefe é uma noite normal com o chefe no campo desde o início (as covas comuns continuam pagando). Se o óleo acabar com o chefe vivo, ele foge, o HP dele **volta cheio**, e o botão continua lá: o jogador volta mais forte e tenta de novo, sem perder nada.
-4. Vitória: diálogo curto (2–4 balões), Resumo especial com a Chave, e na Árvore se revela a segunda metade dos nós + o estágio 2 no seletor de estágios (D12).
+4. Vitória: diálogo curto (2–4 balões), Resumo especial com a Chave, raízes novas reveladas no Pátio/Árvore e próximo estágio adicionado ao destino Próxima Noite quando estiver implementado.
 5. Repetir o chefe depois dá só Almas (farm opcional), como no GDD.
 
 Alternativas descartadas por ora: **A** (chefe aparece sozinho no meio da noite: pode frustrar quando o jogador está fraco) e **C** (sem chefe: a demo fica sem clímax).
@@ -79,7 +79,7 @@ Alternativas descartadas por ora: **A** (chefe aparece sozinho no meio da noite:
 
 **Propostas a decidir:**
 - **Decidido (D0 + resposta do dono do jogo):** o próximo estágio a construir é o **2 · Campo dos Indigentes**, logo depois de fechar o estágio 1 com o Caixão Fujão. Opções originais, para registro: (a) só o estágio 1 + o chefe, com os outros estágios aparecendo como silhuetas trancadas no final (como na revisão §5.5); ou (b) estágio 1 + **estágio 2 jogável** como prêmio do chefe, para o jogador ver um diorama novo antes da demo acabar. Recomendação: **(b)**, se couber no prazo; é o que melhor mostra a promessa "cada chefe abre um mundo novo".
-- **Como trocar de estágio:** um seletor simples na Árvore (ao lado de "Cavar ▶"), com os estágios liberados e os trancados em silhueta; dá para voltar a qualquer estágio liberado (útil para farm, como no GDD §10).
+- **Como trocar de estágio:** a seleção fica dentro do destino Próxima Noite, quando mais de um estágio estiver jogável; fases futuras não aparecem como opções selecionáveis.
 - **Produção por estágio:** tileset + atlas `_lit`, bloco do diorama, fundo próprio (como o fundo da mata escura do estágio 1), props com efeito, chefe e música da área.
 
 ## D11 · Elementos de tabuleiro: começar pelas lápides com efeito — ✅ Aprovado
@@ -93,11 +93,11 @@ Alternativas descartadas por ora: **A** (chefe aparece sozinho no meio da noite:
 - Gasta principalmente Ossos e Almas (moedas que hoje sobram).
 - Fica no hub (D7). Itens, preços e espaços a definir no balanceamento.
 
-## D7 · Hub na superfície da Árvore — ✅ Aprovado
-- Não há cena de hub separada: a **parte de cima da tela da Árvore** (onde ficam o ipê e a grama) vira o cemitério a restaurar.
-- Ali ficam as **construções** de restauração (GDD §11), o **Mascate** (D6) e o **seletor de estágios** (D12).
-- Fluxo: Título → Árvore/hub ⇄ Turno → Resumo → Árvore/hub. Muda o GDD §11 e §15.1.
-
+## D7 · Pátio de navegação na superfície da Árvore — ✅ Aprovado
+- A superfície da Árvore é o **Pátio do Bom Descanso**, um hall visual integrado ao cenário, com estações para Árvore/Talentos, Próxima Noite, Loja e Fazenda.
+- No Marco A, Árvore e Próxima Noite funcionam; Loja e Fazenda ficam bloqueadas e indicam seus marcos futuros. A escavação permanece a um clique.
+- A escolha do estágio entra dentro de Próxima Noite quando houver mais de um estágio jogável. Marco A mostra somente a Paróquia, sem painel de lanternas futuras.
+- Fluxo: Título/Resumo → Pátio → Árvore ou Noite → Resumo → Pátio. Atualiza GDD §4, §10–11 e UI/UX §10.
 ## D8 · Respec ("Replantar") grátis após o chefe — ✅ Aprovado
 - Liberado ao vencer o **1º chefe** (Caixão Fujão).
 - Devolve **100%** do que foi gasto (e solta as encruzilhadas); custa só algumas Almas por uso; só na Árvore.

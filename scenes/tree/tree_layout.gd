@@ -1,7 +1,7 @@
 class_name TreeLayout
 extends RefCounted
 ## Grade e folgas da Árvore de Raízes (GDD §6.1, §15.5; UI/UX §7.3), puras e testáveis.
-## Coordenadas relativas ao centro do medalhão 32×32. O mundo mede 640×720 (TreeArt.WORLD).
+## Coordenadas relativas ao centro do medalhão 32×32. O mundo mede 1936×1024 (TreeArt.WORLD).
 ##
 ## Cada nó ocupa uma "caixa" que inclui o "!" de novidade em cima e os pips + o custo
 ## embaixo; caixas não se tocam e as raízes não atravessam caixa nenhuma (nem a do pai).
@@ -26,7 +26,7 @@ const BADGE_TOP := -22.0
 const SIDE_EXIT := Vector2(15, 6)
 const VERTICAL_DX := 24.0
 ## Câmera inicial: N00 a 128 px do topo da tela (mostra a copa, o N00 e duas linhas inteiras).
-const START_CAM_OFFSET := 128.0
+const START_CAM_OFFSET := 240.0
 ## Plaquetas de cima (carteira e "Cavar"): base em y = 6 + 24.
 const TOP_HUD_BOTTOM := 30.0
 const SIDE_MARGIN := 6.0
@@ -98,10 +98,44 @@ static func safe_rect(panel_y: float) -> Rect2:
 
 ## Bezier quadrática: sai do pai quase na horizontal e desce até o filho (pixels inteiros).
 ## Retorna [Array[Vector2i] pontos, Array[bool] trecho íngreme].
-static func root_path(a: Vector2, b: Vector2) -> Array:
-	var ctrl := Vector2(lerpf(a.x, b.x, 0.85), a.y + (b.y - a.y) * 0.2)
+static func root_path(a: Vector2, b: Vector2, obstacles: Array[Rect2] = []) -> Array:
+	var base_ctrl := Vector2(lerpf(a.x, b.x, 0.85), a.y + (b.y - a.y) * 0.2)
 	if absf(a.x - b.x) < 2.0:
-		ctrl = (a + b) * 0.5
+		base_ctrl = (a + b) * 0.5
+	var controls: Array[Vector2] = [base_ctrl]
+	for offset_x: float in [-32.0, 32.0, -64.0, 64.0, -128.0, 128.0, -192.0, 192.0, -256.0, 256.0, -384.0, 384.0]:
+		controls.append(base_ctrl + Vector2(offset_x, 0))
+	for offset_y: float in [-48.0, 48.0, -96.0, 96.0, -160.0, 160.0]:
+		controls.append(base_ctrl + Vector2(0, offset_y))
+	for offset: Vector2 in [Vector2(-96, 48), Vector2(96, 48), Vector2(-96, -48), Vector2(96, -48)]:
+		controls.append(base_ctrl + offset)
+	var best: Array = []
+	var best_length := INF
+	for ctrl: Vector2 in controls:
+		var candidate := _root_path_with_control(a, b, ctrl)
+		var pts: Array = candidate[0]
+		var clear := true
+		for q: Vector2i in pts:
+			for obstacle: Rect2 in obstacles:
+				if obstacle.has_point(Vector2(q)):
+					clear = false
+					break
+			if not clear:
+				break
+		var path_length := float(pts.size())
+		if clear and path_length < best_length:
+			best = candidate
+			best_length = path_length
+	if not best.is_empty():
+		return best
+	if not obstacles.is_empty():
+		var routed := _route_root_grid(a, b, obstacles)
+		if not routed.is_empty():
+			return routed
+	return _root_path_with_control(a, b, base_ctrl)
+
+
+static func _root_path_with_control(a: Vector2, b: Vector2, ctrl: Vector2) -> Array:
 	var length := a.distance_to(b) * 1.3 + 4.0
 	var steps := maxi(1, int(length * 2.0))
 	var pts: Array[Vector2i] = []
@@ -115,3 +149,64 @@ static func root_path(a: Vector2, b: Vector2) -> Array:
 			pts.append(q)
 			steep.append(absf(tangent.y) > absf(tangent.x))
 	return [pts, steep]
+
+
+static func _route_root_grid(a: Vector2, b: Vector2, obstacles: Array[Rect2]) -> Array:
+	const STEP := 8
+	const WIDTH := 244
+	const HEIGHT := 132
+	var start := Vector2i(roundi(a.x / STEP), roundi(a.y / STEP))
+	var goal := Vector2i(roundi(b.x / STEP), roundi(b.y / STEP))
+	var queue: Array[int] = [start.y * WIDTH + start.x]
+	var parent: Dictionary = {queue[0]: -1}
+	var cursor := 0
+	var directions: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(-1, -1)]
+	var goal_id := goal.y * WIDTH + goal.x
+	while cursor < queue.size() and not parent.has(goal_id):
+		var current_id := queue[cursor]
+		cursor += 1
+		var current := Vector2i(current_id % WIDTH, int(current_id / WIDTH))
+		for direction: Vector2i in directions:
+			var next := current + direction
+			if next.x < 0 or next.x >= WIDTH or next.y < 0 or next.y >= HEIGHT:
+				continue
+			var next_id := next.y * WIDTH + next.x
+			if parent.has(next_id):
+				continue
+			var point := Vector2(next * STEP)
+			var blocked := false
+			for obstacle: Rect2 in obstacles:
+				if obstacle.grow(2.0).has_point(point):
+					blocked = true
+					break
+			if blocked:
+				continue
+			parent[next_id] = current_id
+			queue.append(next_id)
+	if not parent.has(goal_id):
+		return []
+	var grid_path: Array[Vector2i] = []
+	var node_id := goal_id
+	while node_id >= 0:
+		grid_path.push_front(Vector2i(node_id % WIDTH, int(node_id / WIDTH)))
+		node_id = int(parent[node_id])
+	var points: Array[Vector2i] = [Vector2i(a.round())]
+	var prior := a
+	for cell: Vector2i in grid_path:
+		var next_point := Vector2(cell * STEP)
+		var count := maxi(1, int(ceil(prior.distance_to(next_point))))
+		for i: int in count:
+			var q := Vector2i(prior.lerp(next_point, float(i + 1) / count).round())
+			if points[points.size() - 1] != q:
+				points.append(q)
+		prior = next_point
+	var end_count := maxi(1, int(ceil(prior.distance_to(b))))
+	for i: int in end_count:
+		var q := Vector2i(prior.lerp(b, float(i + 1) / end_count).round())
+		if points[points.size() - 1] != q:
+			points.append(q)
+	var steep: Array[bool] = []
+	for i: int in points.size():
+		var tangent := Vector2(points[mini(i + 1, points.size() - 1)] - points[maxi(i - 1, 0)])
+		steep.append(absf(tangent.y) > absf(tangent.x))
+	return [points, steep]

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bbji2uidri1xq"]
+
+[ext_resource type="Script" uid="uid://djreqg63y00fy" path="res://tests/test_chapter_end_flow.gd" id="1_flow"]
+
+[node name="TestChapterEndFlow" type="Node" unique_id=1754482890]
+script = ExtResource("1_flow")

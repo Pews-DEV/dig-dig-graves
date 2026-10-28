@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://d1urj62u0gp7"]
+
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+stat = &"wisp_life"
+value = 1.0
+
+[resource]
+script = ExtResource("1_node")
+id = &"L10"
+display_name = "Fogo Manso"
+description = "Fogos-fátuos duram +1 s"
+branch = 2
+max_level = 3
+base_cost = 250.0
+cost_growth = 1.8
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+children = Array[StringName]([&"L09"])
+requires = Array[Dictionary]([{
+"id": &"L02",
+"level": 1
+}])
+grid = Vector2i(-5, 3)
+tree_position = Vector2(528, 432)
+icon_cell = Vector2i(6, 4)

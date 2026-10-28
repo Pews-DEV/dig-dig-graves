@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://1obqxoklgp8n"]
+
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+stat = &"excess_carries"
+value = 1.0
+
+[resource]
+script = ExtResource("1_node")
+id = &"E13"
+display_name = "Cava-Funda"
+description = "O dano que passa da vida da camada continua na camada de baixo (D9)"
+branch = 1
+kind = &"R"
+base_cost = 120.0
+currency = &"bones"
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+children = Array[StringName]([&"E06", &"E07"])
+requires = Array[Dictionary]([{
+"id": &"E03",
+"level": 2
+}])
+flags = Array[StringName]([&"excess_carries"])
+grid = Vector2i(-7, 3)
+tree_position = Vector2(352, 432)
+icon_cell = Vector2i(0, 4)

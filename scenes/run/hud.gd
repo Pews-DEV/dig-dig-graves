@@ -46,10 +46,21 @@ var _oil_bar: PixelBar
 var _oil_label: Label
 var _toast: Label
 var _toast_time: float = 0.0
+var _grave_tooltip: PanelContainer
+var _grave_tooltip_title: Label
+var _grave_tooltip_effect: Label
 var _options: OptionsMenu
 var _t: float = 0.0
 var _last_oil_second: int = -1
 var _level: int = 1
+var _boss_bar: PixelBar
+var _boss_label: Label
+var _boss_icon: TextureRect
+var _stomp_button: TextureButton
+var _stomp_icon: TextureRect
+var _stomp_atlas: Texture2D
+var _stomp_pips_atlas: Texture2D
+var _stomp_pips: Array[TextureRect] = []
 
 
 func _ready() -> void:
@@ -72,6 +83,7 @@ func _ready() -> void:
 	_toast.size = Vector2(640, 20)
 	_toast.visible = false
 	_root.add_child(_toast)
+	_build_grave_tooltip()
 
 	_options = OptionsMenu.new()
 	_options.show_title_button = true
@@ -134,6 +146,8 @@ func _build_resources() -> void:
 
 
 func _build_level() -> void:
+	if not Game.tree.has_flag(&"epitaphs"):
+		return
 	var p := _plaque(Rect2(232, MARGIN, 180, PLAQUE_H), true)
 	_medal = HudMedal.new()
 	_medal.position = Vector2(3, 0)
@@ -164,6 +178,75 @@ func _build_oil() -> void:
 	_oil_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 
+func show_boss(hp: float, max_hp: float) -> void:
+	if _boss_bar != null:
+		update_boss(hp, max_hp)
+		return
+	var plaque := _plaque(Rect2(160, 6, 320, 24), true)
+	_boss_icon = TextureRect.new()
+	_boss_icon.texture = AssetManifest.texture_by_id("icon_boss_caixao")
+	_boss_icon.position = Vector2(5, 4)
+	_boss_icon.size = Vector2(16, 16)
+	_boss_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	plaque.add_child(_boss_icon)
+	_boss_label = Label.new()
+	_boss_label.text = "Caixão Fujão"
+	_boss_label.position = Vector2(24, TEXT_Y)
+	_boss_label.size = Vector2(106, 18)
+	plaque.add_child(_boss_label)
+	_boss_bar = _bar(plaque, Rect2(132, 7, 146, 10), "", Palette.DANGER, Palette.DANGER)
+	_boss_bar.frame_texture_path = "res://assets/ui/hud/barra_chefe.png"
+	var value := _number(plaque, Vector2(278, TEXT_Y), 38)
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_boss_label.set_meta("hp_label", value)
+	update_boss(hp, max_hp)
+
+
+func update_boss(hp: float, max_hp: float) -> void:
+	if _boss_bar == null:
+		return
+	_boss_bar.value = clampf(hp / maxf(1.0, max_hp), 0.0, 1.0)
+	var hp_label: Label = _boss_label.get_meta("hp_label") as Label
+	hp_label.text = "%s" % NumberFormat.format(hp)
+
+
+func show_stomp(state: RunState) -> void:
+	if _stomp_button != null or state.stat(StatSheet.STOMP_ENABLED) <= 0.0:
+		return
+	_stomp_atlas = AssetManifest.texture_by_id("hud_stomp")
+	_stomp_pips_atlas = AssetManifest.texture_by_id("hud_pips")
+	_stomp_button = TextureButton.new()
+	_stomp_button.ignore_texture_size = true
+	_stomp_button.stretch_mode = TextureButton.STRETCH_SCALE
+	_stomp_button.texture_normal = AssetManifest.texture_by_id("hud_active_frame")
+	_stomp_button.texture_hover = _stomp_button.texture_normal
+	_stomp_button.texture_pressed = _stomp_button.texture_normal
+	_stomp_button.texture_disabled = _stomp_button.texture_normal
+	_stomp_button.position = Vector2(606, 320)
+	_stomp_button.custom_minimum_size = Vector2(28, 28)
+	_stomp_button.size = Vector2(28, 28)
+	_stomp_button.tooltip_text = "Pisão · Q"
+	_stomp_button.pressed.connect(func() -> void: state.use_stomp())
+	_root.add_child(_stomp_button)
+	_stomp_icon = TextureRect.new()
+	_stomp_icon.position = Vector2(4, 4)
+	_stomp_icon.size = Vector2(20, 20)
+	_stomp_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_stomp_icon.stretch_mode = TextureRect.STRETCH_SCALE
+	_stomp_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stomp_button.add_child(_stomp_icon)
+	for i: int in 4:
+		var pip := TextureRect.new()
+		pip.position = Vector2(610 + i * 5, 350)
+		pip.size = Vector2(4, 4)
+		pip.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pip.stretch_mode = TextureRect.STRETCH_SCALE
+		pip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_root.add_child(pip)
+		_stomp_pips.append(pip)
+	refresh(state)
+
+
 func _bar(parent: Control, rect: Rect2, tex: String, fill: int, highlight: int) -> PixelBar:
 	var b := PixelBar.new()
 	b.position = rect.position
@@ -174,6 +257,13 @@ func _bar(parent: Control, rect: Rect2, tex: String, fill: int, highlight: int) 
 	b.value = 0.0
 	parent.add_child(b)
 	return b
+
+
+func _atlas_region(atlas: Texture2D, region: Rect2) -> AtlasTexture:
+	var texture := AtlasTexture.new()
+	texture.atlas = atlas
+	texture.region = region
+	return texture
 
 
 # --- Entrada e saída (UI/UX §4) -------------------------------------------------------
@@ -212,9 +302,23 @@ func refresh(state: RunState) -> void:
 	for k: int in _numbers:
 		_update_number(k)
 	_level = state.level
-	_medal.level = state.level
-	_xp_bar.value = state.xp / state.xp_needed(state.level)
+	if _medal != null and _xp_bar != null:
+		_medal.level = state.level
+		_xp_bar.value = state.xp / state.xp_needed(state.level)
 	_unrest_bar.value = state.unrest
+	if _stomp_button != null:
+		var stomp_ready := state.stomp_cooldown_left <= 0.000001
+		_stomp_button.disabled = not stomp_ready
+		_stomp_icon.texture = _atlas_region(_stomp_atlas, Rect2(0 if stomp_ready else 20, 0, 20, 20))
+		var cooldown := maxf(4.0, state.stat(StatSheet.STOMP_COOLDOWN))
+		var charge := clampf(1.0 - state.stomp_cooldown_left / cooldown, 0.0, 1.0)
+		for i: int in _stomp_pips.size():
+			var before := float(i) / float(_stomp_pips.size())
+			var after := float(i + 1) / float(_stomp_pips.size())
+			var pip_state := 1 if charge >= after else (2 if charge > before else 0)
+			if stomp_ready and i == _stomp_pips.size() - 1:
+				pip_state = 2
+			_stomp_pips[i].texture = _atlas_region(_stomp_pips_atlas, Rect2(pip_state * 4, 0, 4, 4))
 	var frac := state.oil_fraction()
 	_oil_bar.value = frac
 	var danger := frac < OIL_DANGER and not state.ended
@@ -305,6 +409,59 @@ func show_toast(text: String, duration: float = 1.4) -> void:
 	Juice.pop(_toast, 0.2, 0.2)
 
 
+func update_grave_tooltip(grave: Dictionary, screen_position: Vector2) -> void:
+	if grave.is_empty():
+		_grave_tooltip.visible = false
+		return
+	var title_key: String
+	var effect_key: String
+	match StringName(grave.get("type", RunState.GRAVE_TYPE_OVAL)):
+		RunState.GRAVE_TYPE_CROSS:
+			title_key = "Cruz de pedra"
+			effect_key = "+1 Alma × estágio"
+		RunState.GRAVE_TYPE_MOSS:
+			title_key = "Lápide com musgo"
+			effect_key = "Caixão 1,5× mais duro · Ossos ×2"
+		_:
+			title_key = "Foto oval"
+			effect_key = "Cova normal"
+	_grave_tooltip_title.text = tr(title_key)
+	_grave_tooltip_effect.text = tr(effect_key)
+	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
+	var pos := screen_position.floor() + Vector2(12, 14)
+	if pos.x + _grave_tooltip.size.x > viewport_size.x - 4.0:
+		pos.x = screen_position.x - _grave_tooltip.size.x - 12.0
+	if pos.y + _grave_tooltip.size.y > viewport_size.y - 4.0:
+		pos.y = screen_position.y - _grave_tooltip.size.y - 12.0
+	_grave_tooltip.position = pos.floor().clamp(Vector2(4, 4), viewport_size - _grave_tooltip.size - Vector2(4, 4))
+	_grave_tooltip.visible = true
+
+
+func _build_grave_tooltip() -> void:
+	_grave_tooltip = PanelContainer.new()
+	_grave_tooltip.theme_type_variation = &"TooltipPanel"
+	_grave_tooltip.custom_minimum_size = Vector2(220, 48)
+	_grave_tooltip.size = _grave_tooltip.custom_minimum_size
+	_grave_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_grave_tooltip.visible = false
+	_root.add_child(_grave_tooltip)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 1)
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_grave_tooltip.add_child(column)
+	_grave_tooltip_title = Label.new()
+	_grave_tooltip_title.theme_type_variation = &"TooltipLabel"
+	_grave_tooltip_title.custom_minimum_size = Vector2(208, 12)
+	_grave_tooltip_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_child(_grave_tooltip_title)
+	_grave_tooltip_effect = Label.new()
+	_grave_tooltip_effect.theme_type_variation = &"TooltipLabel"
+	_grave_tooltip_effect.custom_minimum_size = Vector2(208, 22)
+	_grave_tooltip_effect.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_grave_tooltip_effect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_child(_grave_tooltip_effect)
+
+
 func _process(delta: float) -> void:
 	_t += delta
 	if _toast_time > 0.0:
@@ -330,6 +487,8 @@ func _on_field_cleared(bonus: float) -> void:
 
 
 func _on_level_up(level: int) -> void:
+	if _medal == null or _xp_bar == null:
+		return
 	_medal.level = level
 	_medal.jump()
 	Audio.play(&"level_up")

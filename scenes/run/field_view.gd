@@ -21,6 +21,7 @@ var grave_props: GraveView
 var block: DioramaBlock
 var block_front: DioramaBlock
 var decor: FieldDecor
+var boss_view: BossView
 
 var state: RunState
 var _shown: PackedInt32Array = PackedInt32Array()
@@ -97,6 +98,11 @@ func attach_run(p_state: RunState) -> void:
 	state = p_state
 	grave_floor.state = p_state
 	grave_props.state = p_state
+	if p_state.boss_active:
+		boss_view = BossView.new()
+		boss_view.name = "BossView"
+		content.add_child(boss_view)
+		boss_view.setup(p_state, tiles)
 
 
 func _center_field() -> void:
@@ -117,9 +123,9 @@ func frame_in(free_top: int, free_bottom: int) -> void:
 	var avail := free_bottom - free_top
 	var top: int
 	if total <= avail:
-		top = free_top + (avail - total) / 2
+		top = free_top + floori(float(avail - total) / 2.0)
 	else:
-		top = free_top + maxi(0, (avail - grid_h) / 2)
+		top = free_top + maxi(0, floori(float(avail - grid_h) / 2.0))
 	var t0 := tiles.map_to_local(Vector2i.ZERO)
 	_base_offset = Vector2(roundf(320.0 - t0.x), roundf(top + 7 - t0.y)) - position
 	content.position = _base_offset
@@ -128,6 +134,11 @@ func frame_in(free_top: int, free_bottom: int) -> void:
 ## Célula sob o mouse (GDD §18.4 via TileMapLayer.local_to_map).
 func mouse_cell() -> Vector2i:
 	return tiles.local_to_map(tiles.get_local_mouse_position())
+
+
+## Posição livre do ponteiro em coordenadas do conteúdo (cursor visual sem snap à grade).
+func mouse_position() -> Vector2:
+	return tiles.get_local_mouse_position()
 
 
 ## Centro (pivô) da célula em coordenadas de `content` (onde ficam efeitos e cursor).
@@ -196,6 +207,27 @@ func _is_lit(cell: Vector2i, center: Vector2i, radius: int) -> bool:
 
 func play_regen(cell: Vector2i) -> void:
 	regen_fx.play(cell)
+
+
+func play_stomp(cells: Array[Vector2i]) -> void:
+	if cells.is_empty() or bool(Game.settings.get("reduce_flashes", false)):
+		return
+	var atlas := AssetManifest.texture_by_id("fx_stomp")
+	if atlas == null:
+		return
+	var first := tiles.map_to_local(cells[0])
+	var min_point := first
+	var max_point := first
+	for cell: Vector2i in cells:
+		var point := tiles.map_to_local(cell)
+		min_point.x = minf(min_point.x, point.x)
+		min_point.y = minf(min_point.y, point.y)
+		max_point.x = maxf(max_point.x, point.x)
+		max_point.y = maxf(max_point.y, point.y)
+	var effect := StompFx.new()
+	effect.setup(atlas, max_point - min_point + Vector2(32, 16))
+	effect.position = (min_point + max_point) * 0.5
+	content.add_child(effect)
 
 
 ## DA §9.3: tremor máx. 2 px, escalonado pela opção de acessibilidade.

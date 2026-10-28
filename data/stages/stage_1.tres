@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="StageData" format=3 uid="uid://berkstl23xden"]
+
+[ext_resource type="Script" uid="uid://crvbk8xjym1rm" path="res://data/types/stage_data.gd" id="1_stage"]
+[ext_resource type="Resource" uid="uid://bgo7sc0fsvfdc" path="res://data/areas/layers/layer_grass.tres" id="2_grass"]
+[ext_resource type="Resource" uid="uid://ddtdfh13xbb3x" path="res://data/areas/layers/layer_dirt.tres" id="3_dirt"]
+[ext_resource type="Resource" uid="uid://bkvahu0tlfuo3" path="res://data/areas/layers/layer_clay.tres" id="4_clay"]
+[ext_resource type="Resource" uid="uid://d3okb613buub1" path="res://data/areas/layers/layer_coffin.tres" id="5_coffin"]
+[ext_resource type="Resource" uid="uid://0ngkmdt227lh" path="res://data/areas/layers/layer_rock.tres" id="6_rock"]
+[ext_resource type="Resource" uid="uid://db4n5npko5s0p" path="res://data/areas/layers/layer_ossada.tres" id="7_ossada"]
+[ext_resource type="Script" uid="uid://dhfiq3digftqh" path="res://data/types/layer_data.gd" id="9_layer_type"]
+
+[resource]
+script = ExtResource("1_stage")
+display_name = "Cemitério da Paróquia"
+layers = Array[ExtResource("9_layer_type")]([ExtResource("2_grass"), ExtResource("3_dirt"), ExtResource("4_clay"), ExtResource("7_ossada")])
+coffin_layer = ExtResource("5_coffin")
+rock_layer = ExtResource("6_rock")
+grave_type_weights = PackedFloat32Array(50, 25, 25)
+boss_path = "res://data/bosses/caixao_fujao.tres"
+tile_atlas_path = "res://assets/tiles/a1/tiles_a1.png"
+tile_atlas_lit_path = "res://assets/tiles/a1/tiles_a1_lit.png"
+crack_atlas_path = "res://assets/tiles/a1/cracks_a1.png"
+crack_atlas_lit_path = "res://assets/tiles/a1/cracks_a1_lit.png"
+regen_atlas_path = "res://assets/tiles/a1/regen_a1.png"
+regen_atlas_lit_path = "res://assets/tiles/a1/regen_a1_lit.png"
+tombstone_path = "res://assets/sprites/props/lapide.png"
+grave_atlas_path = "res://assets/tiles/a1/grave_a1.png"
+grave_atlas_lit_path = "res://assets/tiles/a1/grave_a1_lit.png"
+grave_open_path = "res://assets/tiles/a1/grave_open_a1.png"
+grave_open_lit_path = "res://assets/tiles/a1/grave_open_a1_lit.png"
+rock_atlas_path = "res://assets/sprites/props/rocha.png"

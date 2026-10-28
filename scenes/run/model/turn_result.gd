@@ -28,6 +28,12 @@ var rocks_broken: int = 0
 var oil_drained: float = 0.0
 var wisps_collected: int = 0
 var oil_from_wisps: float = 0.0
+var oil_from_graves: float = 0.0
+var boss_encounter: bool = false
+var boss_victory: bool = false
+var boss_hp_remaining: float = 0.0
+var boss_hp_max: float = 0.0
+var boss_damage_dealt: float = 0.0
 
 
 func copper_total() -> float:
@@ -45,5 +51,9 @@ func to_dict() -> Dictionary:
 		"first_grave_pulse": first_grave_pulse, "unrest_start": unrest_start,
 		"unrest_end": unrest_end, "rocks_placed": rocks_placed, "rocks_broken": rocks_broken,
 		"oil_drained": oil_drained, "wisps_collected": wisps_collected,
-		"oil_from_wisps": oil_from_wisps, "copper_total": copper_total(),
+		"oil_from_wisps": oil_from_wisps, "oil_from_graves": oil_from_graves,
+		"boss_encounter": boss_encounter, "boss_victory": boss_victory,
+		"boss_hp_remaining": boss_hp_remaining, "boss_hp_max": boss_hp_max,
+		"boss_damage_dealt": boss_damage_dealt,
+		"copper_total": copper_total(),
 	}

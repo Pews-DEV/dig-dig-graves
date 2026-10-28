@@ -1,7 +1,7 @@
 # Dig Dig Graves — Game Design Document
 
 > **Versão 2.0** · 27/10/2026 · Engine: Godot 4.7 (GL Compatibility) · Status: produção do v1.0 em marcos jogáveis
-> Documentos irmãos: [02_DIRECAO_DE_ARTE.md](02_DIRECAO_DE_ARTE.md) (visual), [03_UI_UX.md](03_UI_UX.md) (interface, animação e som), [06_PLANO_V1.md](06_PLANO_V1.md) (plano de produção em pacotes), [05_DECISOES_PENDENTES.md](05_DECISOES_PENDENTES.md) (D0–D12, aprovadas e incorporadas aqui) e [04_REVISAO_E_ROADMAP.md](04_REVISAO_E_ROADMAP.md) (análise que originou esta versão; superada por esta onde houver conflito).
+> Documentos irmãos: [02_DIRECAO_DE_ARTE.md](02_DIRECAO_DE_ARTE.md) (visual), [03_UI_UX.md](03_UI_UX.md) (interface, animação e som), [06_PLANO_V1.md](06_PLANO_V1.md) (plano de produção em pacotes), [07_HISTORIA.md](07_HISTORIA.md) (tratamento narrativo), [05_DECISOES_PENDENTES.md](05_DECISOES_PENDENTES.md) (D0–D12, aprovadas e incorporadas aqui) e [04_REVISAO_E_ROADMAP.md](04_REVISAO_E_ROADMAP.md) (análise que originou esta versão; superada por esta onde houver conflito).
 > Todos os números são **valores de balanceamento prontos para `.tres`**, calibrados por simulação (§14). O formato das fórmulas é decisão de design; os coeficientes se ajustam em playtest.
 
 **Changelog 2.0 (em relação à 1.1)**
@@ -125,12 +125,12 @@ O antigo coveiro, Seu Damião, sumiu. Sem covas, as almas formam uma **fila** na
 | Ajudantes | Toupeira Tita, Gato Breu, Cão Ossinho, Morcegos Gêmeos (§9) | B–D | Mascotes |
 
 ### 3.4 Narrativa em pílulas
-Sem cutscenes longas: **balões de 1–4 falas** com retrato 48×48 (UI/UX §14). ~80 falas no total, em `DialogueData` (§18.3). Gatilhos: 1º turno, 1ª cova, 1º nó, 1ª Inquietação cheia de cada estágio, início e vitória de cada Noite do Chefe, 1ª entrada em cada estágio, 1ª visita ao Mascate, N02, final.
+Sem cutscenes longas: **balões de 1–4 falas** com retrato 48×48 (UI/UX §14). ~80 falas no total, em `DialogueData` (§18.3). Gatilhos: 1º turno, 1ª cova, 1º nó, 1ª Inquietação cheia de cada estágio, início e vitória de cada Noite do Chefe, 1ª entrada em cada estágio, 1ª visita ao Mascate, N02, final. O arco, os motivos recorrentes e a orientação de voz estão em [07_HISTORIA.md](07_HISTORIA.md); divergência de mecânica ou escopo é resolvida por este GDD.
 
 ## 4. Mecânica principal: o Turno da Noite
 
 ### 4.1 Visão geral
-1. Da Árvore/hub, o jogador clica em **Cavar ▶** (estágio escolhido no seletor) ou, com a Inquietação cheia, em **Enfrentar ‹chefe›** (Noite do Chefe, §4.11).
+1. Do Pátio, o jogador escolhe **Próxima Noite** para iniciar o estágio atual ou, com a Inquietação cheia, **Enfrentar ‹chefe›** (Noite do Chefe, §4.11).
 2. O **Óleo da Lanterna** queima; o pulso golpeia sozinho a **área de escavação** sob o cursor.
 3. O dano paga **Cobre por ponto** (mais nas camadas fundas), quebra camadas (Ossos e XP) e abre **covas** (Almas, Ossos, Inquietação).
 4. A partir do N02 (marco B), cada nível do turno pausa e oferece **1 de 3 Epitáfios** (§7).
@@ -178,7 +178,7 @@ Cada tile tem uma pilha de camadas (topo → fundo). Valores **base** (antes do 
 | Área | 1×1 | 1×2 | 2×2 | 2×3 | 3×3 | 3×4 | 4×4 | 4×5 | 5×5 | 5×6 | 6×6 |
 | Fonte | — | E03 | E03 | E03 | E06 | E06 | E14 | E16 | E19 | EX | E21 |
 
-- O cursor fica no tile "âncora" do bloco central: lado ímpar = centro; lado par = canto superior-esquerdo do par central (tile sob o cursor + vizinhos à direita/abaixo na grade). Com A > L, o retângulo é "em pé" no eixo y da grade; a Pá Velha não gira (o Enxadão gira, §8).
+- O sprite da pá acompanha o ponteiro em posição livre, sem prender o desenho ao centro dos tiles. O tile mais próximo do ponteiro determina o alvo/âncora da área; fora da grade, o cursor continua visível, mas o golpe não atinge tiles. A âncora do bloco central é: lado ímpar = centro; lado par = canto superior-esquerdo do par central (tile sob o ponteiro + vizinhos à direita/abaixo na grade). Com A > L, o retângulo é "em pé" no eixo y da grade; a Pá Velha não gira (o Enxadão gira, §8).
 - Recortada nas bordas; tiles de lápide e elementos bloqueados não levam dano.
 - Pulso automático e global; crítico rolado **por tile**.
 
@@ -337,12 +337,12 @@ Colunas: **Est.** = estágio que precisa estar liberado; **Marco** = em que buil
 | E04 | Golpe Certeiro | P | +4% de chance de crítico | 8 | Cobre | 80 | 1,6 | E02 Nv1 | 1 | A | (-9, 3) |
 | E10 | Pisão | At | Clique/Q/A: golpe ×4 na área; recarga 8 s | 1 | Cobre | 400 | — | E02 Nv3 | 1 | A | (-8, 3) |
 | E13 | Cava-Funda | R | O dano que passa da vida da camada continua na camada de baixo (D9) | 1 | Ossos | 120 | — | E03 Nv2 | 1 | A | (-7, 3) |
-| E05 | Crítico Brutal | P | +0,5 no multiplicador de crítico | 5 | Ossos | 20 | 1,8 | E04 Nv1 | 1 | A | (-9, 4) |
+| E05 | Crítico Brutal | P | +0,5 no multiplicador de crítico | 5 | Ossos | 20 | 1,8 | E04 Nv1 | 1 | A | (-10, 4) |
 | E11 | Pisão Pesado | P | −1 s na recarga do Pisão | 4 | Cobre | 1.200 | 2 | E10 | 1 | A | (-8, 4) |
-| E06 | Pá de Coveiro | D | +1 passo de área (2×3 → 3×3 → 3×4) | 2 | Ossos | 800 | ×4 | E03 Nv3 + E13 | 1 | A | (-7, 4) |
+| E06 | Pá de Coveiro | D | +1 passo de área (2×3 → 3×3 → 3×4) | 2 | Ossos | 300 | ×4 | E03 Nv3 + E13 | 1 | A | (-7, 4) |
 | E12a | Pisão Sísmico | X | O Pisão também acerta o anel de 1 tile em volta da área, com ×2 | 1 | Cobre | 8.000 | — | E11 Nv1 | 1 | A | (-9, 5) |
-| E12b | Pisão Ritmado | X | O Pisão dispara sozinho a cada 8 golpes (acessível, bom no gamepad) | 1 | Cobre | 8.000 | — | E11 Nv1 | 1 | A | (-8, 5) |
-| E07 | Cavar Fundo | P | +20% de dano no Barro e nas camadas abaixo dele | 5 | Cobre | 1.500 | 1,8 | E13 | 1 | A | (-7, 5) |
+| E12b | Pisão Ritmado | X | O Pisão dispara sozinho a cada 8 golpes (acessível, bom no gamepad) | 1 | Cobre | 8.000 | — | E11 Nv1 | 1 | A | (-6, 6) |
+| E07 | Cavar Fundo | P | +20% de dano no Barro e nas camadas abaixo dele | 5 | Cobre | 1.500 | 1,8 | E13 | 1 | A | (-6, 5) |
 | E08 | Lâmina Temperada | P | +3 dano | 8 | Cobre | 12.000 | 1,75 | E07 Nv2 | 1 | A | (-8, 6) |
 | E14 | Pá Larguíssima | D | +1 passo de área (3×4 → 4×4) | 1 | Ossos | 12.000 | — | E06 Nv2 | 1 | A | (-7, 6) |
 | E09 | Ombro de Ferro | P | −4% no intervalo do golpe | 6 | Cobre | 25.000 | 1,8 | E08 Nv1 | 1 | A | (-9, 7) |
@@ -365,7 +365,7 @@ Colunas: **Est.** = estágio que precisa estar liberado; **Marco** = em que buil
 | L03 | Isca de Fogo-fátuo | P | +12% de frequência de fogos-fátuos | 4 | Cobre | 160 | 1,8 | L02 Nv1 | 1 | A | (-6, 3) |
 | L10 | Fogo Manso | P | Fogos-fátuos duram +1 s | 3 | Cobre | 250 | 1,8 | L02 Nv1 | 1 | A | (-5, 3) |
 | L06 | Segundo Fôlego | R | 1× por turno, ao zerar o óleo, a lanterna volta com 5 s | 1 | Almas | 6 | — | L04 Nv1 | 1 | A | (-4, 3) |
-| L08 | Querosene | P | +3 s de óleo | 5 | Cobre | 6.000 | 1,8 | L03 Nv1 | 1 | A | (-6, 4) |
+| L08 | Querosene | P | +3 s de óleo | 5 | Cobre | 6.000 | 1,8 | L03 Nv1 | 1 | A | (-3, 4) |
 | L09 | Pavio Duplo | P | O óleo queima 5% mais devagar (mult.) | 3 | Cobre | 5.000 | 2 | L10 Nv1 | 1 | A | (-5, 4) |
 | LX | Lua que Não se Põe | M | +8 s de óleo e Constelação: pegar 3 fogos-fátuos em menos de 6 s para o óleo por 8 s | 1 | Almas | 1.500 ×3ⁿ | — | L08 Nv5 + L09 Nv3 + L10 Nv3 | 1 | A | (-5, 6) |
 | L05 | Clarão | At | Botão direito/E/X: 3 s de luz máxima e +50% de dano nos tiles iluminados; custa 2 s de óleo; recarga 20 s | 1 | Cobre | 750.000 | — | L08 Nv1 | 2 | B | (-6, 5) |
@@ -585,13 +585,10 @@ Todos reaproveitam o modelo de campo: o chefe é uma entidade que ocupa tiles (`
 - O HUD mostra a barra do chefe com ícone (UI/UX §13.2). Derrota não custa nada; o HP volta cheio.
 - Pós-vitória: o hub "revela" em sequência curta (câmera): a Chave voa para o seletor, o estágio novo destranca, os nós novos brotam na árvore (UI/UX §15).
 
-### 10.3 Seletor de estágios
-Placa de madeira com 5 lanternas no hub (UI/UX §10.3): estágios liberados acesos e clicáveis; trancados em silhueta com cadeado e o nome do chefe que os guarda. O estágio escolhido é o de "Cavar ▶" e o do "Enfrentar". Marco A mostra só a lanterna 1 acesa e as outras 4 em silhueta.
-
-## 11. Hub na superfície da Árvore (D7)
-
-Não há cena de hub separada: a **superfície da Árvore** (y = 0–176 do mundo 1936×1024) é o Cemitério do Bom Descanso a restaurar. A câmera começa ali; descer mostra as raízes. Tudo é clicável; cada construção é um sprite com estados **ruína** e **restaurada**.
-
+### 10.3 Acesso aos estágios
+O destino **Próxima Noite** inicia o estágio atual. A escolha de estágio pertence a esse destino e só aparece quando houver mais de um estágio jogável. No Marco A, existe apenas a Paróquia; não mostrar um painel com lanternas de fases futuras.
+## 11. Pátio do Bom Descanso (D7)
+A superfície da Árvore é o **Pátio do Bom Descanso**, um hall de navegação integrado ao cenário. Não há painel central com cinco lanternas. Na tela inicial, quatro estações levam a **Raízes/Talentos**, **Próxima Noite**, **Loja** e **Fazenda**. No Marco A, Árvore e Próxima Noite são funcionais; Loja e Fazenda aparecem bloqueadas com indicação do marco futuro. “Próxima Noite” inicia a Paróquia em uma ação. A Árvore de Raízes continua sendo uma tela navegável, com retorno fixo ao Pátio.
 ### 11.1 Construções
 | Construção | Custo | Efeito permanente | Libera | Marco |
 |---|---|---|---|---|
@@ -610,10 +607,9 @@ Construção restaurada: animação de obra (poeira + 3 marteladas, `build_compl
 
 ### 11.2 Elementos fixos da superfície
 - **Ipê-roxo** no centro (x = 968), sobre o N00.
-- **Seletor de estágios** (§10.3) e botões **Cavar ▶** / **Enfrentar ‹chefe›** (este só com Inquietação 100%).
+- Estações do Pátio (§10.3); **Enfrentar ‹chefe›** aparece junto à Próxima Noite só com Inquietação 100%.
 - Personagens que vão chegando: Tião (A), Mascate (B), Madame Ossada na Capelinha (B), Seu Damião (C), Dona Ceifa (final).
 - Posições, tamanhos e estados: UI/UX §10 e DA §13.
-
 ### 11.3 Ganho offline
 **Fora do v1.0** (contraria o pilar 4). O antigo F07 "Cofre do Coveiro" saiu da árvore.
 
@@ -670,9 +666,9 @@ Simulação em Python (fora do repositório, scratchpad da sessão de design) qu
 | Pisão (E10) | 8 min | 8–10 min ✔ |
 | Noite ≥ 60 s | 12 min | ~15 min ✔ |
 | Cava-Funda (E13) | 16 min | — |
-| Área 3×3 · campo 10×10 | 29 min · 22 min | — |
+| Área 3×3 | **34,2 min (33,1–35,0)** | 25–35 min (plano do Marco A) |
 | Ossada (C08) | 32 min | — |
-| **Chefe 1 · Caixão Fujão** | **38 min (36–44)** | 35–45 ✔ |
+| **Chefe 1 · Caixão Fujão** | **40,3 min (39,2–41,4)** | 35–45 ✔ |
 | Clarão (L05) | 46 min | — |
 | **1ª Raiz-mestra** | **59 min (58–1h03)** | ~1 h ✔ |
 | Área 4×4 | 1h05 | — |
@@ -685,9 +681,9 @@ Simulação em Python (fora do repositório, scratchpad da sessão de design) qu
 | Todas as 6 Raízes-mestras · **árvore inteira no máximo** | **~5h00 (4h57–5h03)** | 5–6 h ✔ (limite de baixo) |
 | Maior trecho sem compra | **3–4 noites** | < 5 ✔ |
 
-Duração por estágio: 38 · 45 · 50 · 42 · 51 min. Renda por noite (semente 1, entrada → saída do estágio): est. 1: 26 → 450 mil Cobre · est. 2: 0,8 mi → 10 mi · est. 3: 48 mi → 120 mi · est. 4: 330 mi → 540 mi · est. 5: 1 bi → 1,9 tri. Ossos na saída: 1 mil · 5,7 mil · 30 mil · 55 mil · 3 mi. Almas na saída: 200 · 450 · 550 · 1,9 mil · 79 mil por noite.
+Duração por estágio: **40,3** · 45 · 50 · 42 · 51 min. Renda por noite (semente 1, entrada → saída do estágio): est. 1: 26 → 450 mil Cobre · est. 2: 0,8 mi → 10 mi · est. 3: 48 mi → 120 mi · est. 4: 330 mi → 540 mi · est. 5: 1 bi → 1,9 tri. Ossos na saída: 1 mil · 5,7 mil · 30 mil · 55 mil · 3 mi. Almas na saída: 200 · 450 · 550 · 1,9 mil · 79 mil por noite.
 
-**Marco A isolado** (só estágio 1 e os 44 nós A): chefe aos 36–38 min; LX logo depois (com as Almas do chefe); tudo do capítulo exceto a 2ª Raiz-mestra até ~1h05. A 2ª Raiz-mestra (4.500 Almas) fica como meta longa de "Continuar cavando" (> 2 h), aceitável para um capítulo.
+**Marco A isolado** (só estágio 1 e os 44 nós A): no `tests/sim_campaign.gd`, com 900 covas para a Inquietação e E06 por 300 Ossos, a amostra de cinco sementes libera o 3×3 em 33,1–35,0 min (mediana 34,2) e o chefe em 39,2–41,4 min (mediana 40,3). LX logo depois (com as Almas do chefe); tudo do capítulo exceto a 2ª Raiz-mestra até ~1h05. A 2ª Raiz-mestra (4.500 Almas) fica como meta longa de "Continuar cavando" (> 2 h), aceitável para um capítulo. Os três playtests humanos do §19.1 ainda precisam confirmar a cadência na interface real.
 
 ### 14.3 Regras de ajuste (playtest)
 1. Chefe 1 antes de 32 min na mediana → +20% em N do estágio 1 e no HP do Caixão; depois de 50 → −20%.
@@ -708,7 +704,7 @@ Fonte da verdade: [03_UI_UX.md](03_UI_UX.md) §10–§20. Resumo do fluxo do v1.
 ```
 Título ─Novo Jogo─► 1º TURNO ─► Resumo ─► ÁRVORE/HUB (superfície + raízes)
    └─Continuar──────────────────────────► ÁRVORE/HUB
-ÁRVORE/HUB ─Cavar ▶──────────────► TURNO (estágio do seletor) ─► Resumo ─► ÁRVORE/HUB
+PÁTIO ─Próxima Noite────────────► TURNO (estágio atual) ─► Resumo ─► PÁTIO
            ─Enfrentar ‹chefe›────► NOITE DO CHEFE ─perdeu─► Resumo ("fugiu") ─► ÁRVORE/HUB
                                                    └venceu─► Diálogo ─► Resumo especial ─► revelação no hub
            ─Barraca─► Loja do Mascate (painel) · ─Construção─► painel de obra · ─Tião─► Marcos
@@ -737,7 +733,7 @@ Acessibilidade: volume por canal, reduzir flashes, tremor 0–100%, reduzir movi
 
 ## 17. Áudio
 
-Direção em UI/UX §8; contratos em `assets/AUDIO_MANIFEST.md`. Já produzidos (leva 3): `mus_area2..5`, `mus_boss`, `mus_shop`, `mus_ending`, `jingle_boss_win`, `stinger_boss_appear`, `stinger_stage_unlock`, Pisão/Clarão, golpes por material (`dig_bone/mud/stone/marble/mist`), chefe (`boss_*`), cartas (`card_*`), loja (`shop_*`), tabuleiro (`coin_gold`, `chest_open`, `bone_rain`, `soul_wander`, `tombstone_effect`), árvore (`seal`, `respec`, `milestone`, `build_complete`), ajudantes (`helper_mole`, `helper_cat`), vozes (`dialog_blip_*`) e `unrest_warning`. **Ids que faltam** (lista completa em 06 §8): `jingle_chapter_end`, `boss_flee`, `boss_phase`, `card_reroll`, `stomp_ready`, `flare_ready`, `ghost_appear`, `ghost_fill`, `ghost_pop`, `root_break`, `cross_break`, `combo`, `coin_rain`, `constellation`, `second_wind`, `mist_fade`, `heir_spawn`, `ceifa_layer`, `helper_dog`, `helper_bats`, `key_get`, `stage_select`, `dialog_blip_damiao`, `amb_catacomb`, `amb_mist`, `amb_field`, `ui_toast`, `shop_equip`, `credits_roll` (variação de `mus_title`).
+Direção em UI/UX §8; contratos em `assets/AUDIO_MANIFEST.md`. A trilha e os efeitos do Marco A, incluindo `stomp_ready`, `boss_flee`, `key_get`, `stage_select`, `jingle_chapter_end`, `constellation` e `second_wind`, estão entregues e listados no manifesto. Também estão produzidos (leva 3): `mus_area2..5`, `mus_boss`, `mus_shop`, `mus_ending`, `jingle_boss_win`, `stinger_boss_appear`, `stinger_stage_unlock`, Pisão/Clarão, golpes por material (`dig_bone/mud/stone/marble/mist`), chefe (`boss_*`), cartas (`card_*`), loja (`shop_*`), tabuleiro (`coin_gold`, `chest_open`, `bone_rain`, `soul_wander`, `tombstone_effect`), árvore (`seal`, `respec`, `milestone`, `build_complete`), ajudantes (`helper_mole`, `helper_cat`), vozes (`dialog_blip_*`) e `unrest_warning`. **Ids que faltam para marcos posteriores** (lista completa em 06 §8): `boss_phase`, `card_reroll`, `flare_ready`, `ghost_appear`, `ghost_fill`, `ghost_pop`, `root_break`, `cross_break`, `combo`, `coin_rain`, `mist_fade`, `heir_spawn`, `ceifa_layer`, `helper_dog`, `helper_bats`, `dialog_blip_damiao`, `amb_catacomb`, `amb_mist`, `amb_field`, `ui_toast`, `shop_equip`, `credits_roll` (variação de `mus_title`).
 Regra anti-fadiga mantida: pitch ±6%, 3–4 variações, máx. 6 vozes por id.
 
 ## 18. Arquitetura técnica (Godot 4.7)
@@ -793,16 +789,16 @@ Configuração da v1.1 mantida (640×360, integer, Nearest, snap). Campo desenha
 ### 18.5 Save v2
 - `user://save.json` com `version: 2`. Novos blocos: `progress.stage_unlocked`, `progress.bosses` (vitórias, tentativas), `unrest` por estágio, `items` (comprados, equipados), `hub` (construções), `milestones` (contadores, concluídos), `dialogue_seen`, `tree.masters_bought`, `respec_count`, `chapter_end_seen`.
 - **Migração v1 → v2** (saves da demo/M0): devolve 100% do que foi gasto na árvore antiga em Cobre/Ossos, zera a árvore (ids mudaram), mantém moedas, opções e telemetria; Inquietação zerada.
-- **Compatibilidade entre marcos:** um save do build A abre no B, C e D sem perda (campos novos com padrão; ids de nós estáveis; nós novos aparecem como novidade "!"). Teste automático por marco (`tests/test_save_compat.gd`).
+- **Compatibilidade entre marcos:** um save do build A abre no B, C e D sem perda (campos novos com padrão; ids de nós estáveis; nós novos aparecem como novidade "!"). Teste automático por marco (`tests/test_save_compat.tscn`).
 
 ## 19. Marcos jogáveis e escopo
 
 Cada marco é um **build completo**: do título ao fim do capítulo, sem placeholder visível no que entra, sem crash, save compatível com o marco anterior. Dentro de cada marco o trabalho corre em **ondas** (W1 código de regras → W2 conteúdo/estágio → W3 meta → W4 noite → W5 polimento), detalhadas em [06_PLANO_V1.md](06_PLANO_V1.md).
 
 ### 19.1 Marco A · "Capítulo 1: O Cemitério da Paróquia" (~40–60 min)
-- **Conteúdo:** título → estágio 1 com a economia nova (§4.3–4.7, D1–D3, D10); árvore de **44 nós** (todos os A), com **EX e LX** (Raízes-mestras em Almas), encruzilhada E12, **Pisão**, **Cava-Funda**, Ossada; lápides com efeito (3 tipos), velas, moeda de ouro, alminhas; Ficha do Coveiro; câmera nova da Árvore (atalhos, Centralizar, minimapa); Inquietação → **Enfrentar o Caixão Fujão** (placa na superfície da Árvore) → Noite do Chefe → vitória → diálogo com retrato (Dona Ceifa, Tião) → Resumo especial → **"Fim do Capítulo 1"** com Créditos e Continuar cavando; pausa com Abandonar/Voltar ao título; auto-pisão; save v2 com migração.
+- **Conteúdo:** título → estágio 1 com a economia nova (§4.3–4.7, D1–D3, D10); árvore de **44 nós** (todos os A), com **EX e LX** (Raízes-mestras em Almas), encruzilhada E12, **Pisão**, **Cava-Funda**, Ossada; lápides com efeito (3 tipos), velas, moeda de ouro, alminhas; Ficha do Coveiro; câmera nova da Árvore (atalhos, Centralizar, minimapa); Inquietação → **Enfrentar o Caixão Fujão** (ação na estação Próxima Noite do Pátio) → Noite do Chefe → vitória → diálogo com retrato (Dona Ceifa, Tião) → Resumo especial → **"Fim do Capítulo 1"** com Créditos e Continuar cavando; pausa com Abandonar/Voltar ao título; auto-pisão; save v2 com migração.
 - **Fora do A:** hub com construções, Mascate, Epitáfios (barra de XP oculta), ajudantes, estágio 2.
-- **Pronto quando:** chefe 1 aos 35–45 min (playtest interno, 3 pessoas); 1º nó ≤ 40 s; nenhuma sequência de 5 noites sem compra; nenhum asset placeholder no que entra; testes headless verdes (`test_core`, `test_economy_v2`, `test_boss_hop`, `test_save_migration`).
+- **Pronto quando:** chefe 1 aos 35–45 min (playtest interno, 3 pessoas); 1º nó ≤ 40 s; nenhuma sequência de 5 noites sem compra; nenhum asset placeholder no que entra; testes headless verdes (`test_core`, `test_economy_v2`, `test_boss_hop`, `test_boss_outcomes`, `test_save_migration`, `test_hall_skill_panel_runtime`, `test_dialogue_runtime`, `test_chapter_end_runtime`, `test_chapter_end_flow`).
 
 ### 19.2 Marco B · "Capítulo 2: O Campo dos Indigentes" (~1h20–1h30)
 - **Conteúdo:** hub na superfície (Portão, Casa do Coveiro, Capelinha + Barraca do Mascate), **seletor de estágios**, **Mascate** com 5 itens (Pá de Bico, Enxadão, Dentadura, Terço, Retrato) e 2 espaços; **estágio 2** (diorama, lama, fantasmas, cruzes, poça de lama, lápide rachada) + **Seu Damião**; árvore **64 nós** (+20 B: FX, L07, Clarão, N02, N03…); **Epitáfios: 8**; **Replantar**; **Toupeira Tita**; baús e Ossário; retratos Mascate e Madame Ossada; "Fim do Capítulo 2".

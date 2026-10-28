@@ -16,6 +16,10 @@ const SOUL_RISE := 24.0
 const SOUL_TIME := 1.0
 const WISP_PATH := "res://assets/sprites/fx/fogo_fatuo.png"
 const WISP_FRAME := Vector2(8, 8)
+const CANDLE_PATH := "res://assets/sprites/props/vela_campo.png"
+const CANDLE_HALO_PATH := "res://assets/sprites/props/vela_campo_halo.png"
+const GOLD_PATH := "res://assets/sprites/fx/moeda_ouro.png"
+const WANDERER_PATH := "res://assets/sprites/chars/title/alma_fila.png"
 const TOMBSTONE_CELL := Vector2(16, 24)
 const TOMBSTONE_PIVOT := Vector2(8, 23)
 
@@ -29,6 +33,10 @@ var _tombstone: Texture2D
 var _tombstone_checked: bool = false
 var _wisp: Texture2D = AssetManifest.texture(WISP_PATH)
 var _soul: Texture2D = AssetManifest.texture(SOUL_PATH)
+var _candle: Texture2D = AssetManifest.texture(CANDLE_PATH)
+var _candle_halo: Texture2D = AssetManifest.texture(CANDLE_HALO_PATH)
+var _gold_coin: Texture2D = AssetManifest.texture(GOLD_PATH)
+var _wanderer: Texture2D = AssetManifest.texture(WANDERER_PATH)
 
 
 func _process(delta: float) -> void:
@@ -134,6 +142,23 @@ func _draw_props() -> void:
 			_draw_soul(mid, t)
 	for w: Dictionary in state.wisps:
 		_draw_wisp(tiles.map_to_local(w.cell as Vector2i), float(w.age))
+	for cell: Vector2i in state.candles:
+		var center := tiles.map_to_local(cell)
+		if _candle_halo != null:
+			draw_texture(_candle_halo, center - Vector2(32, 16))
+		if _candle != null:
+			var frame := int(_time * 8.0) % 3
+			draw_texture_rect_region(_candle, Rect2(center - Vector2(16, 16), Vector2(32, 24)), Rect2(frame * 32, 0, 32, 24))
+	if not state.gold_coin.is_empty() and _gold_coin != null:
+		var c: Vector2i = state.gold_coin.cell
+		var frame := int(_time * 10.0) % 4
+		draw_texture_rect_region(_gold_coin, Rect2(tiles.map_to_local(c) - Vector2(4, 13), Vector2(8, 8)), Rect2(frame * 8, 0, 8, 8))
+	if _wanderer != null:
+		for w: Dictionary in state.wanderers:
+			var c: Vector2i = w.cell
+			var frame := int(_time * 7.0) % 4
+			var bob := roundf(sin(_time * 4.0 + float(c.x + c.y)) * 1.0)
+			draw_texture_rect_region(_wanderer, Rect2(tiles.map_to_local(c) - Vector2(4, 13 + bob), Vector2(8, 10)), Rect2(frame * 8, 0, 8, 10))
 
 
 func _draw_tombstone(pivot: Vector2, variant: int) -> void:

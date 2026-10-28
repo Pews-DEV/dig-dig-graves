@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SkillNodeData" format=3 uid="uid://ba3ul01ajniwi"]
+
+[ext_resource type="Script" uid="uid://bat2yahrc7rd3" path="res://data/types/skill_node_data.gd" id="1_node"]
+[ext_resource type="Script" uid="uid://c08lksunv3ps" path="res://data/types/stat_modifier.gd" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+stat = &"candles"
+value = 1.0
+
+[resource]
+script = ExtResource("1_node")
+id = &"C06"
+display_name = "Velas de Finados"
+description = "+1 vela no campo: não é cavável; tiles em volta regeneram 2× mais rápido e rendem +25%"
+branch = 4
+kind = &"D"
+max_level = 3
+base_cost = 60.0
+cost_growth = 2.2
+currency = &"bones"
+modifiers_per_level = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+requires = Array[Dictionary]([{
+"id": &"C03",
+"level": 2
+}])
+flags = Array[StringName]([&"candles"])
+grid = Vector2i(6, 3)
+tree_position = Vector2(1496, 432)
+icon_cell = Vector2i(1, 5)

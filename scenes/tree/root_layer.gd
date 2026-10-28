@@ -33,7 +33,13 @@ func set_roots(list: Array[Dictionary]) -> void:
 	for r: Dictionary in list:
 		var key: String = r.key
 		var old: Dictionary = roots.get(key, {})
-		var path := _path(r.from as Vector2, r.to as Vector2)
+		# A Dictionary erases o tipo genérico do Array ao guardar/ler o valor.
+		# Recriar o Array tipado evita atribuir Array cru a Array[Rect2] em runtime.
+		var obstacles: Array[Rect2] = []
+		for obstacle: Variant in r.get("obstacles", []):
+			if obstacle is Rect2:
+				obstacles.append(obstacle as Rect2)
+		var path := _path(r.from as Vector2, r.to as Vector2, obstacles)
 		next[key] = {
 			"points": path[0], "steep": path[1], "bought": bool(r.bought),
 			"grow": float(old.get("grow", 1.0)),
@@ -73,8 +79,8 @@ func _dirt_at_tip(r: Dictionary) -> void:
 
 
 ## Caminho em pixels inteiros (TreeLayout.root_path, testável sem cena).
-static func _path(a: Vector2, b: Vector2) -> Array:
-	return TreeLayout.root_path(a, b)
+static func _path(a: Vector2, b: Vector2, obstacles: Array[Rect2] = []) -> Array:
+	return TreeLayout.root_path(a, b, obstacles)
 
 
 func _process(delta: float) -> void:

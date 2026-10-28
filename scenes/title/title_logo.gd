@@ -207,7 +207,6 @@ func _draw_drip() -> void:
 	var p: Vector2 = _drip.pos
 	var age := float(_drip.age)
 	if _drip_sheet != null:
-		var fs := _drip_sheet.frame_size()
 		# MANIFEST title_logo_drip: pivô (1, 0) encaixa na ponta de gota.
 		_drip_sheet.draw_frame(self, _drip_sheet.frame_at(DRIP_TAG, age, false), p, Vector2(1, 0))
 		return

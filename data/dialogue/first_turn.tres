@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3 uid="uid://crvmoabfckuqg"]
+
+[ext_resource type="Script" uid="uid://dv65slcj4sifl" path="res://data/types/dialogue_data.gd" id="1_dialogue"]
+
+[resource]
+script = ExtResource("1_dialogue")
+id = &"first_turn"
+lines = Array[Dictionary]([{
+"name": "Tião",
+"speaker": &"tiao",
+"text": "Bom dia, patrão! O cemitério inteiro está esperando uma boa cavada."
+}, {
+"name": "Coveiro",
+"speaker": &"coveiro",
+"text": "E essa terra toda... por onde eu começo?"
+}, {
+"name": "Tião",
+"speaker": &"tiao",
+"text": "Mire com o mouse. A pá trabalha sozinha; as covas guardam o melhor."
+}])

@@ -4,6 +4,7 @@ extends RefCounted
 ## Se o asset não estiver listado (ou não existir), quem chama usa o placeholder de código.
 
 const MANIFEST_PATH := "res://assets/MANIFEST.md"
+const EMBEDDED_PATHS := preload("res://scenes/run/embedded_asset_paths.gd")
 
 static var _text: String = ""
 static var _loaded: bool = false
@@ -20,6 +21,8 @@ static func is_listed(path: String) -> bool:
 	if path.is_empty():
 		return false
 	_ensure()
+	if _text.is_empty():
+		return EMBEDDED_PATHS.PATHS.values().has(path)
 	return _text.contains(path.trim_prefix("res://"))
 
 
@@ -33,6 +36,8 @@ static func texture(path: String) -> Texture2D:
 ## Caminho `res://` do PNG registrado na linha do `id` (1ª coluna da tabela), ou "".
 static func path_for(id: String) -> String:
 	_ensure()
+	if _text.is_empty():
+		return str(EMBEDDED_PATHS.PATHS.get(id, ""))
 	return path_in(_text, id)
 
 

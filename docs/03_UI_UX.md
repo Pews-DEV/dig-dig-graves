@@ -78,6 +78,7 @@ Camadas, de trás para frente:
 
 ### 5.1 Cursor e área
 - **Pá:** sprite 24×24 (substitui o 16×16), leitura clara a 1×: lâmina larga de metal com reflexo do luar, cabo de madeira com fita, e um brilho âmbar da lanterna. Golpe pose a pose com antecipação, impacto (squash + 2 torrões saindo da lâmina) e volta.
+- A ponta da pá acompanha a posição livre do mouse; a arte não salta entre centros da grade. O tile mais próximo define a âncora da área de dano. Fora do campo, a pá ainda segue o ponteiro e nenhum tile recebe dano; entre covas, o alvo continua sendo o tile mais próximo.
 - **Contorno da área:** só o **perímetro externo** em degraus iso (não a grade interna), 1 px em 25, com pulso para 26 no golpe e cantoneiras de 3 px nas 4 pontas do losango. Interior: nenhum traço (a luz da lanterna já mostra a área).
 
 ## 6. Catálogo de animações de interface ("juice")
@@ -230,7 +231,7 @@ Reaproveitados: `fogo_fatuo` (cursor do menu), `fx_tree_petals` (pétalas), `fx_
 
 > Acrescentado em 27/10/2026 junto com o GDD 2.0. Vale tudo da Parte 1 (§1–§9): fontes, kit de madeira/pergaminho/pedra, catálogo de juice (§6), cortina de terra, "reduzir movimento"/"reduzir flashes". Ids de som citados estão no `assets/AUDIO_MANIFEST.md` ou na lista de ids novos do [06_PLANO_V1.md](06_PLANO_V1.md) §8 (marcados com \*). Ids de arte novos: DA §13. A letra entre colchetes diz em que marco a tela entra: [A], [B], [C], [D].
 
-## 10. Hub na superfície da Árvore [A estrutura · B construções]
+## 10. Pátio de navegação na superfície da Árvore [A estrutura · B construções]
 
 ### 10.1 Mundo e câmera
 - A cena da Árvore passa a ter um **mundo de 1936×1024** (GDD §6.1). **Superfície = y 0–176**; a grama fica em y = 176 e as raízes começam embaixo. A vista é 640×360.
@@ -241,7 +242,7 @@ Reaproveitados: `fogo_fatuo` (cursor do menu), `fx_tree_petals` (pétalas), `fx_
 ### 10.2 Composição da superfície (x = centro da base, y da base = 172)
 ```
 x:  150      290      430      580      760        968        1120      1260    1390    1530    1680    1820
-   Jazigo   Portão   Casa do  Capelinha Barraca   IPÊ-ROXO   Seletor   Poço    Canteiro Torre  Galinheiro Coreto
+   Jazigo   Portão   Casa do  Capelinha Barraca   IPÊ-ROXO   Pátio   Poço    Canteiro Torre  Galinheiro Coreto
    [D]      [B]      Coveiro  [B]      Mascate   (N00 embaixo) [A]    [C]     [C]     [C]     [D]     [D]
                      [B]               [B]
 ```
@@ -249,34 +250,26 @@ x:  150      290      430      580      760        968        1120      1260    
 - **Hover:** sobe 1 px, contorno 26, tooltip de pergaminho com nome, efeito, custo e "Clique para restaurar".
 - **Clique** → **painel de obra** (pergaminho 200×110, ancorado acima da construção): nome m6x11, desenho da versão restaurada em miniatura (o próprio sprite), efeito em m5x7, custo com ícones, botões "Restaurar" e "Agora não". Sem dinheiro: "Restaurar" desabilitado e o que falta em 32.
 - **Restaurar:** a câmera centraliza a construção (300 ms) → nuvem de poeira cobre (`dust`, 3 frames) → 3 marteladas com tremor de 1 px (`build_complete`) → troca para o sprite restaurado com pop (1,0→1,1→1,0, 160 ms) e faíscas 26 → texto do bônus sobe ("+10% de Cobre") → autosave.
-- **Personagens na superfície:** Tião na placa do seletor (idle do título); Mascate na Barraca (`mascate` idle/`wave` quando o cursor passa); Madame Ossada na porta da Capelinha (B, após a Capelinha); Seu Damião sentado no Poço (C); Dona Ceifa só aparece em falas e no final. Clicar num personagem = 1 balão curto de dica (§14, sem pausa).
+- **Personagens na superfície:** Tião junto à estação Próxima Noite (idle do título); Mascate na Barraca (`mascate` idle/`wave` quando o cursor passa); Madame Ossada na porta da Capelinha (B, após a Capelinha); Seu Damião sentado no Poço (C); Dona Ceifa só aparece em falas e no final. Clicar num personagem = 1 balão curto de dica (§14, sem pausa).
 
-### 10.3 Seletor de estágios [A]
-- Objeto do mundo em x = 1120: **placa de madeira com 5 lanternas penduradas** (`hub_selector`, 96×64), uma por estágio, com o nome entalhado embaixo em m5x7.
-  - **Liberado:** lanterna acesa (chama 3 frames), nome em 22. **Selecionado:** lanterna maior (frame alternativo) + seta 26 piscando embaixo. **Trancado:** lanterna apagada em silhueta 03, cadeado e "Vença ‹chefe›" no tooltip.
-  - Clicar numa lanterna acesa seleciona o estágio (`ui_click`, a chama "sopra" 1 frame).
-- **Atalho na tela** (sempre visível, plaqueta fixa no topo-direito com "Cavar ▶"): `◀ Paróquia ▶` em m5x7 acima do botão; setas trocam o estágio (`stage_select`\*). Assim o jogador não precisa rolar até a placa.
-- **Estágio liberado** (após o Resumo especial): a câmera rola até a placa (500 ms), a Chave voa do canto e entra na fechadura (`key_get`\*), a lanterna acende de baixo para cima (4 frames), `stinger_stage_unlock`, o nome aparece letra a letra (30 ms/letra).
+#### 10.3 Pátio de navegação [A]
+A superfície funciona como um hall integrado ao cenário da Árvore, sem um painel central de seleção de cinco lanternas. A tela inicial da Árvore apresenta quatro destinos em cartões/estações ancorados visualmente ao chão:
+- **Árvore de Raízes — Talentos:** abre a vista navegável dos nós; botão “Pátio” retorna à superfície.
+- **Próxima Noite — Paróquia:** inicia o estágio 1 em um clique. A seleção de estágio aparece nesse destino quando houver mais de um estágio jogável; no Marco A há apenas a Paróquia.
+- **Barraca — Loja:** visível bloqueada até a liberação do Capítulo 1 (marco B).
+- **Jardim — Fazenda:** visível como destino futuro, bloqueado até sua implementação.
+A carteira permanece no canto superior esquerdo. Os destinos bloqueados comunicam disponibilidade futura sem parecerem botões quebrados. O título do espaço é “Pátio do Bom Descanso”; “Cemitério do Bom Descanso” continua sendo o nome do local na narrativa.
+Ao retornar ao Pátio, o painel de detalhes do último nó selecionado desaparece; ele volta a aparecer ao abrir as Raízes.
+As quatro estações ficam reunidas numa moldura de pergaminho sobre a cena, que separa título e destinos das raízes e do solo e mantém contraste legível; ela não funciona como seletor de estágios.
 
-### 10.4 Botão "Enfrentar ‹chefe›" [A]
-- Aparece **abaixo do "Cavar ▶"** (plaqueta em pedra `panel_stone` em vez de madeira, 120×28), só com a Inquietação do estágio selecionado em 100%: ícone do chefe 16×16 (`icon_boss_*`) + "Enfrentar o Caixão Fujão" em m6x11 + linha m5x7 "A terra treme…".
-- **Entrada:** sobe do chão (+28 px → 0, 300 ms, back-out) com poeira e `unrest_warning`; tremor de 1 px na tela (escala pela opção de tremor).
-- **Ocioso:** a caveira treme 1 px a cada 0,5 s; a borda alterna 31/32 a 1 Hz (desligável com "reduzir flashes": borda fixa 32).
-- **Clique:** botão afunda 1 px, a tela escurece por vinheta (200 ms), `stinger_boss_appear` e cortina de terra → Noite do Chefe. Atalho F / Y.
-- No **marco A** (sem hub completo) a superfície mostra só o ipê, a placa do seletor (1 lanterna acesa, 4 em silhueta) e as ruínas em silhueta escura sem cadeado nem tooltip ("Em breve").
+### 10.4 Noite do Chefe [A]
+Quando a Inquietação do estágio atual chega a 100%, aparece na estação Próxima Noite a ação secundária **Enfrentar o Caixão Fujão**. Mantém a entrada com cortina de terra, feedback sonoro e atalho F/Y. No retorno da vitória, a chave é celebrada no pátio e segue para o encerramento do capítulo; não existe animação de desbloqueio de lanterna em um painel.
 
-### 10.5 Barra de topo da Árvore/hub
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│ ╔═══════════════════════════╗  ╔═══╗              ╔═◀ Paróquia ▶════╗ │
-│ ║ ◉ 12.345 🦴 678  ✦ 90    ║  ║ ☠ ║ (Tião:Marcos)║   CAVAR ▶       ║ │
-│ ╚═══════════════════════════╝  ╚═══╝              ╚═════════════════╝ │
-│                                                  ╔═════════════════╗ │
-│                                                  ║☠ Enfrentar o … ║ │  (só com 100%)
-│                                                  ╚═════════════════╝ │
-```
-Carteira à esquerda (já existe); plaqueta 20×20 do Tião com um "!" quando há marco novo [C]; "Cavar ▶" com o seletor compacto; "Enfrentar" embaixo. Minimapa da Árvore no canto inferior esquerdo (§18.2).
-
+### 10.5 Navegação e acessibilidade
+- O fluxo é Título/Resumo → Pátio; Pátio → Raízes ou Próxima Noite; Árvore → Pátio pelo botão fixo “Pátio”.
+- “Próxima Noite” inicia a noite em uma ação, sem exigir a visita a outro painel.
+- Home volta ao enquadramento do ipê e do Pátio. A câmera continua arrastável na tela da Árvore.
+- Opções e carteira permanecem acessíveis. Destinos bloqueados têm rótulo explícito e estado desabilitado.
 ## 11. Loja do Mascate [B]
 
 ### 11.1 Layout (overlay sobre o hub, 640×360)
@@ -377,6 +370,7 @@ Carteira à esquerda (já existe); plaqueta 20×20 do Tião com um "!" quando h�
   - Clarão: luz vai ao raio máximo com o anel em xadrez se expandindo (200 ms), tiles iluminados ganham uma borda 26 pulsando; `flare`. Ao acabar, a luz volta ao raio do óleo em 300 ms.
 - **Fileira de Epitáfios** [B]: ícones 12×12 da carta, alinhados abaixo dos recursos, máx. 15; hover mostra o tooltip da carta; um número "×2" quando acumulado.
 - **Inquietação:** ao passar de 80% a caveira treme; em 100% a barra fica cheia com brilho 32 varrendo e o rótulo "A terra treme…" pisca 3× ao chegar.
+- **Tipos de lápide [A]:** passar o cursor sobre a lápide mostra no tooltip o nome e o efeito (Cova normal, +1 Alma ou Caixão 1,5× mais duro/Ossos ×2); as três colunas do sprite distinguem os tipos sem depender do texto.
 
 ### 13.2 Barra do chefe [A]
 - Plaqueta larga (320×22) no topo central, **abaixo** da medalha de nível: ícone do chefe 16×16 (`icon_boss_*`), nome em m6x11, barra com moldura `barra_chefe` (preenchimento 31/32, ponta 23) e o HP em m5x7 à direita.
@@ -426,7 +420,7 @@ Painel de madeira: **Continuar · Opções · Abandonar a noite · Voltar ao tí
 ```
 - Entra depois do diálogo de vitória, com cortina de terra. Fundo do Resumo normal + raios de luz 26/23 em xadrez girando devagar atrás da Chave (sem com "reduzir movimento").
 - **Sequência:** título cai letra a letra (30 ms) → a Chave sobe girando (4 frames de giro, 600 ms) e pousa com pop + `key_get`\* + `jingle_boss_win` (se ainda não tocou) → os prêmios contam (contador padrão) → "O que se abriu" entra linha a linha (−8 px, 120 ms de defasagem) com um ícone cada → o botão "chama" (balanço ±1 px).
-- **Ver o cemitério ▶** leva ao hub e dispara a **revelação**: câmera rola até o seletor (lanterna acende, §10.3), depois desce até as raízes novas (brotam com `node_reveal`, máx. 6 visíveis animando, o resto aparece direto) e volta ao ipê. Duração total ≤ 6 s; qualquer clique acelera para o fim.
+- **Ver o cemitério ▶** leva ao Pátio; a revelação mostra a nova chave e as raízes brotando (`node_reveal`, máx. 6 visíveis animando, o resto aparece direto). Duração total ≤ 6 s; qualquer clique acelera para o fim.
 - Builds A–C: depois da revelação entra o **Fim do Capítulo** (§19). Revanche vencida: Resumo normal com a linha "Revanche: +X Almas".
 - Derrota na Noite do Chefe: Resumo normal com a faixa de pedra "O Caixão Fujão fugiu… faltaram 3.420 de vida" e o botão "Árvore" em foco.
 
@@ -456,7 +450,7 @@ Painel de madeira: **Continuar · Opções · Abandonar a noite · Voltar ao tí
 - Comprar Raiz-mestra: pop maior (1,0→1,25→1,0), 2 ondas de pétalas, tremor de 1 px, `seal` + `node_buy`; o custo das outras mestras atualiza com contador ("×3").
 
 ### 18.2 Navegação
-- **Minimapa** 96×48 no canto inferior esquerdo (moldura de madeira): faixas dos 7 ramos nas cores da DA §10.3 em 2 tons, nós comprados = ponto 1×1 aceso, mestras = ponto 2×2, retângulo 26 da vista; clique/arraste move a câmera.
+- **Minimapa** 96×48 no canto inferior esquerdo (`minimap_frame`): faixas coloridas dos ramos presentes nas cores da DA §10.3, nós comprados como pontos acesos (mestras 2×2), retângulo da vista; clique/arraste move a câmera. O painel de descrição começa à direita do minimapa para manter ambos visíveis.
 - **Atalhos 1–7** (E, L, S, N, F, C, A) e **LB/RB**: rolam até o topo do ramo (400 ms, ease-out) com o nome do ramo aparecendo 1 s no topo da tela.
 - **Home / R3:** volta à câmera inicial (superfície).
 - Painel de descrição, Ficha (Tab) e "Cavar ▶" como na Parte 1 (§7).
@@ -487,7 +481,7 @@ BOOT ─► TÍTULO ─Novo Jogo (Coveiro levanta)─► [cortina] ─► TURNO 
 TURNO ─óleo/amanhecer─► "O ÓLEO ACABOU" 0,8 s ─► HUD sai ─► [cortina] ─► RESUMO
 RESUMO ─[Árvore]──────► [cortina] ─► ÁRVORE/HUB (câmera na superfície)
        └[Mais uma noite]► [cortina] ─► TURNO (mesmo estágio)
-ÁRVORE/HUB ─[Cavar ▶ / Espaço]────────────► [cortina] ─► TURNO (estágio do seletor)
+PÁTIO ─[Próxima Noite]───────────────────► [cortina] ─► TURNO (estágio atual)
            ─[Enfrentar / F]─ vinheta 200 ms ► [cortina] ─► NOITE DO CHEFE
            ─[Barraca/Mascate]─► LOJA (overlay, sem trocar de cena; crossfade de música)
            ─[ruína]─► PAINEL DE OBRA (overlay) ─Restaurar─► animação na própria superfície
