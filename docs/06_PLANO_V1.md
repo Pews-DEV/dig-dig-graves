@@ -1,6 +1,6 @@
 # Dig Dig Graves — Plano de produção do v1.0
 
-> Versão 1.0 · 27/10/2026 · Implementa o [01_GDD.md](../core/01_GDD.md) **2.0**, a [03_UI_UX.md](../design/03_UI_UX.md) Parte 2 (§10–§20) e a [02_DIRECAO_DE_ARTE.md](../design/02_DIRECAO_DE_ARTE.md) §13. Onde este plano e o [04_REVISAO_E_ROADMAP.md](../review/04_REVISAO_E_ROADMAP.md) divergirem, vale este plano.
+> Versão 1.0 · 27/10/2026 · Implementa o [01_GDD.md](01_GDD.md) **2.0**, a [03_UI_UX.md](03_UI_UX.md) Parte 2 (§10–§20) e a [02_DIRECAO_DE_ARTE.md](02_DIRECAO_DE_ARTE.md) §13. Onde este plano e o [04_REVISAO_E_ROADMAP.md](04_REVISAO_E_ROADMAP.md) divergirem, vale este plano.
 > Quem edita este documento é o orquestrador. Os agentes leem o pacote deles, as seções citadas da spec e o manifesto.
 
 ---
@@ -21,7 +21,7 @@
 | Marco | Build | Duração-alvo | Conteúdo-chave | Ondas |
 |---|---|---|---|---|
 | **A** | Capítulo 1: O Cemitério da Paróquia | 40–60 min | Economia nova, árvore 44, Pisão, Cava-Funda, EX/LX, lápides com efeito, Noite do Chefe + Caixão Fujão, diálogo, Fim do Capítulo 1 | W1–W5 |
-| **B** | Capítulo 2: O Campo dos Indigentes | ~1h20–1h30 | Hub + 3 construções + Barraca, seletor, Mascate (5), estágio 2 + Seu Damião, árvore 64, Epitáfios 8, Replantar, Clarão, Tita | W1–W5 |
+| **B** | Capítulo 2: O Campo dos Indigentes | ~1h20–1h30 | Entregas B1–B5: estágio 2; progressão; hub; loja; noite avançada e fechamento | B1–B5 (W1–W5 internos) |
 | **C** | Capítulo 3: As Catacumbas de Pedra | ~2h10–2h20 | Estágio 3 + Raiz-Mãe, árvore 84, Mascate 12, Epitáfios 16, Gato, +3 construções, 15 marcos | W1–W5 |
 | **D** | v1.0 | final ~3h30–4h, 100% ~5 h | Estágios 4–5 + 2 chefes, final e créditos, árvore 100 + Duas Raízes, Mascate 20, Epitáfios 24, 4 ajudantes, 9 construções, 20 marcos, gamepad e daltônico | W1–W5 |
 
@@ -142,6 +142,18 @@ Quantidades por sistema e marco: GDD §1.1.
 ## 4. Marco B · "Capítulo 2: O Campo dos Indigentes"
 
 **Critério de pronto do marco:** jogável do título ao "Fim do Capítulo 2"; save do A continua; chefe 2 a ~1h20 (±15); cada noite do estágio 2 tem ≥ 2 decisões; hub, loja e Epitáfios com arte e som finais.
+
+O Marco B é entregue em cinco builds incrementais. Cada build parte do anterior, mantém a compatibilidade do save e tem um resultado jogável próprio. A ordem abaixo também permite validar o estágio e o ritmo antes de ampliar a meta progressiva. Os pacotes W1–W5 abaixo detalham o trabalho; esta lista define os pontos de integração e aceite.
+
+| Entrega | Resultado jogável e aceite | Pacotes incluídos |
+|---|---|---|
+| **B1 · Campo dos Indigentes** | Um seletor mínimo libera o estágio 2, com diorama e elementos próprios; Seu Damião pode ser enfrentado e vencido; chave e desbloqueio persistem. Build de título a vitória do chefe, sem hub/loja novo obrigatório. | B-W2-EST2, B-W2-CHEFE e fatia do seletor de B-W3-HUB; arte/som ART-B1–B2 e dependências do estágio. |
+| **B2 · Novas escolhas de progressão** | Árvore passa a 64 nós; Clarão funciona; barra de XP, fila de níveis e tela de escolha passam a operar; Replantar devolve 100% e reseta o multiplicador. Save B1 continua abrindo. | B-W1-ARVORE, B-W1-REGRAS; ART-B3/B5 e sons correspondentes. |
+| **B3 · Superfície e construções** | Hub apresenta Portão, Casa, Capelinha e Barraca com estados e efeitos; retratos de Mascate e Madame Ossada; navegação de retorno ao campo. Critério: construções e estado persistem após salvar/carregar. | Restante de B-W3-HUB (o seletor mínimo já entrou em B1); parte de ART-B3/SND-B. |
+| **B4 · Mascate** | Loja permite comprar/equipar os cinco itens, trocar pá no início da noite e usar dois espaços; escolhas de item/pá ficam disponíveis em runs do estágio 2. | B-W3-LOJA; parte de ART-B3/SND-B. |
+| **B5 · Noite completa e capítulo** | Oito Epitáfios com sorteio, pausa, escolha e rerrolagem; Tita, baús e Ossário; diálogos, resumo e "Fim do Capítulo 2". Save do A compatível, chefe no alvo de ritmo e ≥2 decisões por noite no estágio 2; arte e som finais. | B-W4-EPI, B-W4-ELEM, B-W5-POLISH; ART-B4 e fechamento de SND-B. |
+
+**Regra de fechamento:** cada entrega deve compilar e abrir como build jogável, com seu próprio checklist de aceite e save migrável para a seguinte. B5 fecha o critério integral do Marco B. Arte e som podem avançar em paralelo, mas só contam como aceitos quando integrados e revisados no build que os consome.
 
 ### W1 · Regras
 **B-W1-ARVORE · +20 nós (B)** — `godot-dev` · Spec GDD §6 (linhas B), §8 (F06), §6.2 (Replantar) · Possui `data/skill_nodes/*` (novos B), `scenes/tree/*`, `tests/test_tree_v2.gd` · Faz os 20 nós, **Replantar** (UI/UX §16, com `respec` ✔) e FX · Pronto: Replantar devolve 100% e zera o ×3 · Depende de: A fechado.
