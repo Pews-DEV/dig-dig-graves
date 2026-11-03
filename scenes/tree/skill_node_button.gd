@@ -160,7 +160,12 @@ func _draw() -> void:
 	if not tree.is_revealed(node_id):
 		# Oculto: silhueta com "?" que oscila levemente (±1 px).
 		var wobble := Vector2(0, roundf(sin(_t * 2.0)) * (1.0 if not Juice.reduce_motion() else 0.0))
+		if tree.is_master(node_id):
+			_draw_master_ring(off + wobble, Palette.NIGHT, Palette.BG)  # silhueta 40×40 (UI/UX §18.1)
 		_draw_medallion(COL_HIDDEN, 0, d, off + wobble)
+		return
+	if tree.is_sealed(node_id) and not preview_only:
+		_draw_sealed(off)
 		return
 	var maxed := tree.is_maxed(node_id)
 	var affordable := not maxed and tree.can_buy(node_id, Economy.balances)
@@ -172,7 +177,10 @@ func _draw() -> void:
 		row = 0 if f == 0 else 1
 	elif affordable and not preview_only and int(_t / BREATH) % 2 == 1:
 		row = 1  # halo de respirar
+	if d.kind == &"M":
+		_draw_master_ring(off, Palette.COFFIN_DARK, Palette.COFFIN_LIGHT)
 	_draw_medallion(col, row, d, off)
+	_draw_kind(d.kind, off)
 	_draw_icon(d, off)
 	if preview_only:
 		return
@@ -211,6 +219,66 @@ func _draw_medallion(col: int, row: int, d: SkillNodeData, off: Vector2) -> void
 		for k: int in range(0, 32, 2):
 			draw_rect(Rect2(o + Vector2(k, -2), Vector2.ONE), Palette.color(int(colors[1])))
 			draw_rect(Rect2(o + Vector2(k + 1, 33), Vector2.ONE), Palette.color(int(colors[1])))
+
+
+## Molduras por tipo (UI/UX §18.1, DA §10.3), desenhadas por cima do medalhão do ramo
+## enquanto `frame_at/r/d` não entram no MANIFEST.
+func _draw_kind(kind: StringName, off: Vector2) -> void:
+	match kind:
+		&"At":
+			# Aro com 4 raios de luz 26 nas diagonais: "botão novo".
+			var c := Palette.color(Palette.LANTERN_BRIGHT)
+			for corner: Vector2 in [Vector2(2, 2), Vector2(29, 2), Vector2(2, 29), Vector2(29, 29)]:
+				var dir := Vector2(-1.0 if corner.x < HALF else 1.0, -1.0 if corner.y < HALF else 1.0)
+				for k: int in range(1, 4):
+					draw_rect(Rect2(off + corner + dir * k, Vector2.ONE), c)
+		&"R":
+			# Aro rúnico: pontos 28 nas 8 direções.
+			var c := Palette.color(Palette.ECTO)
+			var o := Palette.color(Palette.OUTLINE)
+			for i: int in 8:
+				var a := TAU * float(i) / 8.0
+				var p := (off + Vector2(HALF, HALF) + Vector2(cos(a), sin(a)) * 17.0).floor()
+				draw_rect(Rect2(p - Vector2.ONE, Vector2(3, 3)), o)
+				draw_rect(Rect2(p, Vector2.ONE), c)
+		&"D":
+			# Cadeado aberto 8×8 no topo: "coisa nova no campo".
+			var p := off + Vector2(12, -7)
+			draw_rect(Rect2(p + Vector2(0, 3), Vector2(8, 5)), Palette.color(Palette.OUTLINE))
+			draw_rect(Rect2(p + Vector2(1, 4), Vector2(6, 3)), Palette.color(Palette.LANTERN))
+			draw_rect(Rect2(p + Vector2(1, 4), Vector2(6, 1)), Palette.color(Palette.LANTERN_BRIGHT))
+			draw_rect(Rect2(p + Vector2(1, 0), Vector2(1, 4)), Palette.color(Palette.STONE_LIGHT))
+			draw_rect(Rect2(p + Vector2(1, 0), Vector2(4, 1)), Palette.color(Palette.STONE_LIGHT))
+			draw_rect(Rect2(p + Vector2(4, 0), Vector2(1, 2)), Palette.color(Palette.STONE_LIGHT))
+
+
+## Raiz-mestra: raízes abraçando um medalhão de 40×40 (4 px além dos 32 da célula).
+func _draw_master_ring(off: Vector2, dark: int, light: int) -> void:
+	var o := off - Vector2(4, 4)
+	_oct(Rect2(o, Vector2(40, 40)), Palette.OUTLINE)
+	_oct(Rect2(o + Vector2(1, 1), Vector2(38, 38)), dark)
+	var l := Palette.color(light)
+	for y: int in range(8, 32, 6):
+		draw_rect(Rect2(o + Vector2(1, y), Vector2(2, 3)), l)
+		draw_rect(Rect2(o + Vector2(37, y + 3), Vector2(2, 3)), l)
+	for x: int in range(9, 32, 7):
+		draw_rect(Rect2(o + Vector2(x, 1), Vector2(3, 2)), l)
+		draw_rect(Rect2(o + Vector2(x + 3, 37), Vector2(3, 2)), l)
+
+
+## Selado (UI/UX §18.1): pedra fria 06/07, sem respirar, raiz cortada e "×" 8×8.
+func _draw_sealed(off: Vector2) -> void:
+	_oct(Rect2(off, Vector2(32, 32)), Palette.OUTLINE)
+	_oct(Rect2(off + Vector2(1, 1), Vector2(30, 30)), Palette.STONE_DARK)
+	_oct(Rect2(off + Vector2(4, 4), Vector2(24, 24)), Palette.STONE)
+	draw_rect(Rect2(off + Vector2(5, 3), Vector2(18, 1)), Palette.color(Palette.STONE_LIGHT))
+	var x := Palette.color(Palette.OUTLINE)
+	for i: int in 8:
+		draw_rect(Rect2(off + Vector2(12 + i, 12 + i), Vector2(1, 1)), x)
+		draw_rect(Rect2(off + Vector2(19 - i, 12 + i), Vector2(1, 1)), x)
+	# Toco da raiz cortada saindo por baixo, com a falha do corte.
+	draw_rect(Rect2(off + Vector2(15, 30), Vector2(2, 2)), Palette.color(Palette.COFFIN_DARK))
+	draw_rect(Rect2(off + Vector2(15, 35), Vector2(2, 3)), Palette.color(Palette.COFFIN_DARK))
 
 
 func _oct(r: Rect2, idx: int) -> void:

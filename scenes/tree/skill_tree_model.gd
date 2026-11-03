@@ -114,24 +114,54 @@ func next_cost(id: StringName) -> float:
 	if d == null or is_maxed(id):
 		return INF
 	if d.kind == &"M":
-		var bought := 0
-		for other_id: StringName in order:
-			if get_node_data(other_id).kind == &"M" and is_owned(other_id):
-				bought += 1
-		return ceilf(d.base_cost * pow(d.cost_growth, bought))
+		# GDD §6.2: 1.500 × 3^(Raízes-mestras já compradas).
+		return ceilf(d.base_cost * pow(d.cost_growth, masters_bought()))
 	return d.cost_at(level_of(id))
 
 
 func can_buy(id: StringName, wallet: Dictionary) -> bool:
-	if not is_revealed(id) or is_maxed(id):
+	if not is_revealed(id) or is_maxed(id) or is_sealed(id):
 		return false
 	var d := get_node_data(id)
-	if d.exclusive_group != &"":
-		for other_id: StringName in order:
-			var other := get_node_data(other_id)
-			if other_id != id and other.exclusive_group == d.exclusive_group and is_owned(other_id):
-				return false
 	return float(wallet.get(d.currency, 0.0)) >= next_cost(id)
+
+
+## GDD §6.2: encruzilhada — comprar um lado sela o outro (Duas Raízes, N05, libera; marco D).
+func is_sealed(id: StringName) -> bool:
+	var d := get_node_data(id)
+	if d == null or d.exclusive_group == &"" or is_owned(id) or has_flag(&"both_sides"):
+		return false
+	for other_id: StringName in order:
+		var other := get_node_data(other_id)
+		if other_id != id and other.exclusive_group == d.exclusive_group and is_owned(other_id):
+			return true
+	return false
+
+
+## Nós que esta compra acabou de selar (para o som/efeito `seal`).
+func sealed_by(id: StringName) -> Array[StringName]:
+	var out: Array[StringName] = []
+	var d := get_node_data(id)
+	if d == null or d.exclusive_group == &"":
+		return out
+	for other_id: StringName in order:
+		if other_id != id and get_node_data(other_id).exclusive_group == d.exclusive_group and is_sealed(other_id):
+			out.append(other_id)
+	return out
+
+
+## Raiz-mestra (D4): silhueta visível desde o início, com nome e custo no hover.
+func is_master(id: StringName) -> bool:
+	var d := get_node_data(id)
+	return d != null and d.kind == &"M"
+
+
+func masters_bought() -> int:
+	var bought := 0
+	for other_id: StringName in order:
+		if is_master(other_id) and is_owned(other_id):
+			bought += 1
+	return bought
 
 
 func set_trigger(trigger: StringName, enabled: bool = true) -> void:
@@ -178,7 +208,7 @@ func has_flag(flag: StringName) -> bool:
 func cheapest_pending(wallet: Dictionary) -> Dictionary:
 	var best: Dictionary = {}
 	for id: StringName in order:
-		if not is_revealed(id) or is_maxed(id):
+		if not is_revealed(id) or is_maxed(id) or is_sealed(id):
 			continue
 		var d := get_node_data(id)
 		var cost := next_cost(id)
@@ -201,11 +231,13 @@ func _better(a: Dictionary, b: Dictionary) -> bool:
 	return float(a.missing) < float(b.missing)
 
 
+## GDD §18.5: níveis por id + `masters_bought` (ignorado na leitura: não é id de nó).
 func to_save() -> Dictionary:
 	var out: Dictionary = {}
 	for id: StringName in order:
 		if level_of(id) > 0:
 			out[String(id)] = level_of(id)
+	out["masters_bought"] = masters_bought()
 	return out
 
 

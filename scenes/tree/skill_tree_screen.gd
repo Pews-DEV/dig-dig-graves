@@ -10,6 +10,26 @@ const START_CAM := Vector2(648, 0)
 const WHEEL_STEP := 40.0
 const DRAG_THRESHOLD := 3.0
 const COMBO_RESET := 0.6
+## UI/UX §20: autosave a cada 60 s no hub.
+const AUTOSAVE_EVERY := 60.0
+## UI/UX §18.2: atalhos 1–7 = E, L, S, N, F, C, A (ordem das faixas da esquerda para a direita).
+const BRANCH_KEYS: Array[int] = [
+	SkillNodeData.Branch.DIG, SkillNodeData.Branch.LANTERN, SkillNodeData.Branch.SOULS,
+	SkillNodeData.Branch.CENTER, SkillNodeData.Branch.FORTUNE, SkillNodeData.Branch.CEMETERY,
+	SkillNodeData.Branch.HELPERS,
+]
+const BRANCH_NAMES: Dictionary = {
+	SkillNodeData.Branch.DIG: "Escavação", SkillNodeData.Branch.LANTERN: "Lanterna",
+	SkillNodeData.Branch.SOULS: "Almas", SkillNodeData.Branch.CENTER: "Centro",
+	SkillNodeData.Branch.FORTUNE: "Fortuna", SkillNodeData.Branch.CEMETERY: "Cemitério",
+	SkillNodeData.Branch.HELPERS: "Ajudantes",
+}
+## GDD §6.1: coluna k central de cada faixa (fallback quando o ramo ainda não tem nó revelado).
+const BRANCH_K: Dictionary = {
+	SkillNodeData.Branch.DIG: -8, SkillNodeData.Branch.LANTERN: -5, SkillNodeData.Branch.SOULS: -2,
+	SkillNodeData.Branch.CENTER: 0, SkillNodeData.Branch.FORTUNE: 2, SkillNodeData.Branch.CEMETERY: 5,
+	SkillNodeData.Branch.HELPERS: 8,
+}
 const TreeMinimapScript = preload("res://scenes/tree/tree_minimap.gd")
 
 var _cam := TreeCamera.new(Vector2(640, 360), Rect2(Vector2.ZERO, TreeArt.WORLD))
@@ -49,6 +69,10 @@ var _drag_start: Vector2
 var _drag_vel: Vector2 = Vector2.ZERO
 var _combo: int = 0
 var _combo_t: float = 0.0
+var _autosave_t: float = 0.0
+var _branch_label: Label
+var _branch_label_t: float = 0.0
+var _boss_hint: Label
 
 
 func _ready() -> void:
@@ -80,6 +104,14 @@ func _ready() -> void:
 	_options.title_requested.connect(func() -> void: Game.goto_title())
 	_stat_sheet = StatSheetPanel.new()
 	add_child(_stat_sheet)
+	_branch_label = Label.new()
+	_branch_label.theme_type_variation = &"TitleLabel"
+	_branch_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_branch_label.position = Vector2(0, 34)
+	_branch_label.size = Vector2(640, 18)
+	_branch_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_branch_label.visible = false
+	_overlay.add_child(_branch_label)
 
 	Events.currency_changed.connect(_on_currency_changed)
 	Events.unrest_filled.connect(_on_unrest_filled)
@@ -189,9 +221,8 @@ func _build_wallet() -> void:
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	holder.add_child(bg)
 	var x := 7.0
+	# GDD §5: a carteira mostra sempre as 3 moedas.
 	for cur: StringName in [Economy.COPPER, Economy.BONES, Economy.SOULS]:
-		if cur == Economy.SOULS and Economy.get_amount(cur) <= 0.0:
-			continue
 		var icon := ResourceIcon.new()
 		icon.kind = ResourceIcon.kind_for_currency(cur)
 		icon.position = Vector2(x, 3)
@@ -219,8 +250,8 @@ func _build_hall() -> void:
 	_hall.anchor_top = 0.5
 	_hall.anchor_right = 0.5
 	_hall.anchor_bottom = 0.5
-	_hall.position = Vector2(-250, 18)
-	_hall.size = Vector2(500, 150)
+	_hall.position = Vector2(-250, -6)
+	_hall.size = Vector2(500, 176)
 	_hall.mouse_filter = Control.MOUSE_FILTER_STOP
 	_overlay.add_child(_hall)
 	var panel := PanelContainer.new()
@@ -241,17 +272,47 @@ func _build_hall() -> void:
 	row.add_theme_constant_override("separation", 8)
 	column.add_child(row)
 	_add_hall_station(row, "Raízes", "Talentos", _open_skill_tree)
-	_dig_btn = _add_hall_station(row, "Próxima Noite", "Paróquia · Cavar", Game.goto_run)
-	_add_hall_station(row, "Loja", "Capítulo 2", Callable(), true)
+	_dig_btn = _add_hall_station(row, "Próxima Noite", "Paróquia · Espaço", Game.goto_run)
+	_add_hall_station(row, "Loja", "Chega no Capítulo 2", Callable(), true)
 	_add_hall_station(row, "Fazenda", "Em breve", Callable(), true)
+	var boss_row := HBoxContainer.new()
+	boss_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	boss_row.add_theme_constant_override("separation", 8)
+	column.add_child(boss_row)
 	_boss_btn = Button.new()
 	_boss_btn.theme_type_variation = &"BigButton"
 	_boss_btn.custom_minimum_size = Vector2(220, 28)
-	_boss_btn.text = tr("Enfrentar o Caixão Fujão")
-	_boss_btn.visible = Game.unrest_of(Game.area.id) >= 1.0 - 0.000001
-	_boss_btn.pressed.connect(Game.goto_boss)
-	column.add_child(_boss_btn)
+	_boss_btn.text = tr("Enfrentar o Caixão Fujão") + " · F"
+	_boss_btn.pressed.connect(_face_boss)
+	boss_row.add_child(_boss_btn)
+	_boss_hint = Label.new()
+	_boss_hint.text = tr("A terra treme…")
+	_boss_hint.theme_type_variation = &"ParchmentLabel"
+	_boss_hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	boss_row.add_child(_boss_hint)
+	_set_boss_visible(Game.unrest_of(Game.area.id) >= 1.0 - 0.000001)
+	# UI/UX §10.5: opções acessíveis no Pátio (também pelo Esc).
+	var options_btn := Button.new()
+	options_btn.text = tr("Opções")
+	options_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	options_btn.pressed.connect(func() -> void: _options.open())
+	column.add_child(options_btn)
 	Juice.slide_in(_hall, Vector2(0, 12), 0.06)
+
+
+func _set_boss_visible(on: bool) -> void:
+	_boss_btn.visible = on
+	_boss_hint.visible = on
+	if on:
+		Juice.beckon(_boss_btn)
+
+
+## GDD §4.11 / UI/UX §10.4: "Enfrentar ‹chefe›" (botão ou F) leva à Noite do Chefe.
+func _face_boss() -> void:
+	if Game.unrest_of(Game.area.id) < 1.0 - 0.000001:
+		return
+	Audio.play(&"unrest_warning")
+	Game.goto_boss()
 
 
 func _add_hall_station(row: HBoxContainer, name: String, detail: String, action: Callable, locked: bool = false) -> Button:
@@ -278,7 +339,7 @@ func _build_hall_toggle() -> void:
 
 func _on_unrest_filled(area_id: int) -> void:
 	if area_id == Game.area.id:
-		_boss_btn.visible = true
+		_set_boss_visible(true)
 
 
 func _open_skill_tree() -> void:
@@ -294,7 +355,7 @@ func _show_hall() -> void:
 	_hall_toggle.visible = false
 	_minimap.visible = false
 	_panel.visible = false
-	_cam.scroll_to(_cam.clamp_pos(START_CAM))
+	_cam.scroll_to(_home_camera())
 
 func _build_minimap() -> void:
 	_minimap = TreeMinimapScript.new()
@@ -398,20 +459,39 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		_options.open()
 		return
+	if _options.is_open() or _stat_sheet.is_open():
+		return
 	if event.is_action_pressed(&"face_boss") and Game.unrest_of(Game.area.id) >= 1.0 - 0.000001:
 		get_viewport().set_input_as_handled()
-		Game.goto_boss()
+		_face_boss()
 		return
-	var key := event as InputEventKey
-	if key == null or not key.pressed or key.echo:
+	# GDD §15: um turno novo sempre a 1 clique ou tecla (Cavar ▶ = Espaço).
+	if event.is_action_pressed(&"dig_start"):
+		get_viewport().set_input_as_handled()
+		Game.goto_run()
 		return
-	if key.keycode == KEY_HOME:
-		_scroll_to_node(&"N00")
+	if event.is_action_pressed(&"tree_home"):
+		get_viewport().set_input_as_handled()
+		_cam.scroll_to(_home_camera())
 		return
-	if key.keycode >= KEY_1 and key.keycode <= KEY_7:
-		_focus_branch(key.keycode - KEY_0)
+	if _hall.visible:
+		return
+	for i: int in BRANCH_KEYS.size():
+		if event.is_action_pressed(StringName("tree_branch_%d" % (i + 1))):
+			get_viewport().set_input_as_handled()
+			_focus_branch(BRANCH_KEYS[i])
+			return
 
 
+## UI/UX §10.1/§18.2: Home volta ao enquadramento inicial (ipê, Pátio e o N00 embaixo).
+func _home_camera() -> Vector2:
+	var n00 := Game.tree.get_node_data(&"N00")
+	if n00 == null:
+		return _cam.clamp_pos(START_CAM)
+	return _cam.clamp_pos(Vector2(n00.tree_position.x - 320.0, TreeLayout.start_camera_y(n00.tree_position.y)))
+
+
+## UI/UX §18.2: rola até o topo do ramo e mostra o nome dele por 1 s.
 func _focus_branch(branch_id: int) -> void:
 	var candidate: StringName = &""
 	var candidate_y := INF
@@ -422,6 +502,14 @@ func _focus_branch(branch_id: int) -> void:
 			candidate_y = data.tree_position.y
 	if candidate != &"":
 		_scroll_to_node(candidate)
+	else:
+		var k := int(BRANCH_K.get(branch_id, 0))
+		var top := Vector2(TreeArt.WORLD.x * 0.5 + TreeLayout.COLUMN * k, TreeArt.GRASS_Y + 128.0)
+		_cam.scroll_to(_cam.focus_for(top, TreeLayout.safe_rect(PANEL_Y)))
+	_branch_label.text = tr(String(BRANCH_NAMES.get(branch_id, "")))
+	_branch_label.visible = true
+	_branch_label_t = 1.0
+	Juice.pop(_branch_label, 0.1, 0.14)
 
 
 func _process(delta: float) -> void:
@@ -433,6 +521,14 @@ func _process(delta: float) -> void:
 		_combo_t += delta
 		if _combo_t > COMBO_RESET:
 			_combo = 0
+	if _branch_label_t > 0.0:
+		_branch_label_t -= delta
+		if _branch_label_t <= 0.0:
+			_branch_label.visible = false
+	_autosave_t += delta
+	if _autosave_t >= AUTOSAVE_EVERY:
+		_autosave_t = 0.0
+		Game.save_game()
 
 
 func _apply_camera() -> void:
@@ -467,12 +563,26 @@ func _on_buy_requested(id: StringName) -> void:
 	var d := Game.tree.get_node_data(id)
 	var cost := Game.tree.next_cost(id)
 	if not Game.buy_node(id):
+		# Selado ou sem dinheiro: recusa audível (AUDIO_MANIFEST shop_deny), sem repetir ao segurar.
+		if not b.is_holding():
+			Audio.play(&"shop_deny")
 		return
 	var small := b.is_holding()
 	_combo = _combo + 1 if small else 0
 	_combo_t = 0.0
-	b.bought(small)
+	if Game.tree.is_master(id):
+		# UI/UX §18.1: Raiz-mestra = pop maior, tremor de 1 px e `seal` + `node_buy`.
+		Juice.pop(b, 0.25, 0.2)
+		_fx.burst(d.tree_position, false)
+		Audio.play(&"seal")
+	else:
+		b.bought(small)
 	_fx.burst(d.tree_position, small)
+	# GDD §6.2: comprar um lado da encruzilhada sela o outro.
+	for sealed_id: StringName in Game.tree.sealed_by(id):
+		Audio.play(&"seal")
+		if _buttons.has(sealed_id):
+			Juice.squash(_buttons[sealed_id] as Control, Vector2(1.15, 0.85), 0.06, 0.16)
 	# Segurar para comprar: pops menores e pitch subindo (AUDIO_MANIFEST node_buy).
 	Audio.play(&"node_buy", 1.0 + 0.04 * mini(_combo, 10))
 	_fly_cost(d.tree_position, cost, d.currency)
@@ -521,7 +631,7 @@ func _set_focus(id: StringName) -> void:
 	if _hall.visible:
 		_panel.visible = false
 		return
-	if not _panel_shown and Game.tree.is_revealed(id):
+	if not _panel_shown and (Game.tree.is_revealed(id) or Game.tree.is_master(id)):
 		_panel_shown = true
 		_panel.visible = true
 		_panel.position = Vector2(108, 360)
@@ -540,13 +650,14 @@ func _refresh(animate: bool) -> void:
 	for id: StringName in _buttons:
 		var b: SkillNodeButton = _buttons[id]
 		var revealed := tree.is_revealed(id)
-		var vis := revealed or tree.is_hinted(id)
+		# GDD §6.1: Raízes-mestras aparecem desde o início como silhueta (nome e custo no hover).
+		var vis := revealed or tree.is_hinted(id) or tree.is_master(id)
 		if vis and not _visible_ids.has(id):
 			new_visible.append(id)
 		if revealed and not _revealed_ids.has(id):
 			new_revealed.append(id)
 		b.visible = vis
-		b.mouse_filter = Control.MOUSE_FILTER_STOP if revealed else Control.MOUSE_FILTER_IGNORE
+		b.mouse_filter = Control.MOUSE_FILTER_STOP if revealed or tree.is_master(id) else Control.MOUSE_FILTER_IGNORE
 		if vis:
 			_visible_ids[id] = true
 		if revealed:
@@ -624,11 +735,22 @@ func _refresh_info() -> void:
 	var tree := Game.tree
 	for c: Node in _info_effect.get_children():
 		c.queue_free()
+	if _focus_id != &"" and not tree.is_revealed(_focus_id) and tree.is_master(_focus_id):
+		# Silhueta da Raiz-mestra: nome e custo, sem revelar o efeito (UI/UX §18.1).
+		var md := tree.get_node_data(_focus_id)
+		_info_medallion.visible = false
+		_info_title.text = md.display_name
+		_info_level.text = tr("Raiz-mestra")
+		_info_desc.text = tr("O objetivo distante deste ramo. A próxima Raiz-mestra custará ×3.")
+		_info_cost.text = tr("Custo %s") % NumberFormat.format(tree.next_cost(_focus_id))
+		_info_icon.kind = ResourceIcon.kind_for_currency(md.currency)
+		_info_icon.visible = true
+		return
 	if _focus_id == &"" or not tree.is_revealed(_focus_id):
 		_info_medallion.visible = false
-		_info_title.text = "Raízes do Ipê"
+		_info_title.text = tr("Raízes do Ipê")
 		_info_level.text = ""
-		_info_desc.text = "Passe o mouse num nó. Clique para comprar; segure para comprar várias vezes."
+		_info_desc.text = tr("Passe o mouse num nó. Clique para comprar; segure para comprar várias vezes.")
 		_info_cost.text = ""
 		_info_icon.visible = false
 		return
@@ -640,6 +762,13 @@ func _refresh_info() -> void:
 	_info_title.text = d.display_name
 	_info_level.text = "Nv %d/%d" % [lvl, d.max_level]
 	_info_desc.text = d.description
+	if tree.is_sealed(_focus_id):
+		_info_desc.text = tr("Escolhida a outra raiz. Duas Raízes libera esta.")
+		_info_cost.text = tr("Selada")
+		_info_icon.visible = false
+		return
+	if tree.is_master(_focus_id) and not tree.is_maxed(_focus_id):
+		_info_desc.text = d.description + "\n" + tr("A próxima Raiz-mestra custará ×3.")
 	_build_effect_line(d, lvl)
 	if tree.is_maxed(_focus_id):
 		_info_cost.text = "Máximo" if d.base_cost > 0.0 else ""
