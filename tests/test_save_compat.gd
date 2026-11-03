@@ -39,6 +39,14 @@ func _ready() -> void:
 	check_eq(float((loaded.currencies as Dictionary).get("bones", 0.0)), 109.0, "Ossos sobrevivem ao round-trip")
 	check_eq((loaded.telemetry as Array).size(), 1, "telemetria sobrevive ao round-trip")
 	check_eq(float(loaded.settings.get("vol_music", 0.0)), 0.42, "opções sobrevivem ao round-trip")
+	# GDD §18.5: blocos do save v2 presentes (vazios no Marco A) para o B/C/D abrirem sem perda.
+	var progress: Dictionary = loaded.get("progress", {})
+	check(progress.get("bosses") is Dictionary, "save v2 tem progress.bosses")
+	check(progress.get("chapter_end_seen") is Array, "save v2 tem progress.chapter_end_seen")
+	check(progress.get("dialogue_seen") is Array, "save v2 tem progress.dialogue_seen")
+	for key: String in ["items", "hub", "milestones", "respec_count"]:
+		check(loaded.has(key), "save v2 tem o bloco %s" % key)
+	check((loaded.tree as Dictionary).has("masters_bought"), "save v2 tem tree.masters_bought")
 	SaveIO.delete(ROUNDTRIP_PATH)
 	_finish()
 
