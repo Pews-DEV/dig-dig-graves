@@ -506,3 +506,15 @@ TURNO ─[Esc]─► PAUSA ─Abandonar a noite (confirmação)─► [cortina] 
 - Sequência: preto 0,2 s → fade-in 0,3 s com a tag `intro` (0,8 s) e o som `splash_briba` no primeiro frame → segura em `idle` até 1,8 s no total → fade para preto 0,3 s → título (o `mus_title` começa no fade do título, como hoje).
 - Qualquer tecla, clique ou botão pula direto ao título. Só aparece ao abrir o jogo, nunca ao "Voltar ao título". O autopilot pula a splash.
 - "Reduzir flashes" não muda nada (não há flash); "reduzir movimento" mantém a sequência (a animação é pequena).
+
+## 22. Ficha do Coveiro (Tab) [A]
+- **Painel:** `ParchmentPanel` centralizado, cerca de 480×280 na resolução base 640×360. O painel aplica o tema do jogo (`UITheme.get_theme()`) no próprio nó raiz, porque o `CanvasLayer` não herda tema; nada de fonte padrão do Godot. Fundo escurecido atrás (01 em xadrez, como os outros overlays), abrir/fechar como qualquer painel (§6): Tab, Esc, × e clique fora.
+- **Cabeçalho:** "FICHA DO COVEIRO" em m6x11plus, botão × à direita, linha divisória 17 logo abaixo.
+- **Grupos em 2 colunas**, cada um com título curto em m6x11plus na cor de destaque do pergaminho e uma linha fina 17 embaixo:
+  - Coluna esquerda: **Golpe** (dano, intervalo, área, chance e mult. de crítico, camadas fundas, dano no chefe) · **Pisão** (recarga, dano; só com o Pisão comprado).
+  - Coluna direita: **Lanterna** (óleo, queima, óleo por fogo-fátuo, frequência, duração e retorno do fogo-fátuo, óleo por cova e teto) · **Campo** (tamanho, covas simultâneas, regeneração, Inquietação por cova, velas, moeda de ouro, alminhas) · **Ganhos** (Cobre, chance de Osso, Almas, tudo, recompensa e juros das covas, Herança, XP).
+  - Embaixo, faixa inteira: **Habilidades**, com as regras e os ativos comprados (Cava-Funda, Golpe duplo, Pisão Sísmico, Pisão Ritmado, Segundo Fôlego, Constelação, Camada Ossada) como etiquetas lado a lado; sem nenhum comprado, a faixa some.
+- **Linha de stat:** rótulo m5x7 à esquerda na cor de texto do pergaminho e valor m6x11plus alinhado à direita da coluna, na mesma linha, sem corte. Valor acima do valor base em cor de destaque 26; igual ao base em texto normal. Rótulos longos podem ser encurtados na Ficha (ex.: "Freq. de fogo-fátuo"), mas nunca quebram em duas linhas.
+- **Hover/foco numa linha:** tooltip de pergaminho com o rótulo completo, uma frase do que o stat faz e "base → atual".
+- **Rolagem:** só vertical e só se o conteúdo não couber; nunca barra horizontal.
+- Stats de nós não comprados não aparecem (regra já existente: `HIDE_WHEN_ZERO` e os do Pisão).
