@@ -45,31 +45,56 @@ const WISP_OIL := &"wisp_oil"
 const WISP_DECAY := &"wisp_decay"
 
 ## Rótulo e formato de exibição de cada stat (painel antes → depois, Ficha do Coveiro).
+## A ordem aqui é a ordem da Ficha (GDD §18.2). `radius` é legado (substituído por area_step).
 const DISPLAY: Dictionary = {
 	&"damage": ["Dano", "num"],
 	&"pulse_interval": ["Intervalo do golpe", "sec2"],
-	&"radius": ["Área", "area"],
 	&"area_step": ["Área de escavação", "area_step"],
+	&"crit_chance": ["Chance de crítico", "pct"],
+	&"crit_mult": ["Mult. de crítico", "mult"],
+	&"deep_mult": ["Dano em camadas fundas", "mult"],
 	&"excess_carries": ["Cava-Funda", "bool"],
+	&"double_hit": ["Golpe duplo", "bool"],
 	&"stomp_enabled": ["Pisão", "bool"],
 	&"stomp_cd": ["Recarga do Pisão", "sec0"],
 	&"stomp_mult": ["Dano do Pisão", "mult"],
-	&"stomp_auto": ["Pisão automático", "bool"],
-	&"stomp_ring": ["Anel do Pisão", "bool"],
-	&"deep_mult": ["Dano em camadas fundas", "mult"],
-	&"double_hit": ["Golpe duplo", "bool"],
-	&"crit_chance": ["Chance de crítico", "pct"],
-	&"crit_mult": ["Mult. de crítico", "mult"],
+	&"stomp_ring": ["Pisão Sísmico", "bool"],
+	&"stomp_auto": ["Pisão Ritmado", "bool"],
 	&"oil_max": ["Óleo da lanterna", "sec0"],
+	&"oil_burn": ["Queima do óleo", "pct"],
+	&"wisp_oil": ["Óleo por fogo-fátuo", "sec1"],
+	&"wisp_rate": ["Frequência de fogos-fátuos", "pct"],
+	&"wisp_life": ["Duração do fogo-fátuo", "sec0"],
+	&"wisp_decay": ["Retorno de fogo-fátuo", "pct"],
+	&"oil_per_grave": ["Óleo por cova", "sec1"],
+	&"oil_grave_cap": ["Teto do óleo de cova", "sec0"],
+	&"second_wind": ["Segundo Fôlego", "bool"],
+	&"constellation": ["Constelação", "bool"],
 	&"copper_mult": ["Cobre", "pct"],
 	&"bone_chance": ["Chance de Osso (bônus)", "pp"],
-	&"regen_time": ["Regeneração", "sec1"],
+	&"soul_mult": ["Almas", "pct"],
+	&"all_mult": ["Cobre, Ossos e Almas", "pct"],
+	&"grave_reward": ["Recompensa das covas", "pct"],
+	&"grave_interest": ["Juros por cova", "pct"],
+	&"inheritance": ["Herança", "pct"],
 	&"field_size": ["Campo", "field"],
-	&"xp_mult": ["XP", "pct"],
 	&"grave_count": ["Covas simultâneas", "num"],
-	&"wisp_oil": ["Óleo por fogo-fátuo", "sec0"],
-	&"wisp_decay": ["Retorno de fogo-fátuo", "pct"],
+	&"regen_time": ["Regeneração", "sec1"],
+	&"ossuary_layer": ["Camada Ossada", "bool"],
+	&"unrest_mult": ["Inquietação por cova", "pct"],
+	&"candles": ["Velas de Finados", "num"],
+	&"gold_coin": ["Moeda de ouro", "level"],
+	&"wanderers": ["Alminhas errantes", "num"],
+	&"boss_damage": ["Dano no chefe", "pct"],
+	&"xp_mult": ["XP", "pct"],
 }
+## Stats que só aparecem na Ficha quando estão ativos (0 = nó ainda não comprado).
+const HIDE_WHEN_ZERO: Array[StringName] = [
+	&"excess_carries", &"double_hit", &"stomp_enabled", &"stomp_ring", &"stomp_auto",
+	&"second_wind", &"constellation", &"oil_per_grave", &"oil_grave_cap", &"grave_interest",
+	&"inheritance", &"candles", &"gold_coin", &"wanderers", &"ossuary_layer",
+]
+const STOMP_STATS: Array[StringName] = [&"stomp_cd", &"stomp_mult"]
 
 var base: Dictionary = {}
 var min_values: Dictionary = {}
@@ -177,6 +202,8 @@ static func format_value(stat: StringName, v: float) -> String:
 			return "%d×%d" % [width, height]
 		"bool":
 			return "Sim" if v > 0.0 else "Não"
+		"level":
+			return "Nv %d" % roundi(v) if v > 0.0 else "Não"
 		"field":
 			return "%d×%d" % [roundi(v), roundi(v)]
 	return NumberFormat.format(v)

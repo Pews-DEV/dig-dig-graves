@@ -211,9 +211,11 @@ func copper_per_point(layer: LayerData) -> float:
 	return layer.copper * area.reward_mult / layer_max_hp(layer)
 
 
-## GDD §4.3: o dano atinge só a camada do topo; o excedente NÃO passa para baixo.
-## Retorna {"useful": dano efetivo (≤ HP restante), "layer": camada atingida,
-## "broken": bool, "cells": tiles que quebraram (2 quando é o Caixão de uma cova)}.
+## GDD §4.3: o dano atinge a camada do topo; o excedente se perde, salvo com `carry`
+## (Cava-Funda, E13), quando desce em cascata. `deep_mult` (E07) vale nas camadas `deep`.
+## Retorna {"useful": dano efetivo (≤ HP restante), "layer": 1ª camada atingida,
+## "broken": bool, "cells": tiles que quebraram (2 quando é o Caixão de uma cova),
+## "layers": [{layer, useful, broken, cells}] por camada atingida}.
 ## Buraco/fora do campo/Caixão ainda enterrado → useful 0 e layer null.
 func apply_damage(cell: Vector2i, amount: float, regen_time: float, carry: bool = false, deep_mult: float = 1.0) -> Dictionary:
 	var out := {"useful": 0.0, "layer": null, "broken": false, "cells": [], "layers": []}
@@ -268,13 +270,14 @@ func _break_top(i: int, regen_time: float) -> void:
 
 
 ## GDD §4.7: só Buracos regeneram; tiles de cova esperam a cova abrir/fechar.
-## Retorna as células regeneradas.
-func tick_regen(delta: float, candle_cells: Array[Vector2i] = []) -> Array[Vector2i]:
+## Retorna as células regeneradas. Velas (GDD §4.8): tiles a até `candle_radius` regeneram
+## `candle_rate` vezes mais rápido.
+func tick_regen(delta: float, candle_cells: Array[Vector2i] = [], candle_rate: float = 2.0, candle_radius: float = 1.5) -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
 	for i: int in tile_count():
 		if kind[i] == Kind.GRAVE or is_blocked(cell_of(i)) or depth[i] < (stacks[i] as Array).size():
 			continue
-		var rate := 2.0 if _near_any(cell_of(i), candle_cells) else 1.0
+		var rate := candle_rate if near_any(cell_of(i), candle_cells, candle_radius) else 1.0
 		regen_timer[i] -= delta * rate
 		if regen_timer[i] <= 0.0:
 			_restore_index(i)
@@ -282,9 +285,9 @@ func tick_regen(delta: float, candle_cells: Array[Vector2i] = []) -> Array[Vecto
 	return out
 
 
-func _near_any(cell: Vector2i, centers: Array[Vector2i]) -> bool:
+static func near_any(cell: Vector2i, centers: Array[Vector2i], radius: float = 1.5) -> bool:
 	for center: Vector2i in centers:
-		if Vector2(cell - center).length() <= 1.5:
+		if Vector2(cell - center).length() <= radius:
 			return true
 	return false
 

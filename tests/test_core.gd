@@ -144,15 +144,18 @@ func _test_run_timing() -> void:
 func _test_xp() -> void:
 	var run := _make_run()
 	check_eq(run.xp_needed(1), 10.0, "XP nv1→2 = 10")
-	check_eq(run.xp_needed(2), 14.0, "XP nv2→3 = round(13,5) = 14")
-	check_eq(run.xp_needed(3), 18.0, "XP nv3→4 = round(18,225) = 18")
-	check_eq(run.xp_needed(4), 25.0, "XP nv4→5 = round(24,60) = 25")
+	check_eq(run.xp_needed(2), float(roundi(10.0 * 1.45)), "XP nv2→3 = round(10 × 1,45)")
+	check_eq(run.xp_needed(3), 21.0, "XP nv3→4 = round(21,025) = 21")
+	check_eq(run.xp_needed(4), 30.0, "XP nv4→5 = round(30,486) = 30")
 	var levels: Array[int] = []
 	run.leveled_up.connect(func(l: int) -> void: levels.append(l))
-	run._add_xp(10.0 + 14.0 + 5.0)
-	check_eq(levels, [2, 3] as Array[int], "29 XP → sobe para 2 e 3 (fila)")
+	run._add_xp(10.0 + run.xp_needed(2) + 5.0)
+	check_eq(levels, [2, 3] as Array[int], "10 + XP(2) + 5 → sobe para 2 e 3 (fila)")
 	check_eq(run.xp, 5.0, "sobra 5 XP no nível 3")
 	check_eq(run.pending_level_ups.size(), 2, "2 escolhas pendentes na fila")
+	var capped := _make_run()
+	capped._add_xp(1.0e9)
+	check_eq(capped.level, capped.balance.max_night_level, "GDD §4.9: nível da noite para no teto (15)")
 
 
 func _test_light() -> void:

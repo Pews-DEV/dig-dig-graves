@@ -51,8 +51,9 @@ extends Resource
 	&"radius": 0.0,
 	&"area_step": 0.0,
 	&"field_size": 5.0,
-	&"regen_time": 6.0,
+	&"regen_time": 5.0,
 	&"crit_chance": 0.0,
+	&"stomp_cd": 4.0,
 }
 @export var stat_max: Dictionary = {
 	&"radius": 4.0,
@@ -67,6 +68,7 @@ extends Resource
 	&"crit_chance": 1.0,
 	&"field_size": 18.0,
 	&"grave_count": 7.0,
+	&"wisp_decay": 0.92,
 }
 
 @export_group("Turno")
@@ -75,7 +77,7 @@ extends Resource
 @export var oil_burn_rate: float = 1.0
 ## GDD §4.5: cada segundo de óleo restante = 2% do Cobre do turno.
 @export var oil_bonus_per_second: float = 0.02
-## GDD §4.7: Campo Limpo = +20% do Cobre do turno.
+## GDD §4.7: Campo Limpo = +20% do Cobre minerado desde o último Campo Limpo.
 @export var field_clear_bonus: float = 0.20
 
 @export_group("Covas (GDD §4.6)")
@@ -106,9 +108,67 @@ extends Resource
 @export var wisp_lifetime: float = 5.0
 
 @export_group("XP")
-## GDD §4.9: XP(n→n+1) = round(base × crescimento^(n−1)).
+## GDD §4.9: XP(n→n+1) = round(base × crescimento^(n−1) × XP do estágio).
 @export var xp_base: float = 10.0
-@export var xp_growth: float = 1.35
+@export var xp_growth: float = 1.45
+## GDD §4.9 / §14.4: teto de nível por noite.
+@export var max_night_level: int = 15
+
+@export_group("Lápides com efeito (GDD §4.6)")
+## Cruz de pedra: Almas extras × Almas do estágio.
+@export var cross_souls: float = 1.0
+## Lápide com musgo: HP do Caixão × moss_coffin_mult e Ossos × moss_bones_mult.
+@export var moss_coffin_mult: float = 1.5
+@export var moss_bones_mult: float = 2.0
+
+@export_group("Inquietação (GDD §4.11)")
+## Tremores: com a Inquietação cheia, covas de noites comuns dão +25% de Almas.
+@export var unrest_tremor_souls: float = 0.25
+## UI: a caveira treme acima de unrest_alert_at; `unrest_warning` toca ao cruzar unrest_warning_at.
+@export var unrest_alert_at: float = 0.8
+@export var unrest_warning_at: float = 0.9
+
+@export_group("Ativos (GDD §4.4)")
+## Pisão Sísmico (E12a): multiplicador do anel em volta da área.
+@export var stomp_ring_mult: float = 2.0
+## Pisão Ritmado (E12b): dispara sozinho a cada N golpes normais.
+@export var stomp_auto_every: int = 8
+## Golpe duplo (EX): fração do dano do 2º golpe.
+@export var double_hit_share: float = 0.5
+
+@export_group("Lanterna (GDD §4.5)")
+## Segundo Fôlego (L06): óleo devolvido quando zera (1× por noite).
+@export var second_wind_oil: float = 5.0
+## Constelação (LX): N fogos-fátuos dentro da janela param o óleo por constellation_freeze s.
+@export var constellation_wisps: int = 3
+@export var constellation_window: float = 6.0
+@export var constellation_freeze: float = 8.0
+
+@export_group("Elementos de tabuleiro (GDD §4.8)")
+## Vela de Finados (C06).
+@export var candle_max: int = 3
+@export var candle_radius: float = 1.5
+@export var candle_regen_mult: float = 2.0
+@export var candle_copper_mult: float = 1.25
+## Moeda de ouro (F09): pula a cada gold_coin_interval s (− interval_step por nível acima do 1º).
+@export var gold_coin_interval: float = 20.0
+@export var gold_coin_interval_step: float = 3.0
+@export var gold_coin_min_interval: float = 5.0
+@export var gold_coin_life: float = 4.0
+## Fração do Cobre da noite paga ao tocar a moeda.
+@export var gold_coin_share: float = 0.05
+## Alminhas errantes (S04).
+@export var wanderer_max: int = 3
+@export var wanderer_respawn: float = 15.0
+## Segundos para a alminha flutuar até um tile vizinho.
+@export var wanderer_move_interval: float = 3.0
+## Almas × Almas do estágio por alminha tocada.
+@export var wanderer_souls: float = 1.0
+
+@export_group("Árvore (GDD §6.2)")
+## Replantar (N03, marco B): custo por uso = este valor × maior estágio liberado (Almas).
+## O custo das Raízes-mestras (1.500 × 3ⁿ) fica no .tres de cada nó M (base_cost/cost_growth).
+@export var respec_cost_per_stage: float = 5.0
 
 @export_group("Luz")
 ## GDD §4.5 / DA §4.2: raio de luz por fração de óleo restante.

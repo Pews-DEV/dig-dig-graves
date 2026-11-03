@@ -11,7 +11,7 @@ value = 0.5
 [sub_resource type="Resource" id="StatModifier_1"]
 script = ExtResource("2_mod")
 stat = &"oil_grave_cap"
-value = 1.0
+value = 3.0
 
 [resource]
 script = ExtResource("1_node")

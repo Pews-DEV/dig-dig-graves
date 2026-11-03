@@ -196,14 +196,14 @@ func finish_turn(result: TurnResult) -> void:
 	save_game()
 
 
-## GDD §14.3: >5 turnos seguidos sem comprar nada = bug de balanceamento.
+## GDD §14.3: 5 noites seguidas sem comprar nada = alerta de balanceamento.
 func _check_dry_streak() -> void:
 	var streak := 0
 	for i: int in range(telemetry.size() - 1, -1, -1):
 		if int(telemetry[i].get("nodes_bought", 0)) > 0:
 			break
 		streak += 1
-	if streak > 5:
+	if streak >= 5:
 		push_warning("Balanceamento: %d turnos seguidos sem compra (GDD §14.3)." % streak)
 
 

@@ -71,7 +71,14 @@ func _refresh_rows() -> void:
 		return
 	for child: Node in _rows.get_children():
 		child.queue_free()
-	for stat_id: StringName in Stats.snapshot().keys():
+	# GDD §18.2: só stats com rótulo, na ordem da Ficha; regras/ativos aparecem ao comprar.
+	var stomp_on := Stats.get_value(StatSheet.STOMP_ENABLED) > 0.0
+	for stat_id: StringName in StatSheet.DISPLAY.keys():
+		var v := Stats.get_value(stat_id)
+		if StatSheet.HIDE_WHEN_ZERO.has(stat_id) and v <= 0.0:
+			continue
+		if StatSheet.STOMP_STATS.has(stat_id) and not stomp_on:
+			continue
 		var row := HBoxContainer.new()
 		var label := Label.new()
 		label.text = StatSheet.label_of(stat_id)

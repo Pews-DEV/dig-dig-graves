@@ -14,15 +14,24 @@ signal grave_spawned(grave: Dictionary)
 signal grave_opened(grave: Dictionary, rewards: Dictionary)
 signal grave_closed(grave: Dictionary)
 signal unrest_changed(value: float)
-## GDD §10: Inquietação em 100% chama o chefe (M1). Por ora só o sinal.
+## GDD §4.11: Inquietação em 100% libera "Enfrentar ‹chefe›" no Pátio.
 signal unrest_filled()
+## GDD §4.11: a Inquietação cruzou `BalanceData.unrest_warning_at` (90%) nesta noite.
+signal unrest_warned()
 signal wisp_spawned(wisp: Dictionary)
 signal wisp_collected(wisp: Dictionary, oil: float)
 signal wisp_expired(wisp: Dictionary)
 signal oil_drained(cells: Array[Vector2i], amount: float)
+## GDD §4.5: L06 devolveu o óleo; LX parou a queima por `duration` s.
+signal second_wind_triggered(oil: float)
+signal constellation_started(duration: float)
 signal stomp_used(cells: Array[Vector2i])
 signal stomp_ready()
+## Lápide com efeito (cruz/musgo) pagou o bônus dela ao abrir (GDD §4.6).
+signal tombstone_effect(grave: Dictionary)
 signal boss_changed(hp: float, max_hp: float, cells: Array[Vector2i])
+## Dano aplicado no chefe neste golpe (já com `boss_damage`).
+signal boss_damaged(amount: float)
 signal boss_hopped(old_cells: Array[Vector2i], new_cells: Array[Vector2i])
 signal gold_coin_spawned(coin: Dictionary)
 signal gold_coin_collected(coin: Dictionary, copper: float)
@@ -74,6 +83,13 @@ var _wanderer_move_timer: float = 3.0
 var _next_id: int = 1
 var _wisp_timer: float = 0.0
 var _wisps_collected_this_turn: int = 0
+## Instantes (elapsed) dos fogos-fátuos ainda contando para a Constelação (LX).
+var _constellation_hits: Array[float] = []
+## LX: segundos restantes com o óleo parado.
+var oil_frozen_left: float = 0.0
+var _second_wind_ready: bool = false
+## GDD §4.11: tremores (Inquietação cheia numa noite comum).
+var tremor: bool = false
 var _copper_at_last_clear: float = 0.0
 var stomp_cooldown_left: float = 0.0
 var normal_pulses: int = 0
@@ -122,12 +138,19 @@ func _init(p_area: AreaData, p_tool: ToolData, p_balance: BalanceData, p_stats: 
 	boss_active = p_boss
 	boss_data = p_boss_data
 	result.boss_encounter = p_boss
+	result.boss_rematch = p_boss and boss_rematch
+	tremor = not p_boss and unrest >= 1.0 - EPS
+	result.tremor = tremor
+	_second_wind_ready = stat(StatSheet.SECOND_WIND) > 0.0
+	_gold_timer = _gold_interval()
+	_wanderer_timer = balance.wanderer_respawn
+	_wanderer_move_timer = balance.wanderer_move_interval
 	_wisp_timer = _next_wisp_delay()
 	_place_rocks()
 	for i: int in grave_target():
 		_spawn_grave()
 	_place_candles()
-	for i: int in mini(3, maxi(0, roundi(stat(StatSheet.WANDERERS)))):
+	for i: int in wanderer_target():
 		_spawn_wanderer()
 	if p_boss and boss_data != null:
 		boss_hp = boss_data.hp
@@ -163,9 +186,23 @@ func grave_target() -> int:
 	return roundi(stat(StatSheet.GRAVE_COUNT))
 
 
+func wanderer_target() -> int:
+	return clampi(roundi(stat(StatSheet.WANDERERS)), 0, balance.wanderer_max)
+
+
 func xp_needed(for_level: int) -> float:
-	# GDD §4.9: 10 × 1,35^(n−1), arredondada.
-	return float(roundi(balance.xp_base * pow(balance.xp_growth, for_level - 1)))
+	# GDD §4.9: 10 × 1,45^(n−1) × XP do estágio, arredondada.
+	return float(roundi(balance.xp_base * pow(balance.xp_growth, for_level - 1) * area.xp_mult))
+
+
+## Ossos por camada que solta Osso (Rocha inclusive): 1 × Ossos do estágio × all_mult.
+func bone_value() -> float:
+	return area.bones_mult * stat(StatSheet.ALL_MULT)
+
+
+## LX: o óleo está parado pela Constelação.
+func oil_frozen() -> bool:
+	return oil_frozen_left > EPS
 
 
 func oil_fraction() -> float:
@@ -201,15 +238,30 @@ func area_cells(center: Vector2i, include_ring: bool = false) -> Array[Vector2i]
 	return out
 
 
+## Recarga do Pisão em s (E11; mínimo em `BalanceData.stat_min`).
+func stomp_cooldown() -> float:
+	return stat(StatSheet.STOMP_COOLDOWN)
+
+
+func stomp_is_ready() -> bool:
+	return stat(StatSheet.STOMP_ENABLED) > 0.0 and stomp_cooldown_left <= EPS
+
+
+## Pisão manual (GDD §4.4): clique/Q/A ou auto-pisão. Golpe extra ×4 que não gasta o relógio.
 func use_stomp() -> bool:
-	if ended or stat(StatSheet.STOMP_ENABLED) <= 0.0 or stomp_cooldown_left > 0.000001:
+	if ended or not stomp_is_ready():
 		return false
-	stomp_cooldown_left = maxf(4.0, stat(StatSheet.STOMP_COOLDOWN))
+	stomp_cooldown_left = stomp_cooldown()
+	_stomp()
+	return true
+
+
+func _stomp() -> void:
+	result.stomps += 1
 	var ring := stat(StatSheet.STOMP_RING) > 0.0
 	var cells := area_cells(cursor_cell, ring)
 	stomp_used.emit(cells)
 	_pulse(false, stat(StatSheet.STOMP_MULT), true)
-	return true
 
 
 func grave_at(cell: Vector2i) -> Dictionary:
@@ -230,16 +282,19 @@ func advance(delta: float, cursor: Vector2i) -> void:
 	while left > 0.0 and not ended:
 		var interval := pulse_interval()
 		var to_pulse := maxf(interval - pulse_acc, 0.0)
-		var oil_rate := balance.oil_burn_rate * stat(StatSheet.OIL_BURN)
+		var oil_rate := _oil_rate()
 		var to_oil := oil / oil_rate if oil_rate > 0.0 else INF
+		var to_thaw := oil_frozen_left if oil_frozen() else INF
 		var to_dawn := maxf(balance.turn_cap_seconds - elapsed, 0.0)
 		var to_boss_hop := boss_hop_timer if boss_active and boss_hp > 0.0 else INF
-		var step := minf(left, minf(to_pulse, minf(to_oil, minf(to_dawn, to_boss_hop))))
+		var step := minf(left, minf(to_pulse, minf(to_oil, minf(to_thaw, minf(to_dawn, to_boss_hop)))))
 		_pass_time(step)
 		left -= step
 		if oil <= EPS:
-			# GDD §4.10: o óleo acaba → a pá dá um último golpe → fim.
 			oil = 0.0
+			if _try_second_wind():
+				continue
+			# GDD §4.10: o óleo acaba → a pá dá um último golpe → fim.
 			_pulse(true)
 			if not ended:
 				_finish(&"oil")
@@ -248,23 +303,45 @@ func advance(delta: float, cursor: Vector2i) -> void:
 		elif pulse_acc >= interval - EPS:
 			pulse_acc = maxf(pulse_acc - interval, 0.0)
 			_pulse(false)
-			if oil <= EPS and not ended:  # rochas drenaram o resto do óleo neste golpe
+			if oil <= EPS and not ended and not _try_second_wind():  # rochas drenaram o resto do óleo neste golpe
 				oil = 0.0
 				_finish(&"oil")
+		# GDD §16: auto-pisão dispara assim que o Pisão recarrega.
+		if not ended and bool(stats.get("auto_stomp_option", false)) and stomp_is_ready():
+			use_stomp()
+
+
+func _oil_rate() -> float:
+	if oil_frozen():
+		return 0.0
+	return balance.oil_burn_rate * stat(StatSheet.OIL_BURN)
+
+
+## GDD §4.5 / L06: 1× por noite, ao zerar o óleo, a lanterna volta com 5 s.
+func _try_second_wind() -> bool:
+	if not _second_wind_ready or ended:
+		return false
+	_second_wind_ready = false
+	oil = balance.second_wind_oil
+	result.second_wind_used = true
+	second_wind_triggered.emit(oil)
+	return true
 
 
 func _pass_time(step: float) -> void:
 	if step <= 0.0:
 		return
-	oil = maxf(oil - step * balance.oil_burn_rate * stat(StatSheet.OIL_BURN), 0.0)
+	oil = maxf(oil - step * _oil_rate(), 0.0)
+	if oil_frozen():
+		oil_frozen_left = maxf(0.0, oil_frozen_left - step)
 	elapsed += step
 	pulse_acc += step
-	for cell: Vector2i in field.tick_regen(step, candles):
+	for cell: Vector2i in field.tick_regen(step, candles, balance.candle_regen_mult, balance.candle_radius):
 		tile_regenerated.emit(cell)
 	_tick_board_elements(step)
 	if stomp_cooldown_left > 0.0:
 		stomp_cooldown_left = maxf(0.0, stomp_cooldown_left - step)
-		if stomp_cooldown_left <= 0.000001:
+		if stomp_cooldown_left <= EPS:
 			stomp_ready.emit()
 	if boss_active and not ended:
 		boss_invulnerable = maxf(0.0, boss_invulnerable - step)
@@ -295,6 +372,14 @@ func _pulse(is_final: bool, damage_scale: float = 1.0, is_stomp: bool = false) -
 	var broken_by_layer: Dictionary = {}
 	var any_crit := false
 	var boss_damage := 0.0
+	var ring := is_stomp and stat(StatSheet.STOMP_RING) > 0.0
+	var base_area: Dictionary = {}
+	if ring:
+		for c: Vector2i in area_cells(cursor_cell):
+			base_area[c] = true
+	var double_hit := stat(StatSheet.DOUBLE_HIT) > 0.0
+	var carry := stat(StatSheet.EXCESS_CARRIES) > 0.0
+	var deep_mult := stat(StatSheet.DEEP_MULT)
 	# 2. Para cada tile: crítico → dano no topo → Cobre por ponto; XP/Osso se quebrou.
 	for cell: Vector2i in cells:
 		if gold_coin.has("cell") and (gold_coin.cell as Vector2i) == cell:
@@ -304,9 +389,10 @@ func _pulse(is_final: bool, damage_scale: float = 1.0, is_stomp: bool = false) -
 				_collect_wanderer(wanderer)
 		var crit := crit_chance > 0.0 and rng.randf() < crit_chance
 		var amount := (dmg * crit_mult if crit else dmg) * damage_scale
-		if is_stomp and stat(StatSheet.STOMP_RING) > 0.0 and not _base_area_contains(cell):
-			amount = (dmg * crit_mult if crit else dmg) * 2.0
-		var boss_amount := amount * (1.5 if stat(StatSheet.DOUBLE_HIT) > 0.0 else 1.0)
+		if ring and not base_area.has(cell):
+			# E12a: o anel em volta da área leva ×2 (no lugar do ×4 do Pisão).
+			amount = (dmg * crit_mult if crit else dmg) * balance.stomp_ring_mult
+		var boss_amount := amount * (1.0 + balance.double_hit_share if double_hit else 1.0)
 		if boss_active and boss_cells.has(cell) and boss_invulnerable <= EPS:
 			boss_damage += boss_amount
 		if crit:
@@ -314,25 +400,20 @@ func _pulse(is_final: bool, damage_scale: float = 1.0, is_stomp: bool = false) -
 			result.max_crit = maxf(result.max_crit, amount)
 		if field.top_layer(cell) == null:
 			continue
-		var carry := stat(StatSheet.EXCESS_CARRIES) > 0.0
-		var applied_amount := amount
-		if field.is_coffin_exposed(cell):
-			var grave := grave_at(cell)
-			if StringName(grave.get("type", GRAVE_TYPE_OVAL)) == GRAVE_TYPE_MOSS:
-				applied_amount /= 1.5
-		var hit := field.apply_damage(cell, applied_amount, regen_time, carry, stat(StatSheet.DEEP_MULT))
-		if stat(StatSheet.DOUBLE_HIT) > 0.0:
-			var extra_hit := field.apply_damage(cell, applied_amount * 0.5, regen_time, carry, stat(StatSheet.DEEP_MULT))
+		# Lápide com musgo: o Caixão já nasce mais duro (spawn_grave_at); o dano é o normal.
+		var hit := field.apply_damage(cell, amount, regen_time, carry, deep_mult)
+		if double_hit:
+			var extra_hit := field.apply_damage(cell, amount * balance.double_hit_share, regen_time, carry, deep_mult)
 			(hit.layers as Array).append_array(extra_hit.layers as Array)
 			hit.useful = float(hit.useful) + float(extra_hit.useful)
 			hit.broken = bool(hit.broken) or bool(extra_hit.broken)
 		var layer: LayerData = hit.layer
 		var useful: float = hit.useful
 		var copper := 0.0
+		var candle_bonus := balance.candle_copper_mult if _near_candle(cell) else 1.0
 		for band: Dictionary in hit.layers:
 			var band_layer: LayerData = band.layer
 			var band_useful: float = float(band.useful)
-			var candle_bonus := 1.25 if _near_candle(cell) else 1.0
 			copper += band_useful * field.copper_per_point(band_layer) * copper_mult * stat(StatSheet.ALL_MULT) * candle_bonus
 			if bool(band.broken):
 				for bc: Vector2i in band.cells:
@@ -345,9 +426,11 @@ func _pulse(is_final: bool, damage_scale: float = 1.0, is_stomp: bool = false) -
 	_resolve_graves()
 	# 4. Chefe: cada tile da área sobre a posição dele aplica dano uma vez.
 	if boss_active and boss_hp > 0.0 and boss_damage > 0.0:
-		boss_hp = maxf(0.0, boss_hp - boss_damage * stat(StatSheet.BOSS_DAMAGE))
-		result.boss_damage_dealt += boss_damage * stat(StatSheet.BOSS_DAMAGE)
+		var dealt := minf(boss_hp, boss_damage * stat(StatSheet.BOSS_DAMAGE))
+		boss_hp = maxf(0.0, boss_hp - dealt)
+		result.boss_damage_dealt += dealt
 		result.boss_hp_remaining = boss_hp
+		boss_damaged.emit(dealt)
 		boss_changed.emit(boss_hp, boss_hp_max, boss_cells)
 		if boss_hp <= EPS:
 			_boss_victory()
@@ -365,9 +448,12 @@ func _pulse(is_final: bool, damage_scale: float = 1.0, is_stomp: bool = false) -
 		"center": cursor_cell, "cells": cells, "hits": hits, "broken": broken_by_layer, "stomp": is_stomp,
 		"any_crit": any_crit, "final": is_final,
 	})
-	var auto_by_skill := normal_pulses % 8 == 0 and stat(StatSheet.STOMP_AUTO) > 0.0
-	if not is_stomp and not is_final and (auto_by_skill or bool(stats.get("auto_stomp_option", false))):
-		use_stomp()
+	# E12b (Pisão Ritmado): a cada N golpes normais sai um Pisão extra, sem depender
+	# nem gastar a recarga do manual ("além do manual", GDD §4.4).
+	var every := maxi(1, balance.stomp_auto_every)
+	if not is_stomp and not is_final and not ended and normal_pulses % every == 0 \
+			and stat(StatSheet.STOMP_ENABLED) > 0.0 and stat(StatSheet.STOMP_AUTO) > 0.0:
+		_stomp()
 
 
 func _on_layer_broken(cell: Vector2i, layer: LayerData, crit: bool) -> void:
@@ -379,7 +465,8 @@ func _on_layer_broken(cell: Vector2i, layer: LayerData, crit: bool) -> void:
 		chance += stat(StatSheet.BONE_CHANCE)  # F02 soma nas camadas de solo (não em Rocha/Caixão)
 	var bone := chance > 0.0 and rng.randf() < chance
 	if bone:
-		result.bones += 1.0
+		# GDD §4.3/§4.8: 1 Osso × Ossos do estágio (Rocha inclusive).
+		result.bones += bone_value()
 	var gained_xp := layer.xp * area.xp_mult * stat(StatSheet.XP_MULT)
 	layer_broken.emit(cell, layer, bone, gained_xp, crit)
 	if gained_xp > 0.0:
@@ -389,12 +476,15 @@ func _on_layer_broken(cell: Vector2i, layer: LayerData, crit: bool) -> void:
 func _add_xp(amount: float) -> void:
 	xp += amount
 	result.xp_total += amount
-	while xp >= xp_needed(level):
+	# GDD §4.9: teto de nível por noite (o XP excedente não vira nível).
+	while level < balance.max_night_level and xp >= xp_needed(level):
 		xp -= xp_needed(level)
 		level += 1
 		result.level = level
 		pending_level_ups.append(level)
 		leveled_up.emit(level)
+	if level >= balance.max_night_level:
+		xp = minf(xp, xp_needed(level))
 	xp_changed.emit(xp, xp_needed(level), level)
 
 
@@ -411,10 +501,6 @@ func _field_clear() -> void:
 	field_cleared.emit(bonus)
 	while _active_graves() < grave_target() and _spawn_grave():
 		pass
-
-
-func _base_area_contains(cell: Vector2i) -> bool:
-	return area_cells(cursor_cell).has(cell)
 
 
 func _boss_start_cells() -> Array[Vector2i]:
@@ -476,11 +562,15 @@ func _hop_boss() -> void:
 func _boss_victory() -> void:
 	result.boss_victory = true
 	result.boss_hp_remaining = 0.0
+	var data := boss_data if boss_data != null else BossData.new()
 	if boss_rematch:
-		result.souls += boss_data.rematch_souls if boss_data != null else 5.0
+		# GDD §4.11: revanche paga só 20% das Almas da 1ª vitória.
+		result.boss_reward_souls = data.rematch_souls
 	else:
-		result.souls += boss_data.first_victory_souls if boss_data != null else 25.0
-		result.bones += boss_data.first_victory_bones if boss_data != null else 60.0
+		result.boss_reward_souls = data.first_victory_souls
+		result.boss_reward_bones = data.first_victory_bones
+	result.souls += result.boss_reward_souls
+	result.bones += result.boss_reward_bones
 	_finish(&"boss_victory")
 
 
@@ -514,12 +604,21 @@ func _open_grave(g: Dictionary) -> void:
 		"xp": balance.grave_xp * area.xp_mult * stat(StatSheet.XP_MULT),
 		"unrest": (1.0 / maxf(1.0, area.graves_for_unrest)) * stat(StatSheet.UNREST_MULT),
 	}
+	var effect := false
 	if grave_type == GRAVE_TYPE_CROSS:
-		rewards.souls = float(rewards.souls) + area.souls_mult * stat(StatSheet.SOUL_MULT) * stat(StatSheet.ALL_MULT)
+		rewards.souls = float(rewards.souls) + balance.cross_souls * area.souls_mult * stat(StatSheet.SOUL_MULT) * stat(StatSheet.ALL_MULT)
+		effect = true
 	elif grave_type == GRAVE_TYPE_MOSS:
-		rewards.bones = float(rewards.bones) * 2.0
+		rewards.bones = float(rewards.bones) * balance.moss_bones_mult
+		effect = true
 	rewards.bones = float(rewards.bones) * stat(StatSheet.ALL_MULT)
-	var oil_cap := stat(StatSheet.OIL_GRAVE_CAP) * 3.0
+	if tremor:
+		# GDD §4.11: tremores dão +25% de Almas nas covas (incentivo, não punição).
+		var extra := float(rewards.souls) * balance.unrest_tremor_souls
+		rewards.souls = float(rewards.souls) + extra
+		result.tremor_souls += extra
+	# L04: o teto (oil_grave_cap) já vem em segundos por noite (3 s por nível).
+	var oil_cap := stat(StatSheet.OIL_GRAVE_CAP)
 	var oil_gain := minf(stat(StatSheet.OIL_PER_GRAVE), maxf(0.0, oil_cap - result.oil_from_graves))
 	rewards["oil"] = oil_gain
 	result.oil_from_graves += oil_gain
@@ -531,10 +630,15 @@ func _open_grave(g: Dictionary) -> void:
 	if result.first_grave_pulse < 0:
 		result.first_grave_pulse = result.pulses
 	var was_full := unrest >= 1.0
+	var was_warned := unrest >= balance.unrest_warning_at
 	unrest = minf(unrest + float(rewards.unrest), 1.0)
 	result.unrest_end = unrest
 	grave_opened.emit(g, rewards)
+	if effect:
+		tombstone_effect.emit(g)
 	unrest_changed.emit(unrest)
+	if unrest >= balance.unrest_warning_at and not was_warned:
+		unrest_warned.emit()
 	if unrest >= 1.0 and not was_full:
 		unrest_filled.emit()
 	_add_xp(float(rewards.xp))
@@ -588,7 +692,7 @@ func spawn_grave_at(head: Vector2i, axis: int, forced_type: StringName = &"") ->
 	var coffin_override: LayerData = null
 	if grave_type == GRAVE_TYPE_MOSS and field.coffin_layer != null:
 		coffin_override = field.coffin_layer.duplicate() as LayerData
-		coffin_override.hp *= 1.5
+		coffin_override.hp *= balance.moss_coffin_mult
 	field.link_grave(cells[0], cells[1], coffin_override)
 	field.set_kind(head - GRAVE_DIRS[axis], FieldModel.Kind.TOMBSTONE)
 	var g := {
@@ -686,6 +790,7 @@ func _collect_wisps() -> void:
 	var cells := area_cells(cursor_cell)
 	for w: Dictionary in wisps.duplicate():
 		if cells.has(w.cell as Vector2i):
+			# GDD §4.5 (D10): cada fogo-fátuo da noite vale wisp_decay do anterior.
 			var gain := stat(StatSheet.WISP_OIL) * pow(stat(StatSheet.WISP_DECAY), _wisps_collected_this_turn)
 			_wisps_collected_this_turn += 1
 			oil += gain
@@ -693,6 +798,22 @@ func _collect_wisps() -> void:
 			result.oil_from_wisps += gain
 			wisps.erase(w)
 			wisp_collected.emit(w, gain)
+			_check_constellation()
+
+
+## LX (GDD §4.5/§14.4): N fogos-fátuos em menos de `constellation_window` s param o óleo
+## por `constellation_freeze` s; a contagem zera a cada Constelação (1× a cada 3 fogos).
+func _check_constellation() -> void:
+	if stat(StatSheet.CONSTELLATION) <= 0.0:
+		return
+	_constellation_hits.append(elapsed)
+	while not _constellation_hits.is_empty() and elapsed - _constellation_hits[0] > balance.constellation_window:
+		_constellation_hits.pop_front()
+	if _constellation_hits.size() >= maxi(1, balance.constellation_wisps):
+		_constellation_hits.clear()
+		oil_frozen_left = maxf(oil_frozen_left, balance.constellation_freeze)
+		result.constellations += 1
+		constellation_started.emit(balance.constellation_freeze)
 
 
 func _finish(reason: StringName) -> void:
@@ -700,8 +821,11 @@ func _finish(reason: StringName) -> void:
 	result.end_reason = reason
 	result.duration = elapsed
 	result.oil_left = oil
+	var night_copper := result.copper_mined + result.field_clear_bonus
 	# GDD §4.5: óleo sobrando vira bônus (1 s = 2% do Cobre do turno).
-	result.oil_bonus = (result.copper_mined + result.field_clear_bonus) * oil * balance.oil_bonus_per_second
+	result.oil_bonus = night_copper * oil * balance.oil_bonus_per_second
+	# F05 (Herança): % do Cobre da noite como bônus no Resumo.
+	result.inheritance_bonus = night_copper * stat(StatSheet.INHERITANCE)
 	result.level = level
 	result.unrest_end = unrest
 	if boss_active and not result.boss_victory:
@@ -712,8 +836,10 @@ func _finish(reason: StringName) -> void:
 	finished.emit(result)
 
 
+# --- Elementos de tabuleiro (GDD §4.8) ---------------------------------------------
+
 func _place_candles() -> void:
-	var count := clampi(roundi(stat(StatSheet.CANDLES)), 0, 3)
+	var count := clampi(roundi(stat(StatSheet.CANDLES)), 0, balance.candle_max)
 	for n: int in count:
 		var candidates: Array[Vector2i] = []
 		for i: int in field.tile_count():
@@ -728,10 +854,7 @@ func _place_candles() -> void:
 
 
 func _near_candle(cell: Vector2i) -> bool:
-	for candle: Vector2i in candles:
-		if Vector2(cell - candle).length() <= 1.5:
-			return true
-	return false
+	return FieldModel.near_any(cell, candles, balance.candle_radius)
 
 
 func _tick_board_elements(step: float) -> void:
@@ -739,36 +862,48 @@ func _tick_board_elements(step: float) -> void:
 		if gold_coin.is_empty():
 			_gold_timer -= step
 			if _gold_timer <= 0.0:
-				var cells: Array[Vector2i] = []
-				for i: int in field.tile_count():
-					var cell := field.cell_of(i)
-					if field.kind_of(cell) == FieldModel.Kind.SOIL and not field.is_hole(cell):
-						cells.append(cell)
-				if not cells.is_empty():
-					gold_coin = {"cell": cells[rng.randi() % cells.size()], "age": maxf(0.0, -_gold_timer)}
+				var cell := _random_open_cell()
+				if cell.x >= 0:
+					gold_coin = {"cell": cell, "age": maxf(0.0, -_gold_timer)}
 					gold_coin_spawned.emit(gold_coin)
 				_gold_timer = _gold_interval()
 		else:
 			gold_coin.age = float(gold_coin.age) + step
-			if float(gold_coin.age) >= 4.0:
+			if float(gold_coin.age) >= balance.gold_coin_life:
 				gold_coin.clear()
 				_gold_timer = _gold_interval()
 	_wanderer_timer -= step
 	_wanderer_move_timer -= step
 	if _wanderer_move_timer <= 0.0:
-		_wanderer_move_timer += 3.0
+		_wanderer_move_timer += balance.wanderer_move_interval
 		for w: Dictionary in wanderers:
-			w.cell = _random_open_cell()
-	if _wanderer_timer <= 0.0 and wanderers.size() < roundi(stat(StatSheet.WANDERERS)):
-		_spawn_wanderer()
-		_wanderer_timer += 15.0
+			_drift_wanderer(w)
+	if _wanderer_timer <= 0.0:
+		_wanderer_timer += balance.wanderer_respawn
+		if wanderers.size() < wanderer_target():
+			_spawn_wanderer()
 	_collect_board_elements()
 
 
 func _spawn_wanderer() -> void:
 	var cell := _random_open_cell()
 	if cell.x >= 0:
-		wanderers.append({"cell": cell})
+		wanderers.append({"cell": cell, "from": cell, "moved_at": elapsed})
+
+
+## A alminha flutua devagar (GDD §4.8): a cada intervalo segue para um tile vizinho livre.
+## `from` e `moved_at` deixam a visualização interpolar o caminho.
+func _drift_wanderer(w: Dictionary) -> void:
+	var here: Vector2i = w.cell
+	var options: Array[Vector2i] = []
+	for offset: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		var next := here + offset
+		if field.in_bounds(next) and not field.is_blocked(next):
+			options.append(next)
+	w.from = here
+	w.moved_at = elapsed
+	if not options.is_empty():
+		w.cell = options[rng.randi() % options.size()]
 
 
 func _random_open_cell() -> Vector2i:
@@ -781,6 +916,8 @@ func _random_open_cell() -> Vector2i:
 
 
 func _collect_board_elements() -> void:
+	if gold_coin.is_empty() and wanderers.is_empty():
+		return
 	var cells := area_cells(cursor_cell)
 	if not gold_coin.is_empty() and cells.has(gold_coin.cell as Vector2i):
 		_collect_gold_coin()
@@ -793,22 +930,24 @@ func _collect_gold_coin() -> void:
 	if gold_coin.is_empty():
 		return
 	var coin := gold_coin
-	var reward := (result.copper_mined + result.field_clear_bonus) * 0.05
+	var reward := (result.copper_mined + result.field_clear_bonus) * balance.gold_coin_share
 	result.copper_mined += reward
 	gold_coin = {}
 	_gold_timer = _gold_interval()
 	gold_coin_collected.emit(coin, reward)
 
 
+## F09: a cada 20 s, −3 s por nível acima do 1º (mínimo 5 s).
 func _gold_interval() -> float:
-	return maxf(5.0, 20.0 - 3.0 * maxf(0.0, stat(StatSheet.GOLD_COIN) - 1.0))
+	var extra_levels := maxf(0.0, stat(StatSheet.GOLD_COIN) - 1.0)
+	return maxf(balance.gold_coin_min_interval, balance.gold_coin_interval - balance.gold_coin_interval_step * extra_levels)
 
 
 func _collect_wanderer(wanderer: Dictionary) -> void:
 	if not wanderers.has(wanderer):
 		return
-	var reward := area.souls_mult * stat(StatSheet.SOUL_MULT) * stat(StatSheet.ALL_MULT)
+	var reward := balance.wanderer_souls * area.souls_mult * stat(StatSheet.SOUL_MULT) * stat(StatSheet.ALL_MULT)
 	result.souls += reward
 	wanderers.erase(wanderer)
-	_wanderer_timer = 15.0
+	_wanderer_timer = balance.wanderer_respawn
 	wanderer_collected.emit(wanderer, reward)

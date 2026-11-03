@@ -72,7 +72,8 @@ func _test_moss_coffin_and_bones() -> void:
 	moss_run._pulse(false)
 	var moss_loss := moss_before - float(moss_run.field.hp[moss_run.field.index_of(moss.cells[0])])
 	check_eq(moss_hp, normal_hp * 1.5, "Caixão da lápide com musgo tem 1,5× HP")
-	check_eq(moss_loss, 1.0 / 1.5, "Caixão da lápide com musgo recebe dano reduzido em 1,5×")
+	# GDD §4.6: "1,5× mais duro" vale uma vez só (no HP); o golpe tira o dano normal.
+	check_eq(moss_loss, 1.0, "Caixão da lápide com musgo recebe o dano normal (dureza só no HP)")
 	var reward_run := _make_run()
 	reward_run.balance.grave_bones_min = 3
 	reward_run.balance.grave_bones_max = 3
