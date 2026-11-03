@@ -73,6 +73,7 @@ var _autosave_t: float = 0.0
 var _branch_label: Label
 var _branch_label_t: float = 0.0
 var _boss_hint: Label
+var _facing_boss: bool = false
 
 
 func _ready() -> void:
@@ -304,6 +305,10 @@ func _build_hall() -> void:
 	column.add_child(row)
 	_add_hall_station(row, "Raízes", "Talentos", _open_skill_tree)
 	_dig_btn = _add_hall_station(row, "Próxima Noite", "Paróquia · Cavar", Game.goto_run)
+	# UI/UX §10.2: Tião empoleirado no canto de cima da estação Próxima Noite.
+	var tiao := HubTiao.new()
+	tiao.position = Vector2(86, -HubTiao.HIT_SIZE.y + 3.0)
+	_dig_btn.add_child(tiao)
 	_add_hall_station(row, "Loja", "Capítulo 2", Callable(), true)
 	_add_hall_station(row, "Fazenda", "Em breve", Callable(), true)
 	var boss_row := HBoxContainer.new()
@@ -340,9 +345,14 @@ func _set_boss_visible(on: bool) -> void:
 
 ## GDD §4.11 / UI/UX §10.4: "Enfrentar ‹chefe›" (botão ou F) leva à Noite do Chefe.
 func _face_boss() -> void:
-	if Game.unrest_of(Game.area.id) < 1.0 - 0.000001:
+	if _facing_boss or Game.unrest_of(Game.area.id) < 1.0 - 0.000001:
 		return
+	_facing_boss = true
 	Audio.play(&"unrest_warning")
+	# UI/UX §10 (fluxo do hub): vinheta de 200 ms antes da cortina da Noite do Chefe.
+	var vignette := HubVignette.new()
+	_overlay.add_child(vignette)
+	await vignette.play()
 	Game.goto_boss()
 
 
