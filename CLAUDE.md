@@ -23,7 +23,7 @@ Interface, animação e áudio seguem `docs/03_UI_UX.md`.
 Ao delegar: passar o brief no formato da Direção de Arte §12 (arte) ou citar as seções do GDD e o critério de pronto (código). Tarefas de arte e código independentes rodam em paralelo.
 
 ## Comandos
-Godot (console): `C:\Users\pedro\Downloads\Godot_v4.7.2-stable_win64.exe\Godot_v4.7.2-stable_win64_console.exe`
+Godot (console): `C:\Users\pedro\Documents\Godot_v4.7.2-stable_win64.exe\Godot_v4.7.2-stable_win64_console.exe`
 - Importar/validar: `<godot> --headless --path . --import`
 - Testes: `<godot> --headless --path . -s res://tests/<arquivo>.gd`
 
