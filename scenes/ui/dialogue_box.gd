@@ -36,6 +36,7 @@ var _finished: bool = false
 var _previous_pause: bool = false
 var _blocks_tree: bool = true
 var _tip_remaining: float = 0.0
+var _dim: TextureRect
 
 
 func _ready() -> void:
@@ -44,12 +45,14 @@ func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
-	var dim := ColorRect.new()
-	dim.color = Palette.color(Palette.OUTLINE)
-	dim.color.a = 0.55
+	# UI/UX §14.3: o fundo escurece 1 degrau em xadrez 01 (paleta fechada, sem alfa).
+	var dim := TextureRect.new()
+	dim.texture = OptionsMenu._checker()
+	dim.stretch_mode = TextureRect.STRETCH_TILE
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(dim)
+	_dim = dim
 	_portrait = TextureRect.new()
 	_portrait.position = Vector2(28, 282)
 	_portrait.size = Vector2(64, 64)
@@ -101,6 +104,7 @@ func play_id(dialogue_id: StringName) -> void:
 	_finished = false
 	_previous_pause = get_tree().paused
 	_blocks_tree = true
+	_dim.visible = true
 	get_tree().paused = true
 	visible = true
 	_line_index = 0
@@ -121,6 +125,7 @@ func show_tip_id(dialogue_id: StringName) -> void:
 		return
 	_finished = false
 	_blocks_tree = false
+	_dim.visible = false  # dica não bloqueia: sem vinheta (UI/UX §14.1)
 	visible = true
 	var line: Dictionary = _data.lines[0]
 	_name.visible = false

@@ -28,6 +28,13 @@ var boss_1_attempts: int = 0
 var stage_unlocked: int = 1
 var chapter_1_end_seen: bool = false
 var dialogue_seen: Dictionary = {}
+## GDD §18.5: chefes por id → {"wins": int, "attempts": int}. boss_1_* continuam como atalho do A.
+var bosses: Dictionary = {}
+## Contadores de toda a campanha (Fim do Capítulo, marcos do C). play_time em segundos.
+var lifetime: Dictionary = {}
+## Blocos do save que o Marco A ainda não usa (itens, hub, marcos, Replantar): preservados.
+var _saved_extra: Dictionary = {}
+const LIFETIME_KEYS: Array[String] = ["nights", "graves", "layers", "stomps", "wisps", "play_time"]
 ## GDD §10: Inquietação por área (0–1), persiste entre turnos.
 var unrest: Dictionary = {}
 var last_result: TurnResult
@@ -59,7 +66,8 @@ func _ready() -> void:
 		SaveManager.delete_save()
 	balance = load(BALANCE_PATH) as BalanceData
 	area = load(AREA_PATHS[1]) as AreaData
-	boss_data = load(BOSS_PATH) as BossData
+	var boss_path := area.boss_path if not area.boss_path.is_empty() and ResourceLoader.exists(area.boss_path) else BOSS_PATH
+	boss_data = load(boss_path) as BossData
 	tool = load(TOOL_PATHS[&"shovel"]) as ToolData
 	tree = SkillTreeModel.new(SkillTreeModel.load_definitions(SKILL_NODES_DIR))
 	Stats.setup(balance)
@@ -171,11 +179,22 @@ func finish_turn(result: TurnResult) -> void:
 	if result.boss_encounter:
 		boss_1_attempts += 1
 		boss_run = false
+		var boss_id := String(boss_data.id) if boss_data != null else "caixao_fujao"
+		var record: Dictionary = bosses.get(boss_id, {"wins": 0, "attempts": 0})
+		record["attempts"] = int(record.get("attempts", 0)) + 1
+		if result.boss_victory:
+			record["wins"] = int(record.get("wins", 0)) + 1
+		bosses[boss_id] = record
 		if result.boss_victory:
 			boss_1_won = true
 			if boss_data.unlocks.has(&"stage_2"):
 				stage_unlocked = maxi(stage_unlocked, 2)
 			tree.set_trigger(&"boss_1")
+	_add_lifetime("nights", 1.0)
+	_add_lifetime("graves", float(result.graves_opened))
+	_add_lifetime("layers", float(result.layers_broken))
+	_add_lifetime("stomps", float(result.stomps))
+	_add_lifetime("wisps", float(result.wisps_collected))
 	if turns_played >= 2:
 		tree.set_trigger(&"turn_2")
 	if result.souls > 0.0:
@@ -187,7 +206,8 @@ func finish_turn(result: TurnResult) -> void:
 	telemetry.append({
 		"turn": turns_played, "area": result.area_id, "duration": snappedf(result.duration, 0.01),
 		"copper": snappedf(result.copper_total(), 0.01), "nodes_bought": nodes_bought_since_turn,
-		"graves_opened": result.graves_opened,
+		"graves_opened": result.graves_opened, "boss": result.boss_encounter,
+		"boss_victory": result.boss_victory, "play_time": snappedf(lifetime_value("play_time"), 0.1),
 	})
 	while telemetry.size() > TELEMETRY_KEEP:
 		telemetry.pop_front()
@@ -205,6 +225,41 @@ func _check_dry_streak() -> void:
 		streak += 1
 	if streak >= 5:
 		push_warning("Balanceamento: %d turnos seguidos sem compra (GDD §14.3)." % streak)
+
+
+## GDD §14.3 regra 2: Noites do Chefe perdidas seguidas (telemetria local).
+func boss_loss_streak() -> int:
+	var streak := 0
+	for i: int in range(telemetry.size() - 1, -1, -1):
+		var entry: Dictionary = telemetry[i]
+		if not bool(entry.get("boss", false)):
+			continue
+		if bool(entry.get("boss_victory", false)):
+			break
+		streak += 1
+	return streak
+
+
+func lifetime_value(key: String) -> float:
+	return float(lifetime.get(key, 0.0))
+
+
+func _add_lifetime(key: String, amount: float) -> void:
+	lifetime[key] = lifetime_value(key) + amount
+
+
+func _process(delta: float) -> void:
+	# Tempo de jogo (Fim do Capítulo): conta fora da tela-título e sem o jogo pausado.
+	if not get_tree().paused and get_tree().current_scene != null and not get_tree().current_scene.scene_file_path.begins_with("res://scenes/title/"):
+		_add_lifetime("play_time", delta)
+
+
+## UI/UX §13.3 / GDD §4.5: "Abandonar a noite" — os ganhos dela se perdem e vai ao Pátio.
+func abandon_night() -> void:
+	last_result = null
+	boss_run = false
+	get_tree().paused = false
+	_change_scene(SCENE_TREE)
 
 
 # --- Fluxo de telas ----------------------------------------------------------
@@ -280,11 +335,28 @@ func _build_curtain() -> void:
 
 # --- Save --------------------------------------------------------------------
 
+## GDD §18.5 (save v2): blocos novos com padrão vazio no Marco A (itens, hub, marcos e
+## Replantar entram no B/C); os campos boss_1_* / chapter_1_end_seen ficam por compatibilidade.
 func to_save_dict() -> Dictionary:
+	var chapters: Array[int] = []
+	if chapter_1_end_seen:
+		chapters.append(1)
 	return {
 		"currencies": Economy.to_dict(),
 		"tree": tree.to_save(),
-		"progress": {"turns_played": turns_played, "area": area.id, "stage_unlocked": stage_unlocked, "unrest": _unrest_to_save(), "seen_nodes": seen_nodes.keys().map(func(k: StringName) -> String: return String(k)), "boss_1_won": boss_1_won, "boss_1_attempts": boss_1_attempts, "chapter_1_end_seen": chapter_1_end_seen, "dialogue_seen": dialogue_seen.keys().map(func(k: StringName) -> String: return String(k))},
+		"progress": {
+			"turns_played": turns_played, "area": area.id, "stage_unlocked": stage_unlocked,
+			"unrest": _unrest_to_save(), "bosses": bosses.duplicate(true),
+			"seen_nodes": seen_nodes.keys().map(func(k: StringName) -> String: return String(k)),
+			"boss_1_won": boss_1_won, "boss_1_attempts": boss_1_attempts,
+			"chapter_1_end_seen": chapter_1_end_seen, "chapter_end_seen": chapters,
+			"dialogue_seen": dialogue_seen.keys().map(func(k: StringName) -> String: return String(k)),
+			"lifetime": lifetime.duplicate(),
+		},
+		"items": _saved_extra.get("items", {"owned": [], "equipped": []}),
+		"hub": _saved_extra.get("hub", {}),
+		"milestones": _saved_extra.get("milestones", {"counters": {}, "done": []}),
+		"respec_count": int(_saved_extra.get("respec_count", 0)),
 		"settings": settings.duplicate(),
 		"telemetry": telemetry.duplicate(true),
 	}
@@ -295,10 +367,31 @@ func apply_save_dict(data: Dictionary) -> void:
 	tree.load_save(data.get("tree", {}) as Dictionary)
 	var progress: Dictionary = data.get("progress", {})
 	turns_played = int(progress.get("turns_played", 0))
-	boss_1_won = bool(progress.get("boss_1_won", false))
-	boss_1_attempts = int(progress.get("boss_1_attempts", 0))
+	bosses.clear()
+	var saved_bosses: Dictionary = progress.get("bosses", {})
+	for boss_id: Variant in saved_bosses:
+		var entry: Dictionary = saved_bosses[boss_id] if saved_bosses[boss_id] is Dictionary else {}
+		bosses[str(boss_id)] = {"wins": maxi(0, int(entry.get("wins", 0))), "attempts": maxi(0, int(entry.get("attempts", 0)))}
+	var boss_id_1 := String(boss_data.id) if boss_data != null else "caixao_fujao"
+	var record_1: Dictionary = bosses.get(boss_id_1, {})
+	boss_1_won = bool(progress.get("boss_1_won", false)) or int(record_1.get("wins", 0)) > 0
+	boss_1_attempts = maxi(int(progress.get("boss_1_attempts", 0)), int(record_1.get("attempts", 0)))
+	if not bosses.has(boss_id_1) and (boss_1_won or boss_1_attempts > 0):
+		bosses[boss_id_1] = {"wins": 1 if boss_1_won else 0, "attempts": boss_1_attempts}
 	stage_unlocked = maxi(1, int(progress.get("stage_unlocked", 1)))
 	chapter_1_end_seen = bool(progress.get("chapter_1_end_seen", false))
+	for chapter: Variant in progress.get("chapter_end_seen", []):
+		if int(chapter) == 1:
+			chapter_1_end_seen = true
+	lifetime.clear()
+	var saved_lifetime: Dictionary = progress.get("lifetime", {})
+	for key: String in LIFETIME_KEYS:
+		if saved_lifetime.has(key):
+			lifetime[key] = maxf(0.0, float(saved_lifetime[key]))
+	_saved_extra.clear()
+	for key: String in ["items", "hub", "milestones", "respec_count"]:
+		if data.has(key):
+			_saved_extra[key] = data[key]
 	dialogue_seen.clear()
 	for dialogue_id: Variant in progress.get("dialogue_seen", []):
 		dialogue_seen[StringName(str(dialogue_id))] = true
@@ -356,6 +449,9 @@ func _reset_progress() -> void:
 	stage_unlocked = 1
 	chapter_1_end_seen = false
 	dialogue_seen.clear()
+	bosses.clear()
+	lifetime.clear()
+	_saved_extra.clear()
 	unrest.clear()
 	seen_nodes.clear()
 	telemetry.clear()

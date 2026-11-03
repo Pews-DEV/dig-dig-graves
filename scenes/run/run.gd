@@ -84,6 +84,11 @@ func _ready() -> void:
 		_leaving = true  # a cortina despausa o jogo: o turno não pode andar durante a saída
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		Game.goto_title())
+	# UI/UX §13.3 / §20: "Abandonar a noite" → Pátio sem os ganhos da noite.
+	hud.options().abandon_requested.connect(func() -> void:
+		_leaving = true
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		Game.abandon_night())
 	if Game.boss_run:
 		var boss_name := Game.boss_data.display_name if Game.boss_data != null else "O Caixão Fujão"
 		var icon_id := String(Game.boss_data.icon_id) if Game.boss_data != null else "icon_boss_caixao"

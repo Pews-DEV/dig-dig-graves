@@ -175,10 +175,41 @@ func _build_world() -> void:
 	# Hall de navegação sobre o cenário; a árvore continua sendo um destino separado.
 
 
+## UI/UX §10.4/§15: no retorno da 1ª vitória a Chave é celebrada no Pátio (gira, pousa com pop)
+## e as raízes novas brotam; depois entra o Fim do Capítulo (≤ 6 s no total).
 func _show_chapter_unlock() -> void:
-	Audio.play(&"key_get")
+	var sheet := AsepriteSheet.load_id("icon_key_1_32")
+	var key := TextureRect.new()
+	key.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	key.size = Vector2(32, 32)
+	key.pivot_offset = Vector2(16, 16)
+	key.position = Vector2(304, 48)
+	if sheet != null and sheet.texture != null:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = sheet.texture
+		atlas.region = sheet.frames[0]
+		key.texture = atlas
+		var spin := key.create_tween().set_loops(6)
+		for i: int in mini(4, sheet.frames.size()):
+			var region: Rect2 = sheet.frames[i]
+			spin.tween_callback(func() -> void: atlas.region = region)
+			spin.tween_interval(0.125)
+	_overlay.add_child(key)
+	var caption := Label.new()
+	caption.theme_type_variation = &"TitleLabel"
+	caption.text = tr("Chave da Cripta I")
+	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	caption.position = Vector2(0, 84)
+	caption.size = Vector2(640, 18)
+	caption.add_theme_color_override("font_color", Palette.color(Palette.LANTERN_BRIGHT))
+	caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_overlay.add_child(caption)
+	Juice.slide_in(key, Vector2(0, 24), 0.0, 0.3)
+	Audio.play_variant(&"key_get", 1)
 	Audio.play(&"stinger_stage_unlock")
-	await get_tree().create_timer(2.3).timeout
+	await get_tree().create_timer(0.35).timeout
+	Juice.pop(key, 0.2, 0.16)
+	await get_tree().create_timer(1.95).timeout
 	Game.goto_chapter_end()
 
 

@@ -103,6 +103,8 @@ func _ready() -> void:
 
 	_options = OptionsMenu.new()
 	_options.show_title_button = true
+	_options.show_abandon_button = true
+	_options.confirm_title = true
 	add_child(_options)
 
 	Events.field_cleared.connect(_on_field_cleared)

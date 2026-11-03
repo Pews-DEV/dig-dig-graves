@@ -6,6 +6,8 @@ extends Control
 signal closed()
 ## "Voltar ao título" (UI/UX §9.4): só aparece com `show_title_button`; o jogo salva antes.
 signal title_requested()
+## UI/UX §13.3: "Abandonar a noite" confirmado na lápide (os ganhos da noite se perdem).
+signal abandon_requested()
 
 const VOLUME_ROWS: Array[Array] = [
 	["Volume geral", "vol_master"],
@@ -18,6 +20,11 @@ const VOLUME_ROWS: Array[Array] = [
 var title_text: String = "Pausa"
 ## Defina antes de adicionar à árvore.
 var show_title_button: bool = false
+## Pausa do turno (UI/UX §13.3): "Abandonar a noite" e confirmação também para o título.
+var show_abandon_button: bool = false
+var confirm_title: bool = false
+var _confirm: ConfirmStone
+var _confirm_action: StringName = &""
 var _resume: Button
 var _panel: PanelContainer
 var _float_btn: Button
@@ -90,12 +97,21 @@ func _ready() -> void:
 	_resume.text = "Continuar" if show_title_button else "Voltar"
 	_resume.pressed.connect(close)
 	buttons.add_child(_resume)
+	if show_abandon_button:
+		var abandon := Button.new()
+		abandon.theme_type_variation = &"BigButton"
+		abandon.text = "Abandonar a noite"
+		abandon.pressed.connect(_on_abandon_pressed)
+		buttons.add_child(abandon)
 	if show_title_button:
 		var to_title := Button.new()
 		to_title.theme_type_variation = &"BigButton"
 		to_title.text = "Voltar ao título"
 		to_title.pressed.connect(_on_title_pressed)
 		buttons.add_child(to_title)
+	_confirm = ConfirmStone.new()
+	add_child(_confirm)
+	_confirm.confirmed.connect(_on_confirmed)
 
 
 func is_open() -> bool:
@@ -125,12 +141,39 @@ func close() -> void:
 func _on_title_pressed() -> void:
 	if not _is_open:
 		return
+	if confirm_title:
+		_ask(&"title", "Voltar ao título?", "Os ganhos desta noite serão perdidos.", "Voltar ao título")
+		return
 	_is_open = false
 	Game.save_game()
 	title_requested.emit()
 
 
+func _on_abandon_pressed() -> void:
+	if _is_open:
+		_ask(&"abandon", "Abandonar a noite?", "Os ganhos desta noite serão perdidos.", "Abandonar")
+
+
+func _ask(action: StringName, title: String, note: String, confirm: String) -> void:
+	_confirm_action = action
+	_confirm.title_text = title
+	_confirm.note_text = note
+	_confirm.confirm_text = confirm
+	_confirm.open()
+
+
+func _on_confirmed() -> void:
+	_is_open = false
+	Game.save_game()
+	if _confirm_action == &"abandon":
+		abandon_requested.emit()
+	else:
+		title_requested.emit()
+
+
 func _unhandled_input(event: InputEvent) -> void:
+	if _confirm != null and _confirm.is_open():
+		return
 	if _is_open and (event.is_action_pressed(&"pause") or event.is_action_pressed(&"ui_cancel")):
 		get_viewport().set_input_as_handled()
 		close()
