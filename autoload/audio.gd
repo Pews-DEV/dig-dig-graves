@@ -111,6 +111,26 @@ func play(id: StringName, pitch: float = 1.0, variation: float = AudioBank.PITCH
 	player.play()
 
 
+## Toca uma variação fixa (1-based) de um id "não sortear" (ex.: AUDIO_MANIFEST key_get_1/_2).
+func play_variant(id: StringName, index: int, volume_db: float = 0.0) -> void:
+	var list := bank.variants(id)
+	if list.is_empty():
+		return
+	var path := list[clampi(index - 1, 0, list.size() - 1)]
+	var stream := _stream(path)
+	if stream == null:
+		return
+	var player := _voice_for(id)
+	player.stop()
+	player.stream = stream
+	player.bus = AudioBank.bus_for(id)
+	player.pitch_scale = 1.0
+	player.volume_db = volume_db
+	_pool_ids[player] = id
+	_pool_started[player] = Time.get_ticks_msec()
+	player.play()
+
+
 ## Compatível com as chamadas antigas (GDD §18.3).
 func play_sfx(id: StringName, pitch_variation: float = AudioBank.PITCH_VARIATION) -> void:
 	play(id, 1.0, pitch_variation)

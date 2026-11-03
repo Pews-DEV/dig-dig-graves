@@ -7,6 +7,10 @@ const MAX_COINS_PER_PULSE := 3
 const SUMMARY_DELAY := 0.8
 ## DA §9.1: hit-stop de 2 frames ao abrir cova.
 const HITSTOP_FRAMES := 2
+## UI/UX §13.1: 2º anel do Pisão Sísmico.
+const STOMP_RING_DELAY := 0.06
+## GDD §4.8: "obrigado" da alminha errante em 1 palavra.
+const THANKS: Array[String] = ["Obrigado!", "Valeu!", "Brigado!", "Descanso!", "Paz!"]
 
 var state: RunState
 
@@ -36,7 +40,7 @@ func _ready() -> void:
 	state = RunState.new(Game.area, Game.tool, Game.balance, run_stats, 0, Game.unrest_of(Game.area.id), Game.boss_run, Game.boss_data)
 	field_view.position = Vector2.ZERO
 	field_view.setup(state.field, Game.area)
-	field_view.frame_in(Hud.FREE_TOP, Hud.FREE_BOTTOM)
+	field_view.frame_in(Hud.BOSS_FREE_TOP if Game.boss_run else Hud.FREE_TOP, Hud.FREE_BOTTOM)
 	var center_cell := Vector2i(state.field.size >> 1, state.field.size >> 1)
 	var center_viewport := field_view.content.get_global_transform_with_canvas() * field_view.cell_center(center_cell)
 	get_viewport().warp_mouse(center_viewport)
@@ -62,11 +66,14 @@ func _ready() -> void:
 	state.wisp_collected.connect(_on_wisp_collected)
 	state.oil_drained.connect(_on_oil_drained)
 	state.boss_changed.connect(func(hp: float, max_hp: float, _cells: Array[Vector2i]) -> void: hud.update_boss(hp, max_hp))
-	state.stomp_used.connect(func(cells: Array[Vector2i]) -> void: field_view.play_stomp(cells))
-	state.boss_hopped.connect(func(_old_cells: Array[Vector2i], _new_cells: Array[Vector2i]) -> void:
-		Audio.play(&"boss_sink")
-		Audio.play(&"boss_emerge"))
+	state.boss_damaged.connect(func(_amount: float) -> void: hud.boss_hit())
+	state.stomp_used.connect(_on_stomp_used)
+	state.boss_hopped.connect(_on_boss_hopped)
 	state.stomp_ready.connect(func() -> void: Audio.play(&"stomp_ready"))
+	state.second_wind_triggered.connect(_on_second_wind)
+	state.constellation_started.connect(_on_constellation)
+	state.tombstone_effect.connect(func(_grave: Dictionary) -> void: Audio.play(&"tombstone_effect"))
+	state.unrest_warned.connect(_on_unrest_warned)
 	state.finished.connect(_on_finished)
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 	hud.refresh(state)
@@ -78,10 +85,12 @@ func _ready() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		Game.goto_title())
 	if Game.boss_run:
-		hud.show_boss(state.boss_hp, state.boss_hp_max)
+		var boss_name := Game.boss_data.display_name if Game.boss_data != null else "O Caixão Fujão"
+		var icon_id := String(Game.boss_data.icon_id) if Game.boss_data != null else "icon_boss_caixao"
+		hud.show_boss(state.boss_hp, state.boss_hp_max, boss_name, icon_id)
 		Audio.play_music(&"mus_boss")
 	else:
-		Audio.play_music(&"mus_area1")
+		Audio.play_music(Game.area.music_id)
 	Audio.play_ambience(&"amb_night")
 	if Game.boss_run:
 		await Game.show_dialogue(&"boss_intro")
@@ -233,8 +242,9 @@ func _on_layer_broken(cell: Vector2i, layer: LayerData, bone: bool, xp: float, c
 	# A quebra ganha destaque pelo flash, pelo XP agregado do golpe e pelo Osso.
 	_pulse_xp += xp
 	if bone:
-		field_view.numbers.spawn(pos - Vector2(0, 22), "+1 osso", Palette.BONE_SHADOW, false)
-		hud.fly(ResourceIcon.Kind.BONES, _to_screen(pos), 1.0)
+		var bones := state.bone_value()
+		field_view.numbers.spawn(pos - Vector2(0, 22), "+%s %s" % [NumberFormat.format(bones), "osso" if bones < 1.5 else "ossos"], Palette.BONE_SHADOW, false)
+		hud.fly(ResourceIcon.Kind.BONES, _to_screen(pos), bones)
 
 
 ## Linha de material dos torrões/poeira: só camadas de solo da área (Rocha/Caixão usam cores).
@@ -260,7 +270,8 @@ func _on_grave_opened(grave: Dictionary, rewards: Dictionary) -> void:
 	var cells: Array = grave.cells
 	var mid := (field_view.cell_center(cells[0] as Vector2i) + field_view.cell_center(cells[1] as Vector2i)) * 0.5
 	field_view.numbers.spawn(mid - Vector2(0, 30), "+%s" % NumberFormat.format(float(rewards.copper)), Palette.LANTERN_BRIGHT, false)
-	field_view.numbers.spawn(mid - Vector2(0, 20), "+1 alma  +%d ossos" % int(rewards.bones), Palette.SOUL, false)
+	var souls := float(rewards.get("souls", 0.0))
+	field_view.numbers.spawn(mid - Vector2(0, 20), "+%s %s  +%s ossos" % [NumberFormat.format(souls), "alma" if souls < 1.5 else "almas", NumberFormat.format(float(rewards.bones))], Palette.SOUL, false)
 	field_view.shake(2.0, 0.2)
 	hud.show_toast("COVA ABERTA!", 1.2)
 	Audio.play(&"grave_open")
@@ -300,7 +311,44 @@ func _on_wanderer_collected(wanderer: Dictionary, souls: float) -> void:
 	var pos := field_view.cell_center(wanderer.cell as Vector2i)
 	Audio.play(&"soul_wander")
 	field_view.numbers.spawn(pos - Vector2(0, 18), "+%s alma" % NumberFormat.format(souls), Palette.SOUL, false)
+	# GDD §4.8: a alminha agradece em 1 palavra.
+	field_view.numbers.spawn(pos - Vector2(0, 28), tr(String(THANKS[randi() % THANKS.size()])), Palette.BONE_BRIGHT, false)
 	hud.fly(ResourceIcon.Kind.SOULS, _to_screen(pos), souls)
+
+
+## Pisão (UI/UX §13.1): anel na área; com o Pisão Sísmico um 2º anel 1 tile maior 60 ms depois.
+func _on_stomp_used(cells: Array[Vector2i]) -> void:
+	var base := state.area_cells(state.cursor_cell)
+	field_view.play_stomp(base)
+	if cells.size() > base.size():
+		get_tree().create_timer(STOMP_RING_DELAY).timeout.connect(func() -> void:
+			if is_instance_valid(field_view):
+				field_view.play_stomp(cells))
+
+
+func _on_boss_hopped(_old_cells: Array[Vector2i], _new_cells: Array[Vector2i]) -> void:
+	Audio.play(&"boss_sink")
+	get_tree().create_timer(Game.boss_data.hop_invulnerability if Game.boss_data != null else 0.6).timeout.connect(func() -> void:
+		Audio.play(&"boss_emerge"))
+
+
+## L06 (GDD §4.5): a lanterna volta com 5 s.
+func _on_second_wind(oil: float) -> void:
+	Audio.play(&"second_wind")
+	hud.show_toast(tr("SEGUNDO FÔLEGO!") + "  +%d s" % roundi(oil), 1.6)
+	field_view.shake(1.0, 0.15)
+
+
+## LX (GDD §4.5): Constelação para o óleo.
+func _on_constellation(duration: float) -> void:
+	Audio.play(&"constellation")
+	hud.show_toast(tr("CONSTELAÇÃO!") + "  " + tr("óleo parado por %d s") % roundi(duration), 1.8)
+
+
+## GDD §4.11: a Inquietação cruzou 90% — a terra treme.
+func _on_unrest_warned() -> void:
+	Audio.play(&"unrest_warning")
+	field_view.shake(2.0, 0.4)
 
 
 func _on_oil_drained(cells: Array[Vector2i], amount: float) -> void:
@@ -316,10 +364,17 @@ func _on_finished(result: TurnResult) -> void:
 	if result.end_reason == &"oil":
 		Audio.play(&"oil_out")
 	if result.boss_encounter and result.boss_victory:
+		# UI/UX §13.2: a barra estoura, hit-stop de 2 frames, boss_defeat → jingle_boss_win.
+		hud.boss_defeated()
+		if not _reduce_flashes():
+			_hitstop = HITSTOP_FRAMES
+			field_view.process_mode = Node.PROCESS_MODE_DISABLED
 		Audio.play(&"boss_defeat")
 		Audio.play_jingle(&"jingle_boss_win")
+		await get_tree().create_timer(0.6).timeout
 		await Game.show_dialogue(&"boss_victory")
 	elif result.boss_encounter:
+		hud.boss_fled()
 		Audio.play(&"boss_flee")
 	var finish_text := "CHEFE VENCIDO!" if result.boss_victory else ("O ÓLEO ACABOU" if result.end_reason == &"oil" else "O SOL NASCEU")
 	hud.show_toast(finish_text, 2.0)

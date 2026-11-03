@@ -30,6 +30,14 @@ var override_color: int = 0:
 		if v != override_color:
 			override_color = v
 			queue_redraw()
+## "Dano atrasado" (UI/UX §13.2): faixa `ghost_color` entre o valor e `ghost` (< 0 = desligada).
+var ghost: float = -1.0:
+	set(v):
+		ghost = v
+		queue_redraw()
+var ghost_color: int = Palette.BONE
+## Cor da varredura (padrão = brilho 23 da ponta).
+var sweep_color: int = Palette.BONE_BRIGHT
 ## Varredura de brilho (subir de nível): 0..1 = posição da faixa; < 0 = desligada.
 var sweep: float = -1.0:
 	set(v):
@@ -85,6 +93,10 @@ func _draw() -> void:
 		draw_rect(inner, Palette.color(back_color))
 		inner_w = inner.size.x
 		fill_rect = Rect2(inner.position, Vector2(floorf(inner.size.x * value), inner.size.y))
+	if ghost > value:
+		var ghost_w := floorf(inner_w * clampf(ghost, 0.0, 1.0)) - fill_rect.size.x
+		if ghost_w > 0.0:
+			draw_rect(Rect2(fill_rect.position + Vector2(fill_rect.size.x, 0), Vector2(ghost_w, fill_rect.size.y)), Palette.color(ghost_color))
 	if fill_rect.size.x > 0.0:
 		if override_color > 0:
 			draw_rect(fill_rect, Palette.color(override_color))
@@ -100,4 +112,4 @@ func _draw() -> void:
 		var x := fill_rect.position.x + floorf((inner_w + 4.0) * sweep) - 2.0
 		var band := Rect2(x, fill_rect.position.y, 2, fill_rect.size.y).intersection(Rect2(fill_rect.position, Vector2(inner_w, fill_rect.size.y)))
 		if band.size.x > 0.0:
-			draw_rect(band, Palette.color(TIP_COLOR))
+			draw_rect(band, Palette.color(sweep_color))

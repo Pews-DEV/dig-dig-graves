@@ -12,7 +12,14 @@ const TEXT_Y := 1
 const FREE_TOP := MARGIN + PLAQUE_H
 const FREE_BOTTOM := 360 - MARGIN - PLAQUE_H
 const OIL_DANGER := 0.25  # DA §3.2 / UI/UX §4: alerta < 25%
-const UNREST_ALERT := 0.8
+## UI/UX §13.2: barra do chefe 320 px no topo central, logo abaixo da 1ª fileira.
+const BOSS_RECT := Rect2(160, MARGIN + PLAQUE_H + 2, 320, PLAQUE_H)
+## Faixa livre para o campo na Noite do Chefe (abaixo da barra do chefe).
+const BOSS_FREE_TOP := MARGIN + PLAQUE_H + 2 + PLAQUE_H
+const BOSS_GHOST_HOLD := 0.4
+const BOSS_GHOST_DRAIN := 0.3
+## UI/UX §13.1: "A terra treme…" pisca 3× ao chegar a 100%.
+const UNREST_BLINKS := 3
 const OIL_FILL := "res://assets/ui/hud/barra_oleo.png"
 const OIL_FILL_DANGER := "res://assets/ui/hud/barra_oleo_alerta.png"
 const ENTER_OFFSET := 28.0
@@ -55,12 +62,21 @@ var _last_oil_second: int = -1
 var _level: int = 1
 var _boss_bar: PixelBar
 var _boss_label: Label
+var _boss_hp_label: Label
 var _boss_icon: TextureRect
+var _boss_plaque: Control
+var _boss_ghost_tween: Tween
+var _boss_hit_limiter := RateLimiter.new(8.0)
+var _unrest_label: Label
+var _unrest_blinks: float = 0.0
+var _unrest_shown: bool = false
+var _oil_frozen: bool = false
 var _stomp_button: TextureButton
 var _stomp_icon: TextureRect
 var _stomp_atlas: Texture2D
 var _stomp_pips_atlas: Texture2D
 var _stomp_pips: Array[TextureRect] = []
+var _stomp_glow: _StompGlow
 
 
 func _ready() -> void:
@@ -166,6 +182,16 @@ func _build_unrest() -> void:
 	_skull_base = _skull.position
 	p.add_child(_skull)
 	_unrest_bar = _bar(p, Rect2(26, 6, 106, 10), "res://assets/ui/hud/barra_inquietacao.png", Palette.ECTO, Palette.ECTO_BRIGHT)
+	_unrest_label = Label.new()
+	_unrest_label.text = tr("A terra treme…")
+	_unrest_label.theme_type_variation = &"HudNumber"
+	_unrest_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_unrest_label.position = Vector2(640 - MARGIN - 140, MARGIN + PLAQUE_H)
+	_unrest_label.size = Vector2(136, 14)
+	_unrest_label.add_theme_color_override("font_color", Palette.color(Palette.DANGER))
+	_unrest_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_unrest_label.visible = false
+	_root.add_child(_unrest_label)
 
 
 func _build_oil() -> void:
@@ -178,36 +204,83 @@ func _build_oil() -> void:
 	_oil_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 
-func show_boss(hp: float, max_hp: float) -> void:
+## UI/UX §13.2: plaqueta larga no topo central, abaixo da fileira de cima (no Marco A não há
+## medalha de nível; a 1ª fileira já tem recursos e Inquietação).
+func show_boss(hp: float, max_hp: float, boss_name: String = "O Caixão Fujão", icon_id: String = "icon_boss_caixao") -> void:
 	if _boss_bar != null:
 		update_boss(hp, max_hp)
 		return
-	var plaque := _plaque(Rect2(160, 6, 320, 24), true)
+	var plaque := _plaque(Rect2(BOSS_RECT.position, BOSS_RECT.size), true)
+	_boss_plaque = plaque
 	_boss_icon = TextureRect.new()
-	_boss_icon.texture = AssetManifest.texture_by_id("icon_boss_caixao")
+	_boss_icon.texture = AssetManifest.texture_by_id(icon_id)
 	_boss_icon.position = Vector2(5, 4)
 	_boss_icon.size = Vector2(16, 16)
+	_boss_icon.pivot_offset = Vector2(8, 8)
 	_boss_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	plaque.add_child(_boss_icon)
 	_boss_label = Label.new()
-	_boss_label.text = "Caixão Fujão"
+	_boss_label.text = boss_name
 	_boss_label.position = Vector2(24, TEXT_Y)
 	_boss_label.size = Vector2(106, 18)
 	plaque.add_child(_boss_label)
-	_boss_bar = _bar(plaque, Rect2(132, 7, 146, 10), "", Palette.DANGER, Palette.DANGER)
+	_boss_bar = _bar(plaque, Rect2(132, 7, 146, 10), "", Palette.DANGER_DARK, Palette.DANGER)
 	_boss_bar.frame_texture_path = "res://assets/ui/hud/barra_chefe.png"
-	var value := _number(plaque, Vector2(278, TEXT_Y), 38)
-	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_boss_label.set_meta("hp_label", value)
+	_boss_bar.ghost_color = Palette.BONE
+	_boss_hp_label = _number(plaque, Vector2(278, TEXT_Y), 38)
+	_boss_hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	update_boss(hp, max_hp)
+	# Entrada: desce de −28 px em 300 ms junto com o stinger.
+	Juice.slide_in(plaque, Vector2(0, -ENTER_OFFSET), 0.0, 0.3)
+	Audio.play(&"stinger_boss_appear")
 
 
 func update_boss(hp: float, max_hp: float) -> void:
 	if _boss_bar == null:
 		return
-	_boss_bar.value = clampf(hp / maxf(1.0, max_hp), 0.0, 1.0)
-	var hp_label: Label = _boss_label.get_meta("hp_label") as Label
-	hp_label.text = "%s" % NumberFormat.format(hp)
+	var ratio := clampf(hp / maxf(1.0, max_hp), 0.0, 1.0)
+	if ratio < _boss_bar.value - 0.000001:
+		# Dano atrasado: o "fantasma" 22 fica 400 ms e escorre até o valor real.
+		if _boss_bar.ghost < _boss_bar.value:
+			_boss_bar.ghost = _boss_bar.value
+		if _boss_ghost_tween != null:
+			_boss_ghost_tween.kill()
+		_boss_ghost_tween = _boss_bar.create_tween()
+		_boss_ghost_tween.tween_interval(BOSS_GHOST_HOLD)
+		_boss_ghost_tween.tween_property(_boss_bar, "ghost", ratio, BOSS_GHOST_DRAIN)
+	_boss_bar.value = ratio
+	_boss_hp_label.text = NumberFormat.format(hp)
+
+
+## Cada golpe que acerta o chefe: pop de 1 px no ícone e `boss_hit`, limitados a 8/s.
+func boss_hit() -> void:
+	if _boss_icon == null or not _boss_hit_limiter.try_fire(_t):
+		return
+	Audio.play(&"boss_hit")
+	if not Juice.reduce_motion():
+		Juice.pop(_boss_icon, 0.12, 0.1)
+
+
+## Fuga (óleo acabou): a barra se enche ao contrário enquanto o chefe some.
+func boss_fled() -> void:
+	if _boss_bar == null:
+		return
+	_boss_bar.ghost = -1.0
+	var t := _boss_bar.create_tween()
+	t.tween_property(_boss_bar, "value", 1.0, 0.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+
+## Vitória: a barra estoura em faíscas 26/23.
+func boss_defeated() -> void:
+	if _boss_plaque == null:
+		return
+	_boss_bar.ghost = -1.0
+	_boss_bar.value = 0.0
+	if Juice.reduce_flashes():
+		return
+	var sparks := _Sparks.new()
+	sparks.position = _boss_plaque.position + Vector2(205, 12)
+	_root.add_child(sparks)
 
 
 func show_stomp(state: RunState) -> void:
@@ -235,6 +308,20 @@ func show_stomp(state: RunState) -> void:
 	_stomp_icon.stretch_mode = TextureRect.STRETCH_SCALE
 	_stomp_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_stomp_button.add_child(_stomp_icon)
+	# UI/UX §13.1: tecla em m5x7 no topo da moldura.
+	var key := Label.new()
+	key.text = "Q"
+	key.theme_type_variation = &"HudNumber"
+	key.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	key.position = Vector2(0, -12)
+	key.size = Vector2(28, 12)
+	key.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stomp_button.add_child(key)
+	_stomp_glow = _StompGlow.new()
+	_stomp_glow.size = Vector2(28, 28)
+	_stomp_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stomp_button.add_child(_stomp_glow)
+	state.stomp_used.connect(func(_cells: Array[Vector2i]) -> void: _on_stomp_used())
 	for i: int in 4:
 		var pip := TextureRect.new()
 		pip.position = Vector2(610 + i * 5, 350)
@@ -306,11 +393,19 @@ func refresh(state: RunState) -> void:
 		_medal.level = state.level
 		_xp_bar.value = state.xp / state.xp_needed(state.level)
 	_unrest_bar.value = state.unrest
+	var full := state.unrest >= 1.0 - 0.000001
+	if full and not _unrest_shown:
+		_unrest_label.visible = true
+		# Chegou a 100%: o rótulo pisca 3× e depois fica aceso.
+		_unrest_shown = true
+		_unrest_blinks = float(UNREST_BLINKS)
+	_oil_frozen = state.oil_frozen()
 	if _stomp_button != null:
 		var stomp_ready := state.stomp_cooldown_left <= 0.000001
 		_stomp_button.disabled = not stomp_ready
 		_stomp_icon.texture = _atlas_region(_stomp_atlas, Rect2(0 if stomp_ready else 20, 0, 20, 20))
-		var cooldown := maxf(4.0, state.stat(StatSheet.STOMP_COOLDOWN))
+		_stomp_glow.lit = stomp_ready
+		var cooldown := maxf(0.001, state.stomp_cooldown())
 		var charge := clampf(1.0 - state.stomp_cooldown_left / cooldown, 0.0, 1.0)
 		for i: int in _stomp_pips.size():
 			var before := float(i) / float(_stomp_pips.size())
@@ -329,6 +424,9 @@ func refresh(state: RunState) -> void:
 	_oil_bar.fill_color = Palette.DANGER if danger else Palette.LANTERN
 	# UI/UX §4: abaixo de 25% a barra alterna 31/32 a 2 Hz e os segundos ficam em 32.
 	_oil_bar.override_color = Palette.DANGER_DARK if danger and int(_t * 4.0) % 2 == 1 else 0
+	if _oil_frozen and not Juice.reduce_flashes():
+		# LX: óleo parado pela Constelação — a barra pisca em ecto.
+		_oil_bar.override_color = Palette.ECTO_BRIGHT if int(_t * 4.0) % 2 == 1 else Palette.ECTO
 	_oil_label.add_theme_color_override("font_color", Palette.color(Palette.DANGER if danger else Palette.BONE))
 	var secs := ceili(state.oil - 0.0001)
 	_oil_label.text = "%d s" % secs
@@ -473,9 +571,18 @@ func _process(delta: float) -> void:
 		if float(_flash_t[k]) <= 0.0:
 			_flash_t.erase(k)
 			(_numbers[k] as Label).remove_theme_color_override("font_color")
-	# UI/UX §4: Inquietação > 80% pulsa a 1 Hz e a caveira treme 1 px.
-	var alert := _unrest_bar.value >= UNREST_ALERT
-	_unrest_bar.override_color = Palette.ECTO_BRIGHT if alert and fmod(_t, 1.0) < 0.5 and not Juice.reduce_flashes() else 0
+	# UI/UX §4/§13.1: Inquietação > 80% pulsa a 1 Hz e a caveira treme 1 px; em 100% a barra
+	# fica cheia com brilho 32 varrendo.
+	var alert := _unrest_bar.value >= Game.balance.unrest_alert_at
+	var full := _unrest_bar.value >= 1.0 - 0.000001
+	_unrest_bar.override_color = Palette.ECTO_BRIGHT if alert and not full and fmod(_t, 1.0) < 0.5 and not Juice.reduce_flashes() else 0
+	_unrest_bar.sweep_color = Palette.DANGER
+	_unrest_bar.sweep = fmod(_t, 1.5) / 1.5 if full and not Juice.reduce_flashes() else -1.0
+	if _unrest_blinks > 0.0:
+		_unrest_blinks -= delta * 2.0
+		_unrest_label.visible = int(_unrest_blinks * 2.0) % 2 == 0 or Juice.reduce_flashes()
+	elif full:
+		_unrest_label.visible = true
 	if alert and not Juice.reduce_motion():
 		_skull.position = _skull_base + Vector2(randi_range(-1, 1), 0) if int(_t * 12.0) % 2 == 0 else _skull_base
 	else:
@@ -512,3 +619,79 @@ func _rising_text(text: String, from: Vector2) -> void:
 	t.tween_property(l, "position:y", l.position.y - 10.0, 0.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	t.parallel().tween_callback(func() -> void: l.add_theme_color_override("font_color", Palette.color(Palette.LANTERN))).set_delay(0.4)
 	t.tween_callback(l.queue_free)
+
+
+## UI/UX §13.1 "Usado": o ícone afunda 1 px e pisca 23 por 1 frame (sem flash com "reduzir flashes").
+func _on_stomp_used() -> void:
+	if _stomp_icon == null:
+		return
+	_stomp_icon.position = Vector2(4, 5)
+	var t := _stomp_icon.create_tween()
+	t.tween_interval(0.12)
+	t.tween_callback(func() -> void: _stomp_icon.position = Vector2(4, 4))
+	if not Juice.reduce_flashes():
+		_stomp_glow.flash()
+
+
+## Borda 26 do Pisão pronto com um brilho varrendo a cada 1,5 s; flash 23 ao usar.
+class _StompGlow:
+	extends Control
+
+	const SWEEP_EVERY := 1.5
+	const SWEEP_TIME := 0.3
+	var lit: bool = false
+	var _t: float = 0.0
+	var _flash: int = 0
+
+	func flash() -> void:
+		_flash = 2
+
+	func _process(delta: float) -> void:
+		_t += delta
+		queue_redraw()
+
+	func _draw() -> void:
+		if _flash > 0:
+			_flash -= 1
+			draw_rect(Rect2(4, 4, 20, 20), Palette.color(Palette.BONE_BRIGHT))
+			return
+		if not lit:
+			return
+		var c := Palette.color(Palette.LANTERN_BRIGHT)
+		draw_rect(Rect2(1, 1, 26, 1), c)
+		draw_rect(Rect2(1, 26, 26, 1), c)
+		draw_rect(Rect2(1, 1, 1, 26), c)
+		draw_rect(Rect2(26, 1, 1, 26), c)
+		var phase := fmod(_t, SWEEP_EVERY)
+		if phase < SWEEP_TIME and not Juice.reduce_flashes():
+			var x := 1.0 + floorf(phase / SWEEP_TIME * 26.0)
+			draw_rect(Rect2(x, 1, 2, 1), Palette.color(Palette.BONE_BRIGHT))
+			draw_rect(Rect2(28.0 - x, 26, 2, 1), Palette.color(Palette.BONE_BRIGHT))
+
+
+## Faíscas 26/23 da barra do chefe estourando (UI/UX §13.2, vitória).
+class _Sparks:
+	extends Node2D
+
+	const LIFE := 0.5
+	var _t: float = 0.0
+	var _dirs: Array[Vector2] = []
+
+	func _ready() -> void:
+		for i: int in 14:
+			var a := TAU * float(i) / 14.0 + randf_range(-0.2, 0.2)
+			_dirs.append(Vector2(cos(a), sin(a) * 0.6) * randf_range(30.0, 70.0))
+
+	func _process(delta: float) -> void:
+		_t += delta
+		if _t >= LIFE:
+			queue_free()
+			return
+		queue_redraw()
+
+	func _draw() -> void:
+		var k := _t / LIFE
+		for i: int in _dirs.size():
+			var p := (_dirs[i] * k).floor()
+			var c := Palette.LANTERN_BRIGHT if (i + int(k * 6.0)) % 2 == 0 else Palette.BONE_BRIGHT
+			draw_rect(Rect2(p, Vector2(2, 2) if k < 0.5 else Vector2.ONE), Palette.color(c))
