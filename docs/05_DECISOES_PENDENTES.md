@@ -110,6 +110,17 @@ Alternativas descartadas por ora: **A** (chefe aparece sozinho no meio da noite:
 - Cada fogo-fátuo coletado na **mesma noite** vale **80%** do anterior; o valor volta ao normal na noite seguinte.
 - Corrige o risco de "noite infinita" com os nós de Lanterna no máximo (revisão §3).
 
+## D13 · Interpretações fechadas na implementação do Marco A — ✅ Registrado (2026-11-03)
+- **Musgo:** "Caixão 1,5× mais duro" vale só para o HP; o dano não é dividido (antes o código aplicava 2,25×).
+- **Pisão Ritmado (E12b):** dispara a cada 8 golpes, além do Pisão manual; não depende da recarga nem a consome.
+- **Auto-pisão:** dispara assim que o Pisão recarrega.
+- **L04 · óleo de cova:** `oil_grave_cap` é o teto em segundos (3 + 3 por nível).
+- **XP:** `10 × 1,45^(n−1) × XP do estágio`, com teto no nível 15. O "(1, 3, 9, 27, 81)" do GDD §4.9 é o XP de cada estágio, não a curva de níveis.
+- **Constelação:** 3 fogos-fátuos em menos de 6 s param o óleo por 8 s; depois a contagem zera. **Tremores:** valem nas noites comuns que começam com a Inquietação cheia.
+- **Abandonar a noite:** não conta como tentativa contra o chefe e não altera a Inquietação.
+- **Ordem do pulso:** covas antes do chefe, para o golpe que mata o chefe ainda pagar as covas abertas.
+- **Em aberto:** o E05 está em k = −10 na tabela do §6, fora da faixa −9…+9 do §6.1; mantido como está na tabela.
+
 ---
 
 ## Próximo passo

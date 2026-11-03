@@ -6,7 +6,7 @@ Use uma cópia limpa do jogo por participante. Não explique as mecânicas duran
 
 - Build de referência: playtest `0.1.0-a`, Windows x64, exportado com Godot **4.7.2**. O executável exibe `v0.1.0` por exigência do formato de versão do export.
 - Caminho recomendado: extraia `builds/dig-dig-graves-marco-a-playtest-windows.zip` e abra `Dig Dig Graves Marco A.exe`; não requer instalar o editor Godot.
-- Alternativa para desenvolvimento: use o checkout atual de `codex/marco-a`, incluindo as alterações locais, abra `project.godot` no Godot 4.7.2 e pressione **Executar Projeto (F5)**; não execute apenas a cena selecionada.
+- Alternativa para desenvolvimento: use o checkout atual de `main`, abra `project.godot` no Godot 4.7.2 e pressione **Executar Projeto (F5)**; não execute apenas a cena selecionada.
 - Comece em **Novo Jogo** e confirme que a primeira noite abriu. Se a instalação já tiver um save que precise ser preservado, faça backup antes: o save fica no diretório `user://` do perfil do sistema e é compartilhado entre cópias do projeto nesse mesmo perfil.
 - Cada sessão leva cerca de **40–60 minutos**. Deixe o participante jogar sem instruções; intervenha apenas se houver bloqueio técnico e registre o que aconteceu.
 - Ao terminar, preencha uma cópia desta ficha por participante. Não grave nomes: use códigos como P1, P2 e P3.
