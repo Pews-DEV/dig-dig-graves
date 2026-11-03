@@ -37,7 +37,7 @@ A primeira noite do coveiro,A primeira noite do coveiro,The gravedigger's first 
 A terra chamou o Caixão Fujão. Ele não vai ficar quieto por muito tempo.,A terra chamou o Caixão Fujão. Ele não vai ficar quieto por muito tempo.,The ground has called the Runaway Coffin. It won't stay still for long.,La terre a appelé le Cercueil Fuyard. Il ne restera pas tranquille longtemps.,La terra ha chiamato la Bara Fuggitiva. Non resterà ferma a lungo.,Die Erde hat den Flüchtigen Sarg gerufen. Er wird nicht lange stillhalten.,La tierra ha llamado al Ataúd Fugitivo. No se quedará quieto mucho tiempo.,大地が逃げる棺を呼び起こした。じっとしているのも長くはない。,땅이 도망치는 관을 깨웠어. 오래 얌전히 있진 않을 거야.,Земля призвала Убегающий гроб. Долго он спокойно лежать не будет.,大地唤醒了逃跑棺材。它可不会安分太久。
 A terra está tremendo. O Caixão Fujão despertou lá embaixo.,A terra está tremendo. O Caixão Fujão despertou lá embaixo.,The ground is shaking. The Runaway Coffin has awakened below.,La terre tremble. Le Cercueil Fuyard s’est réveillé sous nos pieds.,La terra trema. La Bara Fuggitiva si è risvegliata laggiù.,Die Erde bebt. Der Flüchtige Sarg ist dort unten erwacht.,La tierra tiembla. El Ataúd Fugitivo ha despertado ahí abajo.,大地が揺れている。逃げる棺が地下で目を覚ました。,땅이 흔들려. 도망치는 관이 아래에서 깨어났어.,Земля дрожит. Внизу пробудился Убегающий гроб.,大地在震动。逃跑棺材在下面醒来了。
 Agora,Agora,Now,Maintenant,Ora,Jetzt,Ahora,今,지금,Сейчас,现在
-Alma,Alma,Soul,Âme,Soul,Seele,Alma,魂,영혼,Душа,灵魂
+Alma,Alma,Soul,Âme,Anima,Seele,Alma,魂,영혼,Душа,灵魂
 Almas,Almas,Souls,Âmes,Anime,Seelen,Almas,魂,영혼,Души,灵魂
 Alminhas Errantes,Alminhas Errantes,Wandering Souls,Âmes errantes,Anime vaganti,Wandernde Seelchen,Almitas errantes,さまよう小さな魂,떠도는 작은 영혼,Блуждающие душонки,游荡的小灵魂
 Ambiente,Ambiente,Ambience,Ambiance,Atmosfera,Umgebung,Ambiente,環境音,환경음,Окружение,环境音
@@ -250,3 +250,49 @@ para %s Nv %d,para %s Nv %d,for %s Lv. %d,pour %s niv. %d,per %s liv. %d,bis %s 
 −10% no tempo de regeneração,−10% no tempo de regeneração,−10% regeneration time,−10 % au temps de régénération,−10% al tempo di rigenerazione,−10 % Regenerationszeit,−10 % al tiempo de regeneración,再生時間 −10%,재생 시간 −10%,Время восстановления −10%,再生时间 −10%
 −4% no intervalo do golpe,−4% no intervalo do golpe,−4% strike interval,−4 % à l’intervalle entre les coups,−4% all'intervallo tra i colpi,−4 % Schlagintervall,−4 % al intervalo entre golpes,攻撃間隔 −4%,타격 간격 −4%,Интервал удара −4%,攻击间隔 −4%
 −5% no intervalo do golpe (mult.),−5% no intervalo do golpe (mult.),−5% strike interval (mult.),−5 % à l’intervalle entre les coups (mult.),−5% all'intervallo tra i colpi (moltiplicativo),−5 % Schlagintervall (multiplikativ),−5 % al intervalo entre golpes (multiplicativo),攻撃間隔 −5%（乗算）,타격 간격 −5% (곱연산),Интервал удара −5% (множитель),攻击间隔 −5%（乘算）
+%d min,%d min,%d min,%d min,%d min,%d Min.,%d min,%d分,%d분,%d мин,%d 分钟
+%s DESCANSOU!,%s DESCANSOU!,%s IS AT REST!,%s REPOSE EN PAIX !,%s RIPOSA IN PACE!,%s RUHT IN FRIEDEN!,¡%s DESCANSA EN PAZ!,%sは眠りについた！,%s 영면에 들다!,%s ОБРЁЛ ПОКОЙ!,%s 安息了！
+%s fugiu… faltaram %s de vida,%s fugiu… faltaram %s de vida,%s fled… it still had %s HP,%s s’est enfui… il lui restait %s PV,%s se l'è data a gambe… restavano %s punti vita,%s ist geflohen … noch %s Leben übrig,%s huyó… le quedaban %s puntos de vida,%sは逃げた…残りHP %s,%s 도망쳤다… 남은 체력 %s,%s сбежал… не хватило %s здоровья,%s 逃走了……还差 %s 生命值
+(+ ganhos normais da noite),(+ ganhos normais da noite),(+ the night's usual earnings),(+ gains habituels de la nuit),(+ normali guadagni della notte),(+ normale Ausbeute der Nacht),(+ ganancias normales de la noche),（＋通常の夜の稼ぎ）,(+ 평소 밤 수익),(+ обычная добыча за ночь),（+ 本夜常规收益）
++%s alma,+%s alma,+%s soul,+%s âme,+%s anima,+%s Seele,+%s alma,魂 +%s,영혼 +%s,Душа +%s,灵魂 +%s
++%s almas,+%s almas,+%s souls,+%s âmes,+%s anime,+%s Seelen,+%s almas,魂 +%s,영혼 +%s,Души +%s,灵魂 +%s
++%s osso,+%s osso,+%s bone,+%s os,+%s osso,+%s Knochen,+%s hueso,骨 +%s,뼈 +%s,Кость +%s,骨头 +%s
++%s ossos,+%s ossos,+%s bones,+%s os,+%s ossa,+%s Knochen,+%s huesos,骨 +%s,뼈 +%s,Кости +%s,骨头 +%s
+A próxima Raiz-mestra custará ×3.,A próxima Raiz-mestra custará ×3.,The next Master Root will cost ×3.,La prochaine racine maîtresse coûtera ×3.,La prossima Radice maestra costerà ×3.,Die nächste Meisterwurzel kostet ×3.,La próxima Raíz maestra costará ×3.,次の主根はコスト×3。,다음 으뜸 뿌리는 비용이 ×3이 돼요.,Следующий главный корень будет стоить ×3.,下一个主根的价格将 ×3。
+A terra treme…,A terra treme…,The ground trembles…,La terre tremble…,La terra trema…,Die Erde bebt …,La tierra tiembla…,大地が揺れる…,땅이 흔들린다…,Земля дрожит…,大地在颤抖……
+Abandonar,Abandonar,Abandon,Abandonner,Abbandona,Aufgeben,Abandonar,放棄する,포기하기,Бросить,放弃
+Abandonar a noite,Abandonar a noite,Abandon the Night,Abandonner la nuit,Abbandona la notte,Nacht aufgeben,Abandonar la noche,夜を放棄する,밤 포기하기,Бросить ночь,放弃本夜
+Abandonar a noite?,Abandonar a noite?,Abandon the night?,Abandonner la nuit ?,Abbandonare la notte?,Die Nacht aufgeben?,¿Abandonar la noche?,夜を放棄しますか？,밤을 포기할까요?,Бросить ночь?,要放弃本夜吗？
+Ajudantes,Ajudantes,Helpers,Aides,Aiutanti,Helfer,Ayudantes,助っ人,조수,Помощники,帮手
+Brigado!,Brigado!,Thankee!,Merchi !,Grazie mille!,Dankeschön!,¡Graciaaas!,あんがと！,고맙당!,Спасибочки!,谢啦！
+CAMPO LIMPO!,CAMPO LIMPO!,FIELD CLEARED!,TERRAIN NETTOYÉ !,CAMPO PULITO!,FELD FREIGERÄUMT!,¡CAMPO DESPEJADO!,全掘り！,필드 정리!,ЧИСТОЕ ПОЛЕ!,场地清空！
+CONSTELAÇÃO!,CONSTELAÇÃO!,CONSTELLATION!,CONSTELLATION !,COSTELLAZIONE!,STERNBILD!,¡CONSTELACIÓN!,星座！,별자리!,СОЗВЕЗДИЕ!,星座！
+Campo dos Indigentes · Capítulo 2,Campo dos Indigentes · Capítulo 2,Paupers' Field · Chapter 2,Champ des indigents · Chapitre 2,Campo dei poveri · Capitolo 2,Feld der Armen · Kapitel 2,Campo de los Indigentes · Capítulo 2,貧者の野 · 第2章,빈민의 들판 · 2장,Поле бедняков · Глава 2,穷人墓地 · 第2章
+Carteira,Carteira,Wallet,Bourse,Borsellino,Geldbeutel,Monedero,財布,지갑,Кошелёк,钱袋
+Cemitério,Cemitério,Cemetery,Cimetière,Cimitero,Friedhof,Cementerio,墓地,묘지,Кладбище,墓园
+Centro,Centro,Center,Centre,Centro,Mitte,Centro,中心,중심,Центр,中心
+Chave da Cripta I,Chave da Cripta I,Crypt Key I,Clé de la crypte I,Chiave della Cripta I,Kryptaschlüssel I,Llave de la Cripta I,地下墓地の鍵 I,지하 묘지 열쇠 I,Ключ от склепа I,地窖钥匙 I
+Cobre da noite,Cobre da noite,Night's Copper,Cuivre de la nuit,Rame della notte,Kupfer der Nacht,Cobre de la noche,その夜の銅貨,이번 밤의 구리,Медь за ночь,本夜铜币
+Descanso!,Descanso!,Rest at last!,Enfin le repos !,Riposo!,Endlich Ruhe!,¡Descanso!,やっと眠れる！,드디어 쉰다!,Покой!,安息了！
+Escavação,Escavação,Digging,Creusage,Scavo,Graben,Excavación,採掘,채굴,Раскопки,挖掘
+Escolhida a outra raiz. Duas Raízes libera esta.,Escolhida a outra raiz. Duas Raízes libera esta.,The other root was chosen. Two Roots unlocks this one.,L’autre racine a été choisie. Deux Racines débloque celle-ci.,È stata scelta l'altra radice. Due Radici sblocca questa.,Die andere Wurzel wurde gewählt. Zwei Wurzeln schaltet diese frei.,Se eligió la otra raíz. Dos Raíces desbloquea esta.,もう一方の根を選んだ。「二つの根」でこちらも解放される。,다른 뿌리를 선택했어요. '두 뿌리'로 이쪽도 열 수 있어요.,Выбран другой корень. «Два корня» откроет и этот.,已选择另一条根。“双根”可解锁这一条。
+Fortuna,Fortuna,Fortune,Fortune,Fortuna,Glück,Fortuna,幸運,행운,Удача,财运
+Lanterna,Lanterna,Lantern,Lanterne,Lanterna,Laterne,Linterna,ランタン,랜턴,Фонарь,提灯
+Mascate e Pátio · Capítulo 2,Mascate e Pátio · Capítulo 2,Peddler and Courtyard · Chapter 2,Colporteur et cour · Chapitre 2,Venditore ambulante e cortile · Capitolo 2,Hausierer und Hof · Kapitel 2,Buhonero y patio · Capítulo 2,行商人と中庭 · 第2章,행상인과 뜰 · 2장,Коробейник и двор · Глава 2,货郎与庭院 · 第2章
+O QUE SE ABRIU,O QUE SE ABRIU,WHAT OPENED UP,CE QUI S’EST OUVERT,COSA SI È APERTO,WAS SICH GEÖFFNET HAT,LO QUE SE ABRIÓ,開かれたもの,열린 것들,ЧТО ОТКРЫЛОСЬ,新开放内容
+O objetivo distante deste ramo. A próxima Raiz-mestra custará ×3.,O objetivo distante deste ramo. A próxima Raiz-mestra custará ×3.,This branch's distant goal. The next Master Root will cost ×3.,L’objectif lointain de cette branche. La prochaine racine maîtresse coûtera ×3.,L'obiettivo lontano di questo ramo. La prossima Radice maestra costerà ×3.,Das ferne Ziel dieses Zweigs. Die nächste Meisterwurzel kostet ×3.,El objetivo lejano de esta rama. La próxima Raíz maestra costará ×3.,この枝の遠い目標。次の主根はコスト×3。,이 가지의 먼 목표예요. 다음 으뜸 뿌리는 비용이 ×3이 돼요.,Далёкая цель этой ветви. Следующий главный корень будет стоить ×3.,这条分支的远方目标。下一个主根的价格将 ×3。
+Obrigado!,Obrigado!,Thanks!,Merci !,Grazie!,Danke!,¡Gracias!,ありがとう！,고마워!,Спасибо!,谢谢！
+Os ganhos desta noite serão perdidos.,Os ganhos desta noite serão perdidos.,This night's earnings will be lost.,Les gains de cette nuit seront perdus.,I guadagni di questa notte andranno persi.,Die Ausbeute dieser Nacht geht verloren.,Las ganancias de esta noche se perderán.,この夜の稼ぎは失われます。,이번 밤의 수익은 사라집니다.,Добыча этой ночи будет потеряна.,本夜的收益将会丢失。
+PRÊMIOS,PRÊMIOS,REWARDS,RÉCOMPENSES,PREMI,BELOHNUNGEN,PREMIOS,報酬,보상,НАГРАДЫ,奖励
+Paz!,Paz!,Peace!,Paix !,Pace!,Frieden!,¡Paz!,安らぎを！,평화!,Мир!,安宁！
+Pátio,Pátio,Courtyard,Cour,Cortile,Hof,Patio,中庭,뜰,Двор,庭院
+Raiz-mestra,Raiz-mestra,Master Root,Racine maîtresse,Radice maestra,Meisterwurzel,Raíz maestra,主根,으뜸 뿌리,Главный корень,主根
+Revanche vencida,Revanche vencida,Rematch won,Revanche gagnée,Rivincita vinta,Revanche gewonnen,Revancha ganada,リベンジ成功,재도전 승리,Реванш выигран,再战获胜
+Revanche: Almas,Revanche: Almas,Rematch: Souls,Revanche : âmes,Rivincita: anime,Revanche: Seelen,Revancha: almas,リベンジ：魂,재도전: 영혼,Реванш: души,再战：灵魂
+SEGUNDO FÔLEGO!,SEGUNDO FÔLEGO!,SECOND WIND!,SECOND SOUFFLE !,SECONDO RESPIRO!,ZWEITER ATEM!,¡SEGUNDO ALIENTO!,第二の息吹！,두 번째 숨!,ВТОРОЕ ДЫХАНИЕ!,第二口气！
+Selada,Selada,Sealed,Scellée,Sigillata,Versiegelt,Sellada,封印,봉인됨,Запечатан,已封印
+Tempo de jogo,Tempo de jogo,Play Time,Temps de jeu,Tempo di gioco,Spielzeit,Tiempo de juego,プレイ時間,플레이 시간,Время игры,游戏时间
+Tremores: Almas extras,Tremores: Almas extras,Tremors: Bonus Souls,Secousses : âmes bonus,Scosse: anime extra,Beben: Extra-Seelen,Temblores: almas extra,揺れ：追加の魂,진동: 추가 영혼,Толчки: дополнительные души,震动：额外灵魂
+Valeu!,Valeu!,Cheers!,Chouette !,Grande!,Super!,¡Genial!,助かる！,최고야!,Класс!,太好了！
+Voltar ao título?,Voltar ao título?,Back to title?,Retourner au titre ?,Tornare al titolo?,Zurück zum Titelbildschirm?,¿Volver al título?,タイトルに戻りますか？,타이틀로 돌아갈까요?,Вернуться в меню?,要返回标题吗？
+óleo parado por %d s,óleo parado por %d s,oil paused for %d s,huile figée pendant %d s,olio fermo per %d s,Öl angehalten für %d Sek.,aceite detenido durante %d s,油が%d秒止まる,기름 소모 %d초 정지,масло не тратится %d с,灯油暂停 %d 秒

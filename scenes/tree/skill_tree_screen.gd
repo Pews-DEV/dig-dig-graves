@@ -360,7 +360,7 @@ func _add_hall_station(row: HBoxContainer, name: String, detail: String, action:
 func _build_hall_toggle() -> void:
 	_hall_toggle = Button.new()
 	_hall_toggle.theme_type_variation = &"BigButton"
-	_hall_toggle.text = "Pátio"
+	_hall_toggle.text = tr("Pátio")
 	_hall_toggle.position = Vector2(548, 6)
 	_hall_toggle.custom_minimum_size = Vector2(86, 0)
 	_hall_toggle.visible = false

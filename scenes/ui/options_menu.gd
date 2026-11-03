@@ -94,19 +94,19 @@ func _ready() -> void:
 	box.add_child(buttons)
 	_resume = Button.new()
 	_resume.theme_type_variation = &"BigButton"
-	_resume.text = "Continuar" if show_title_button else "Voltar"
+	_resume.text = tr("Continuar") if show_title_button else tr("Voltar")
 	_resume.pressed.connect(close)
 	buttons.add_child(_resume)
 	if show_abandon_button:
 		var abandon := Button.new()
 		abandon.theme_type_variation = &"BigButton"
-		abandon.text = "Abandonar a noite"
+		abandon.text = tr("Abandonar a noite")
 		abandon.pressed.connect(_on_abandon_pressed)
 		buttons.add_child(abandon)
 	if show_title_button:
 		var to_title := Button.new()
 		to_title.theme_type_variation = &"BigButton"
-		to_title.text = "Voltar ao título"
+		to_title.text = tr("Voltar ao título")
 		to_title.pressed.connect(_on_title_pressed)
 		buttons.add_child(to_title)
 	_confirm = ConfirmStone.new()

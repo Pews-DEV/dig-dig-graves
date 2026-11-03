@@ -132,7 +132,7 @@ static func _format(v: float, fmt: String) -> String:
 		var hours := total / 3600
 		@warning_ignore("integer_division")
 		var minutes := (total % 3600) / 60
-		return "%dh%02d" % [hours, minutes] if hours > 0 else "%d min" % maxi(minutes, 0)
+		return "%dh%02d" % [hours, minutes] if hours > 0 else tr("%d min") % maxi(minutes, 0)
 	return NumberFormat.format(roundf(v))
 
 

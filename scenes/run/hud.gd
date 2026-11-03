@@ -613,7 +613,7 @@ func _process(delta: float) -> void:
 
 
 func _on_field_cleared(bonus: float) -> void:
-	show_toast("CAMPO LIMPO!  +%s" % NumberFormat.format(bonus), 1.8)
+	show_toast(tr("CAMPO LIMPO!") + "  +%s" % NumberFormat.format(bonus), 1.8)
 
 
 func _on_level_up(level: int) -> void:

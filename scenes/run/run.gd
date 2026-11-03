@@ -248,7 +248,7 @@ func _on_layer_broken(cell: Vector2i, layer: LayerData, bone: bool, xp: float, c
 	_pulse_xp += xp
 	if bone:
 		var bones := state.bone_value()
-		field_view.numbers.spawn(pos - Vector2(0, 22), "+%s %s" % [NumberFormat.format(bones), "osso" if bones < 1.5 else "ossos"], Palette.BONE_SHADOW, false)
+		field_view.numbers.spawn(pos - Vector2(0, 22), tr("+%s osso" if bones < 1.5 else "+%s ossos") % NumberFormat.format(bones), Palette.BONE_SHADOW, false)
 		hud.fly(ResourceIcon.Kind.BONES, _to_screen(pos), bones)
 
 
@@ -276,7 +276,7 @@ func _on_grave_opened(grave: Dictionary, rewards: Dictionary) -> void:
 	var mid := (field_view.cell_center(cells[0] as Vector2i) + field_view.cell_center(cells[1] as Vector2i)) * 0.5
 	field_view.numbers.spawn(mid - Vector2(0, 30), "+%s" % NumberFormat.format(float(rewards.copper)), Palette.LANTERN_BRIGHT, false)
 	var souls := float(rewards.get("souls", 0.0))
-	field_view.numbers.spawn(mid - Vector2(0, 20), "+%s %s  +%s ossos" % [NumberFormat.format(souls), "alma" if souls < 1.5 else "almas", NumberFormat.format(float(rewards.bones))], Palette.SOUL, false)
+	field_view.numbers.spawn(mid - Vector2(0, 20), tr("+%s alma" if souls < 1.5 else "+%s almas") % NumberFormat.format(souls) + "  " + tr("+%s ossos") % NumberFormat.format(float(rewards.bones)), Palette.SOUL, false)
 	field_view.shake(2.0, 0.2)
 	hud.show_toast("COVA ABERTA!", 1.2)
 	Audio.play(&"grave_open")
@@ -315,7 +315,7 @@ func _on_gold_coin_collected(coin: Dictionary, copper: float) -> void:
 func _on_wanderer_collected(wanderer: Dictionary, souls: float) -> void:
 	var pos := field_view.cell_center(wanderer.cell as Vector2i)
 	Audio.play(&"soul_wander")
-	field_view.numbers.spawn(pos - Vector2(0, 18), "+%s alma" % NumberFormat.format(souls), Palette.SOUL, false)
+	field_view.numbers.spawn(pos - Vector2(0, 18), tr("+%s alma" if souls < 1.5 else "+%s almas") % NumberFormat.format(souls), Palette.SOUL, false)
 	# GDD §4.8: a alminha agradece em 1 palavra.
 	field_view.numbers.spawn(pos - Vector2(0, 28), tr(String(THANKS[randi() % THANKS.size()])), Palette.BONE_BRIGHT, false)
 	hud.fly(ResourceIcon.Kind.SOULS, _to_screen(pos), souls)
