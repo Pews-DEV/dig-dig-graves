@@ -74,25 +74,16 @@ func _build_card() -> void:
 		[tr("Noites cavadas"), float(Game.turns_played), "num"],
 		[tr("Covas abertas"), maxf(Game.lifetime_value("graves"), float(_telemetry_graves())), "num"],
 		[tr("Nós comprados"), float(_total_nodes()), "num"],
-		[tr("Chefe vencido em (tentativas)"), float(maxi(1, Game.boss_1_attempts)), "num"],
+		[tr("Tentativas no chefe"), float(maxi(1, Game.boss_1_attempts)), "num"],
 	]
 	for i: int in stats.size():
 		_add_stat(box, String(stats[i][0]), float(stats[i][1]), String(stats[i][2]), start + i * STAT_STAGGER)
-	var future := HBoxContainer.new()
-	future.alignment = BoxContainer.ALIGNMENT_CENTER
-	future.add_theme_constant_override("separation", 6)
+	# GDD §13.2: o estágio seguinte em silhueta (cor 05), "Em breve".
+	var future := Label.new()
+	future.text = tr("Capítulo 2 · Campo dos Indigentes · Em breve")
+	future.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	future.add_theme_color_override("font_color", Palette.color(Palette.MOONSHADOW))
 	box.add_child(future)
-	# GDD §13.2: os estágios seguintes em silhueta, "Em breve".
-	for chapter: String in [tr("Capítulo 2"), tr("Capítulo 3"), tr("Capítulo 4"), tr("Capítulo 5")]:
-		var l := Label.new()
-		l.text = chapter
-		l.add_theme_color_override("font_color", Palette.color(Palette.MOONSHADOW))
-		future.add_child(l)
-	var soon := Label.new()
-	soon.text = tr("Em breve")
-	soon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	soon.add_theme_color_override("font_color", Palette.color(Palette.BONE_SHADOW))
-	box.add_child(soon)
 	var actions := HBoxContainer.new()
 	actions.alignment = BoxContainer.ALIGNMENT_CENTER
 	actions.add_theme_constant_override("separation", 12)

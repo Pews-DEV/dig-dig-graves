@@ -303,8 +303,8 @@ func _build_hall() -> void:
 	row.add_theme_constant_override("separation", 8)
 	column.add_child(row)
 	_add_hall_station(row, "Raízes", "Talentos", _open_skill_tree)
-	_dig_btn = _add_hall_station(row, "Próxima Noite", "Paróquia · Espaço", Game.goto_run)
-	_add_hall_station(row, "Loja", "Chega no Capítulo 2", Callable(), true)
+	_dig_btn = _add_hall_station(row, "Próxima Noite", "Paróquia · Cavar", Game.goto_run)
+	_add_hall_station(row, "Loja", "Capítulo 2", Callable(), true)
 	_add_hall_station(row, "Fazenda", "Em breve", Callable(), true)
 	var boss_row := HBoxContainer.new()
 	boss_row.alignment = BoxContainer.ALIGNMENT_CENTER
