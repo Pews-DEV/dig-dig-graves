@@ -247,3 +247,35 @@ func load_save(data: Dictionary) -> void:
 		var id := StringName(str(key))
 		if nodes.has(id):
 			levels[id] = clampi(int(data[key]), 0, (nodes[id] as SkillNodeData).max_level)
+
+
+# --- Modo de desenvolvedor -------------------------------------------------------
+
+## Total pago pelos níveis atuais, por moeda (devolução do "resetar árvore" do DevTools).
+## Raízes-mestras: 1ª comprada a base × 3^0, 2ª a × 3^1… na ordem dos ids.
+func dev_spent_totals() -> Dictionary:
+	var totals: Dictionary = {}
+	var masters := 0
+	for id: StringName in order:
+		var d := get_node_data(id)
+		var first := 1 if d.starts_owned else 0
+		for lvl: int in range(first, level_of(id)):
+			var cost := 0.0
+			if d.kind == &"M":
+				cost = ceilf(d.base_cost * pow(d.cost_growth, masters))
+				masters += 1
+			else:
+				cost = d.cost_at(lvl)
+			totals[d.currency] = float(totals.get(d.currency, 0.0)) + cost
+	return totals
+
+
+## Lado A de cada encruzilhada = o primeiro id do grupo na ordem dos arquivos.
+func dev_is_side_a(id: StringName) -> bool:
+	var d := get_node_data(id)
+	if d == null or d.exclusive_group == &"":
+		return true
+	for other_id: StringName in order:
+		if get_node_data(other_id).exclusive_group == d.exclusive_group:
+			return other_id == id
+	return true

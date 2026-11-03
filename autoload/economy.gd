@@ -19,6 +19,13 @@ func reset() -> void:
 		balances[c] = 0.0
 
 
+## Modo de desenvolvedor: zera a carteira avisando a HUD.
+func dev_clear() -> void:
+	for c: StringName in CURRENCIES:
+		balances[c] = 0.0
+		Events.currency_changed.emit(c, 0.0)
+
+
 func get_amount(currency: StringName) -> float:
 	return float(balances.get(currency, 0.0))
 

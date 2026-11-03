@@ -472,3 +472,109 @@ func new_game() -> void:
 		SaveManager.bury_save()
 	_reset_progress()
 	save_game()
+
+
+# --- Modo de desenvolvedor (só o autoload DevTools chama) ---------------------------
+
+## Dá 1 nível de graça (sem gastar), com os mesmos sinais da compra. Não salva.
+func dev_grant_node(id: StringName) -> bool:
+	if tree.get_node_data(id) == null or tree.is_maxed(id) or tree.is_sealed(id):
+		return false
+	var revealed := tree.add_level(id)
+	Events.skill_node_bought.emit(id, tree.level_of(id))
+	for r: StringName in revealed:
+		Events.skill_node_revealed.emit(r)
+	return true
+
+
+## Todos os nós no nível máximo; nas encruzilhadas, só o lado A. Retorna os níveis dados.
+func dev_grant_all() -> int:
+	var granted := 0
+	for id: StringName in tree.order:
+		if not tree.dev_is_side_a(id):
+			continue
+		while dev_grant_node(id):
+			granted += 1
+	refresh_stats()
+	save_game()
+	return granted
+
+
+## Compra (de graça) o caminho até `id`: pré-requisitos e um pai por nível. -1 = id inválido/selado.
+func dev_grant_path(id: StringName) -> int:
+	if tree.get_node_data(id) == null or tree.is_sealed(id):
+		return -1
+	var visited: Dictionary = {}
+	var granted := _dev_grant_path(id, 1, visited)
+	refresh_stats()
+	save_game()
+	return granted
+
+
+func _dev_grant_path(id: StringName, min_level: int, visited: Dictionary) -> int:
+	var d := tree.get_node_data(id)
+	if d == null or visited.has(id):
+		return 0
+	visited[id] = true
+	var granted := 0
+	for req: Dictionary in d.requires:
+		var req_id := StringName(str(req.get("id", "")))
+		granted += _dev_grant_path(req_id, int(req.get("level", 1)), visited)
+	if not d.requires_any.is_empty():
+		var any_owned := false
+		for req_id: StringName in d.requires_any:
+			any_owned = any_owned or tree.is_owned(req_id)
+		if not any_owned:
+			granted += _dev_grant_path(d.requires_any[0], 1, visited)
+	if d.requires.is_empty() and d.requires_any.is_empty():
+		var parents := tree.parents_of(id)
+		var parent_owned := false
+		for p: StringName in parents:
+			parent_owned = parent_owned or tree.is_owned(p)
+		if not parent_owned and not parents.is_empty():
+			var pick := parents[0]
+			for p: StringName in parents:
+				if not tree.is_sealed(p):
+					pick = p
+					break
+			granted += _dev_grant_path(pick, 1, visited)
+	while tree.level_of(id) < min_level and dev_grant_node(id):
+		granted += 1
+	return granted
+
+
+## Zera a árvore e devolve o que os níveis atuais custam (por moeda). Mantém os gatilhos.
+func dev_reset_tree_refund() -> Dictionary:
+	var totals := tree.dev_spent_totals()
+	var triggers := tree.trigger_state.duplicate()
+	tree.reset()
+	tree.trigger_state = triggers
+	refresh_stats()
+	for currency: StringName in totals:
+		Economy.add(currency, float(totals[currency]))
+	save_game()
+	return totals
+
+
+## `notify = false` quando o RunState da noite já avisa o Events (evita sinal duplicado).
+func dev_set_unrest(value: float, notify: bool = true) -> void:
+	unrest[area.id] = clampf(value, 0.0, 1.0)
+	if notify:
+		Events.unrest_changed.emit(unrest_of(area.id))
+		if value >= 1.0:
+			Events.unrest_filled.emit(area.id)
+	save_game()
+
+
+func dev_reset_chapter_end() -> void:
+	chapter_1_end_seen = false
+	save_game()
+
+
+## Restaura um snapshot do DevTools: zera tudo, aplica o dicionário e grava no save atual.
+func dev_load_save_dict(data: Dictionary) -> void:
+	_reset_progress()
+	apply_save_dict(data)
+	save_game()
+	for c: StringName in Economy.CURRENCIES:
+		Events.currency_changed.emit(c, Economy.get_amount(c))

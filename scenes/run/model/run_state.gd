@@ -102,6 +102,9 @@ var boss_hop_timer: float = 4.0
 var boss_invulnerable: float = 0.0
 var boss_hops: int = 0
 var boss_rematch: bool = false
+## Modo de desenvolvedor (autoload DevTools): óleo não queima / tipo fixo das próximas lápides.
+var dev_infinite_oil: bool = false
+var dev_forced_grave_type: StringName = &""
 
 
 func _init(p_area: AreaData, p_tool: ToolData, p_balance: BalanceData, p_stats: Dictionary, seed_value: int = 0, p_unrest: float = 0.0, p_boss: bool = false, p_boss_data: BossData = null) -> void:
@@ -312,7 +315,7 @@ func advance(delta: float, cursor: Vector2i) -> void:
 
 
 func _oil_rate() -> float:
-	if oil_frozen():
+	if oil_frozen() or dev_infinite_oil:
 		return 0.0
 	return balance.oil_burn_rate * stat(StatSheet.OIL_BURN)
 
@@ -707,6 +710,8 @@ func spawn_grave_at(head: Vector2i, axis: int, forced_type: StringName = &"") ->
 
 
 func _roll_grave_type() -> StringName:
+	if GRAVE_TYPES.has(dev_forced_grave_type):
+		return dev_forced_grave_type
 	var weights := area.grave_type_weights
 	if weights.size() != GRAVE_TYPES.size():
 		weights = PackedFloat32Array([50.0, 25.0, 25.0])
@@ -951,3 +956,109 @@ func _collect_wanderer(wanderer: Dictionary) -> void:
 	wanderers.erase(wanderer)
 	_wanderer_timer = balance.wanderer_respawn
 	wanderer_collected.emit(wanderer, reward)
+
+
+# --- Modo de desenvolvedor (só o autoload DevTools chama) ---------------------------
+
+func dev_fill_oil() -> void:
+	oil = maxf(oil, oil_start)
+
+
+func dev_end_night() -> void:
+	if not ended:
+		_finish(&"dawn")
+
+
+## Para o turno sem creditar nada (antes de o DevTools trocar de cena).
+func dev_halt() -> void:
+	ended = true
+
+
+func dev_recharge_stomp() -> void:
+	if stomp_cooldown_left > 0.0:
+		stomp_cooldown_left = 0.0
+		stomp_ready.emit()
+
+
+func dev_set_unrest(value: float) -> void:
+	var was_full := unrest >= 1.0
+	var was_warned := unrest >= balance.unrest_warning_at
+	unrest = clampf(value, 0.0, 1.0)
+	result.unrest_end = unrest
+	unrest_changed.emit(unrest)
+	if unrest >= balance.unrest_warning_at and not was_warned:
+		unrest_warned.emit()
+	if unrest >= 1.0 and not was_full:
+		unrest_filled.emit()
+
+
+func dev_win_boss() -> bool:
+	if not boss_active or ended:
+		return false
+	boss_hp = 0.0
+	result.boss_hp_remaining = 0.0
+	boss_changed.emit(boss_hp, boss_hp_max, boss_cells)
+	_boss_victory()
+	return true
+
+
+func dev_lose_boss() -> bool:
+	if not boss_active or ended:
+		return false
+	_finish(&"dawn")
+	return true
+
+
+func dev_spawn_wisp() -> bool:
+	var cell := _dev_free_cell(false)
+	if cell.x < 0:
+		return false
+	var w := {"id": _next_id, "cell": cell, "age": 0.0}
+	_next_id += 1
+	wisps.append(w)
+	wisp_spawned.emit(w)
+	return true
+
+
+func dev_spawn_candle() -> bool:
+	if candles.size() >= balance.candle_max:
+		return false
+	var cell := _dev_free_cell(true)
+	if cell.x < 0:
+		return false
+	field.set_kind(cell, FieldModel.Kind.CANDLE)
+	candles.append(cell)
+	return true
+
+
+func dev_spawn_gold_coin() -> bool:
+	var cell := _dev_free_cell(false)
+	if cell.x < 0:
+		return false
+	gold_coin = {"cell": cell, "age": 0.0}
+	gold_coin_spawned.emit(gold_coin)
+	return true
+
+
+func dev_spawn_wanderer() -> bool:
+	var cell := _dev_free_cell(false)
+	if cell.x < 0:
+		return false
+	wanderers.append({"cell": cell, "from": cell, "moved_at": elapsed})
+	return true
+
+
+## Tile de solo livre fora da área atual (senão o elemento é coletado no mesmo frame).
+func _dev_free_cell(need_intact: bool) -> Vector2i:
+	var under_cursor := area_cells(cursor_cell, true)
+	var cells: Array[Vector2i] = []
+	for i: int in field.tile_count():
+		var cell := field.cell_of(i)
+		if field.kind_of(cell) != FieldModel.Kind.SOIL or field.is_hole(cell) or under_cursor.has(cell):
+			continue
+		if need_intact and not field.is_intact(cell):
+			continue
+		if candles.has(cell):
+			continue
+		cells.append(cell)
+	return cells[rng.randi() % cells.size()] if not cells.is_empty() else Vector2i(-1, -1)
