@@ -92,6 +92,7 @@ func _ready() -> void:
 	_add_row(list, tr("Total de Cobre"), r.copper_total(), ResourceIcon.Kind.COPPER, true)
 
 	box.add_child(HSeparator.new())
+	box.add_child(_build_wallet())
 	box.add_child(_build_next_node())
 
 	_buttons = HBoxContainer.new()
@@ -235,6 +236,28 @@ func _big_button(text: String, action: Callable) -> Button:
 	b.custom_minimum_size = Vector2(130, 0)
 	b.pressed.connect(action)
 	return b
+
+
+## GDD §5: a carteira aparece no Resumo, sempre com as 3 moedas (saldo já com a noite).
+func _build_wallet() -> Control:
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 3)
+	var caption := Label.new()
+	caption.text = tr("Carteira")
+	caption.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	caption.add_theme_color_override("font_color", Palette.color(Palette.BONE_SHADOW))
+	row.add_child(caption)
+	for cur: StringName in [Economy.COPPER, Economy.BONES, Economy.SOULS]:
+		var icon := ResourceIcon.new()
+		icon.kind = ResourceIcon.kind_for_currency(cur)
+		row.add_child(icon)
+		var l := Label.new()
+		l.theme_type_variation = &"HudNumber"
+		l.text = NumberFormat.format(Economy.get_amount(cur))
+		l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(l)
+	return row
 
 
 func _boss_name() -> String:
