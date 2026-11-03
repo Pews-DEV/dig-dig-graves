@@ -18,6 +18,8 @@ const WISP_PATH := "res://assets/sprites/fx/fogo_fatuo.png"
 const WISP_FRAME := Vector2(8, 8)
 const CANDLE_PATH := "res://assets/sprites/props/vela_campo.png"
 const CANDLE_HALO_PATH := "res://assets/sprites/props/vela_campo_halo.png"
+const CANDLE_LIT_PATH := "res://assets/sprites/props/vela_campo_lit.png"
+const GOLD_POP_FRAME := 0.083
 const GOLD_PATH := "res://assets/sprites/fx/moeda_ouro.png"
 const WANDERER_PATH := "res://assets/sprites/chars/title/alma_fila.png"
 const TOMBSTONE_CELL := Vector2(16, 24)
@@ -35,12 +37,19 @@ var _wisp: Texture2D = AssetManifest.texture(WISP_PATH)
 var _soul: Texture2D = AssetManifest.texture(SOUL_PATH)
 var _candle: Texture2D = AssetManifest.texture(CANDLE_PATH)
 var _candle_halo: Texture2D = AssetManifest.texture(CANDLE_HALO_PATH)
+var _candle_lit: Texture2D = AssetManifest.texture(CANDLE_LIT_PATH)
+var _coin_pops: Array[Dictionary] = []
+var _connected: bool = false
 var _gold_coin: Texture2D = AssetManifest.texture(GOLD_PATH)
 var _wanderer: Texture2D = AssetManifest.texture(WANDERER_PATH)
 
 
 func _process(delta: float) -> void:
 	_time += delta
+	if draw_props and state != null and not _connected:
+		_connected = true
+		state.gold_coin_collected.connect(func(coin: Dictionary, _copper: float) -> void:
+			_coin_pops.append({"pos": tiles.map_to_local(coin.cell as Vector2i), "t": _time}))
 	queue_redraw()
 
 
@@ -146,19 +155,38 @@ func _draw_props() -> void:
 		var center := tiles.map_to_local(cell)
 		if _candle_halo != null:
 			draw_texture(_candle_halo, center - Vector2(32, 16))
-		if _candle != null:
+		# MANIFEST vela_campo_lit: dentro do raio da lanterna usa a versão iluminada.
+		var candle := _candle_lit if _candle_lit != null and _is_lit(cell) else _candle
+		if candle != null:
 			var frame := int(_time * 8.0) % 3
-			draw_texture_rect_region(_candle, Rect2(center - Vector2(16, 16), Vector2(32, 24)), Rect2(frame * 32, 0, 32, 24))
+			draw_texture_rect_region(candle, Rect2(center - Vector2(16, 16), Vector2(32, 24)), Rect2(frame * 32, 0, 32, 24))
 	if not state.gold_coin.is_empty() and _gold_coin != null:
 		var c: Vector2i = state.gold_coin.cell
 		var frame := int(_time * 10.0) % 4
 		draw_texture_rect_region(_gold_coin, Rect2(tiles.map_to_local(c) - Vector2(4, 13), Vector2(8, 8)), Rect2(frame * 8, 0, 8, 8))
+	# MANIFEST moeda_ouro `pop`: frames 4–6, 83 ms cada, depois some.
+	for pop: Dictionary in _coin_pops.duplicate():
+		var age := _time - float(pop.t)
+		var pop_frame := 4 + int(age / GOLD_POP_FRAME)
+		if pop_frame > 6 or _gold_coin == null:
+			_coin_pops.erase(pop)
+			continue
+		draw_texture_rect_region(_gold_coin, Rect2((pop.pos as Vector2) - Vector2(4, 13), Vector2(8, 8)), Rect2(pop_frame * 8, 0, 8, 8))
 	if _wanderer != null:
+		var move_time := maxf(0.001, state.balance.wanderer_move_interval)
 		for w: Dictionary in state.wanderers:
 			var c: Vector2i = w.cell
+			# GDD §4.8: a alminha flutua devagar do tile anterior até o atual.
+			var from: Vector2i = w.get("from", c)
+			var k := clampf((state.elapsed - float(w.get("moved_at", 0.0))) / move_time, 0.0, 1.0)
+			var p := tiles.map_to_local(from).lerp(tiles.map_to_local(c), k).round()
 			var frame := int(_time * 7.0) % 4
 			var bob := roundf(sin(_time * 4.0 + float(c.x + c.y)) * 1.0)
-			draw_texture_rect_region(_wanderer, Rect2(tiles.map_to_local(c) - Vector2(4, 13 + bob), Vector2(8, 10)), Rect2(frame * 8, 0, 8, 10))
+			var flip := tiles.map_to_local(c).x < tiles.map_to_local(from).x
+			var src := Rect2(frame * 8, 0, 8, 10)
+			if flip:
+				src = Rect2(frame * 8 + 8, 0, -8, 10)
+			draw_texture_rect_region(_wanderer, Rect2(p - Vector2(4, 13 + bob), Vector2(8, 10)), src)
 
 
 func _draw_tombstone(pivot: Vector2, variant: int) -> void:
@@ -207,7 +235,7 @@ func _draw_soul(base: Vector2, t: float) -> void:
 
 ## Fogo-fátuo (DA §8.2): 8×8, núcleo 29/23, corpo 28, halo 27; flutua 2 px; pisca no fim.
 func _draw_wisp(center: Vector2, age: float) -> void:
-	var life := state.balance.wisp_lifetime
+	var life := state.stat(StatSheet.WISP_LIFE)
 	if age > life - 1.0 and int(age * 10.0) % 2 == 1:
 		return
 	var bob := roundf(sin((_time + age) * 4.0) * 2.0)

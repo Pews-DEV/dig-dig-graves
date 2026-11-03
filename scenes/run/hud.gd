@@ -56,6 +56,9 @@ var _toast_time: float = 0.0
 var _grave_tooltip: PanelContainer
 var _grave_tooltip_title: Label
 var _grave_tooltip_effect: Label
+var _grave_tooltip_icon: TextureRect
+var _lapide_icon_cache: Dictionary = {}
+var _lapide_icons: Texture2D = AssetManifest.texture_by_id("icons_lapide")
 var _options: OptionsMenu
 var _t: float = 0.0
 var _last_oil_second: int = -1
@@ -526,6 +529,14 @@ func update_grave_tooltip(grave: Dictionary, screen_position: Vector2) -> void:
 			title_key = "Foto oval"
 			effect_key = "Cova normal"
 	_grave_tooltip_title.text = tr(title_key)
+	if _lapide_icons != null:
+		var variant := int(grave.get("variant", 0))
+		if not _lapide_icon_cache.has(variant):
+			var icon := AtlasTexture.new()
+			icon.atlas = _lapide_icons
+			icon.region = Rect2(8 * variant, 0, 8, 8)
+			_lapide_icon_cache[variant] = icon
+		_grave_tooltip_icon.texture = _lapide_icon_cache[variant] as Texture2D
 	_grave_tooltip_effect.text = tr(effect_key)
 	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
 	var pos := screen_position.floor() + Vector2(12, 14)
@@ -549,11 +560,21 @@ func _build_grave_tooltip() -> void:
 	column.add_theme_constant_override("separation", 1)
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_grave_tooltip.add_child(column)
+	# MANIFEST icons_lapide: ícone 8×8 do tipo ao lado do nome (coluna = coluna de `lapide`).
+	var title_row := HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 3)
+	title_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_child(title_row)
+	_grave_tooltip_icon = TextureRect.new()
+	_grave_tooltip_icon.custom_minimum_size = Vector2(8, 8)
+	_grave_tooltip_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_grave_tooltip_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	title_row.add_child(_grave_tooltip_icon)
 	_grave_tooltip_title = Label.new()
 	_grave_tooltip_title.theme_type_variation = &"TooltipLabel"
-	_grave_tooltip_title.custom_minimum_size = Vector2(208, 12)
+	_grave_tooltip_title.custom_minimum_size = Vector2(197, 12)
 	_grave_tooltip_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	column.add_child(_grave_tooltip_title)
+	title_row.add_child(_grave_tooltip_title)
 	_grave_tooltip_effect = Label.new()
 	_grave_tooltip_effect.theme_type_variation = &"TooltipLabel"
 	_grave_tooltip_effect.custom_minimum_size = Vector2(208, 22)

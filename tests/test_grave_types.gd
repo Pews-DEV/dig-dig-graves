@@ -10,6 +10,7 @@ func _initialize() -> void:
 	_test_tombstone_identity()
 	_test_cross_rewards()
 	_test_moss_coffin_and_bones()
+	_test_wanderer_drift()
 	finish()
 
 
@@ -80,3 +81,14 @@ func _test_moss_coffin_and_bones() -> void:
 	var reward_grave := reward_run.spawn_grave_at(HEAD, 0, RunState.GRAVE_TYPE_MOSS)
 	reward_run._open_grave(reward_grave)
 	check_eq(float(reward_run.result.bones), 6.0, "lápide com musgo dobra os Ossos da cova")
+
+
+func _test_wanderer_drift() -> void:
+	var stats := base_stats({StatSheet.GRAVE_COUNT: 0.0, StatSheet.WANDERERS: 1.0})
+	var run := RunState.new(load_area(), load_tool(), clean_balance(), stats, 31)
+	check_eq(run.wanderers.size(), 1, "S04: 1 alminha errante no campo")
+	var before: Vector2i = run.wanderers[0].cell
+	run.advance(run.balance.wanderer_move_interval + 0.01, Vector2i(-100, -100))
+	var after: Vector2i = run.wanderers[0].cell
+	check(absi(after.x - before.x) + absi(after.y - before.y) <= 1, "alminha flutua para um tile vizinho (não teleporta)")
+	check(run.wanderers[0].has("from"), "alminha guarda o tile de origem para a animação")
