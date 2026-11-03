@@ -4,6 +4,9 @@ Itens combinados e ainda não feitos. Ao concluir um item, marque com ✔ e o co
 
 ## Fechar o Marco A
 - [ ] Rodar a suíte de testes e o `sim_campaign`. As regras novas (musgo, tremores, Herança, Segundo Fôlego, Constelação) mexem no ritmo, e `test_core`/`test_grave_types` mudaram com as regras.
+- [ ] Testes que já falham (vistos na entrega do modo dev):
+  - `test_core` espera regeneração mínima de 6 s, mas o GDD §4.7 diz 5 s: corrigir o teste.
+  - `test_chapter_end_flow` falha em "Continuar cavando": investigar.
 - [ ] 3 playtests com o `08_PLAYTEST_MARCO_A.md` e o build `builds/Dig Dig Graves.exe`.
 - [ ] Ajuste de ritmo pelas fichas (GDD §14.3): 1º nó ≤ 40 s, chefe aos 35–45 min, nenhuma sequência de 5 noites sem compra.
 - [ ] Conferir com o jogo aberto:
