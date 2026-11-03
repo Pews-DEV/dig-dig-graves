@@ -138,8 +138,11 @@ func _build_world() -> void:
 	deep_soil.size = Vector2(TreeArt.WORLD.x, TreeArt.WORLD.y - TreeArt.GRASS_Y)
 	deep_soil.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_world.add_child(deep_soil)
+	var soil_wide := TreeArt.tex(TreeArt.SOIL_WIDE_FILE)
 	var soil := TreeArt.tex("tree_soil.png")
-	if soil != null:
+	if soil_wide != null:
+		_add_tex(soil_wide, TreeArt.SOIL_WIDE_POS)  # já cobre o mundo v2 inteiro
+	elif soil != null:
 		var x := 0.0
 		while x < TreeArt.WORLD.x:
 			_add_tex(soil, TreeArt.SOIL_POS + Vector2(x, 0))
@@ -150,8 +153,11 @@ func _build_world() -> void:
 	var trunk := TreeArt.tex("tree_trunk.png")
 	if trunk != null:
 		_add_tex(trunk, TreeArt.TRUNK_POS)
+	var grass_wide := TreeArt.tex(TreeArt.GRASS_WIDE_FILE)
 	var grass := TreeArt.tex("tree_grass.png")
-	if grass != null:
+	if grass_wide != null:
+		_add_tex(grass_wide, TreeArt.GRASS_POS)
+	elif grass != null:
 		var grass_x := 0.0
 		while grass_x < TreeArt.WORLD.x:
 			_add_tex(grass, TreeArt.GRASS_POS + Vector2(grass_x, 0))
@@ -575,7 +581,11 @@ func _process(delta: float) -> void:
 func _apply_camera() -> void:
 	var p := _cam.pixel_pos()
 	_world.position = -p
-	_sky.position = Vector2(-p.x, -roundf(p.y * TreeArt.SKY_PARALLAX))
+	if _sky.wide:
+		# MANIFEST tree_sky_wide: parallax 0,5 nos dois eixos (desenhar em −câmera × 0,5).
+		_sky.position = (-p * TreeArt.SKY_PARALLAX).round()
+	else:
+		_sky.position = Vector2(-p.x, -roundf(p.y * TreeArt.SKY_PARALLAX))
 
 
 func _scroll_to_node(id: StringName) -> void:
@@ -752,11 +762,24 @@ func _root_list() -> Array[Dictionary]:
 			out.append({"key": "trunk>" + String(id), "from": TreeArt.TRUNK_ROOT, "to": d.tree_position, "bought": true})
 		if not tree.is_revealed(id):
 			continue
+		var forks := _crossroad_forks(id)
+		for fork: Dictionary in forks:
+			var any_owned := false
+			for c: StringName in fork.children:
+				any_owned = any_owned or tree.is_owned(c)
+			# Tronco da encruzilhada: do pai, reto para baixo, até a emenda em Y (root_y).
+			out.append({"key": String(id) + ">Y" + String(fork.group), "from": fork.stem_from,
+				"to": fork.stem_to, "bought": any_owned, "joint": fork.joint})
 		for child: StringName in d.children:
 			if not _buttons.has(child) or not (tree.is_revealed(child) or tree.is_hinted(child)):
 				continue
 			var to := tree.get_node_data(child).tree_position
 			var from := TreeLayout.root_start(d.tree_position, to, TreeLayout.decor_bottom_for(tree, id))
+			for fork: Dictionary in forks:
+				if (fork.children as Array).has(child):
+					var joint: Vector2 = fork.joint
+					# Filhos saem pelas bordas esquerda/direita da peça 8×4 (TreeLayout.root_y_exit).
+					from = TreeLayout.root_y_exit(joint, to.x < joint.x)
 			var blockers: Array[Rect2] = []
 			for other: StringName in _buttons:
 				if other == id or other == child:
@@ -769,6 +792,43 @@ func _root_list() -> Array[Dictionary]:
 			blockers.append(TreeLayout.label_rect(to))
 			out.append({"key": String(id) + ">" + String(child), "from": from,
 				"to": to, "bought": tree.is_owned(child), "obstacles": blockers})
+	return out
+
+
+## Encruzilhadas (UI/UX §18.1, tipo X) do nó `id`: pares de filhos visíveis do mesmo
+## `exclusive_group`, um de cada lado do pai. Cada um vira {group, children, joint, stem_from, stem_to}.
+func _crossroad_forks(id: StringName) -> Array[Dictionary]:
+	var tree := Game.tree
+	var d := tree.get_node_data(id)
+	var groups: Dictionary = {}  # StringName -> Array[StringName]
+	for child: StringName in d.children:
+		if not _buttons.has(child) or not (tree.is_revealed(child) or tree.is_hinted(child)):
+			continue
+		var g: StringName = tree.get_node_data(child).exclusive_group
+		if g == &"":
+			continue
+		if not groups.has(g):
+			var fresh: Array[StringName] = []
+			groups[g] = fresh
+		var members: Array[StringName] = groups[g]
+		members.append(child)
+	var out: Array[Dictionary] = []
+	for g: StringName in groups:
+		var kids: Array[StringName] = groups[g]
+		if kids.size() < 2:
+			continue
+		var left := false
+		var right := false
+		for k: StringName in kids:
+			var kx: float = tree.get_node_data(k).tree_position.x
+			left = left or kx < d.tree_position.x
+			right = right or kx > d.tree_position.x
+		if not (left and right):
+			continue  # Y só com um filho de cada lado (a peça abre para os dois lados)
+		var stem_from := d.tree_position + Vector2(0, TreeLayout.decor_bottom_for(tree, id) + 1.0)
+		var joint := TreeLayout.root_y_joint(d.tree_position)
+		out.append({"group": g, "children": kids, "joint": joint,
+			"stem_from": stem_from, "stem_to": TreeLayout.root_y_entry(joint)})
 	return out
 
 

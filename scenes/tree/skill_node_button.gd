@@ -21,6 +21,26 @@ const MEDALLIONS_PATH := "res://assets/ui/tree/medallions32.png"
 const ICONS_PATH := "res://assets/ui/tree/node_icons.png"
 const PIPS_PATH := "res://assets/ui/tree/pips.png"
 const BADGE_PATH := "res://assets/ui/tree/fx_new_badge.png"
+## ART-A2 (MANIFEST frame_*): sobreposições por tipo, lado selado e Raízes-mestras.
+const FRAME_AT_PATH := "res://assets/ui/tree/frame_at.png"
+const FRAME_R_PATH := "res://assets/ui/tree/frame_r.png"
+const FRAME_D_PATH := "res://assets/ui/tree/frame_d.png"
+const FRAME_SEALED_PATH := "res://assets/ui/tree/frame_sealed.png"
+const FRAME_MASTERS_PATH := "res://assets/ui/tree/frame_masters.png"
+## frame_masters: células 40×40; canto = centro do nó − (20, 20) = canto do medalhão 32 − (4, 4).
+const MASTER_SIZE := 40
+const MASTER_INSET := Vector2(4, 4)
+const MASTER_COLUMN: Dictionary = {
+	SkillNodeData.Branch.CENTER: 0,
+	SkillNodeData.Branch.DIG: 0,
+	SkillNodeData.Branch.LANTERN: 1,
+	SkillNodeData.Branch.FORTUNE: 2,
+	SkillNodeData.Branch.CEMETERY: 3,
+	SkillNodeData.Branch.HELPERS: 4,
+	SkillNodeData.Branch.SOULS: 5,
+	SkillNodeData.Branch.LUNAR: 0,
+}
+const MASTER_COL_SHADOW := 6
 const MEDALLION_COLUMN: Dictionary = {
 	SkillNodeData.Branch.CENTER: 0,
 	SkillNodeData.Branch.DIG: 0,
@@ -49,6 +69,9 @@ static var _medallions: Texture2D
 static var _icons: Texture2D
 static var _pips: Texture2D
 static var _badge: Texture2D
+static var _frame_kinds: Dictionary = {}  # kind (StringName) -> Texture2D
+static var _frame_sealed: Texture2D
+static var _frame_masters: Texture2D
 static var _checked: bool = false
 
 var node_id: StringName
@@ -72,6 +95,13 @@ static func _load_textures() -> void:
 	_icons = AssetManifest.texture(ICONS_PATH)
 	_pips = AssetManifest.texture(PIPS_PATH)
 	_badge = AssetManifest.texture(BADGE_PATH)
+	_frame_kinds = {
+		&"At": AssetManifest.texture(FRAME_AT_PATH),
+		&"R": AssetManifest.texture(FRAME_R_PATH),
+		&"D": AssetManifest.texture(FRAME_D_PATH),
+	}
+	_frame_sealed = AssetManifest.texture(FRAME_SEALED_PATH)
+	_frame_masters = AssetManifest.texture(FRAME_MASTERS_PATH)
 
 
 func _init() -> void:
@@ -161,7 +191,10 @@ func _draw() -> void:
 		# Oculto: silhueta com "?" que oscila levemente (±1 px).
 		var wobble := Vector2(0, roundf(sin(_t * 2.0)) * (1.0 if not Juice.reduce_motion() else 0.0))
 		if tree.is_master(node_id):
-			_draw_master_ring(off + wobble, Palette.NIGHT, Palette.BG)  # silhueta 40×40 (UI/UX §18.1)
+			# Silhueta 40×40 da Raiz-mestra (UI/UX §18.1): frame_master_shadow, sem ícone.
+			if _draw_master_frame(MASTER_COL_SHADOW, off + wobble):
+				return
+			_draw_master_ring(off + wobble, Palette.NIGHT, Palette.BG)
 		_draw_medallion(COL_HIDDEN, 0, d, off + wobble)
 		return
 	if tree.is_sealed(node_id) and not preview_only:
@@ -177,11 +210,14 @@ func _draw() -> void:
 		row = 0 if f == 0 else 1
 	elif affordable and not preview_only and int(_t / BREATH) % 2 == 1:
 		row = 1  # halo de respirar
-	if d.kind == &"M":
-		_draw_master_ring(off, Palette.COFFIN_DARK, Palette.COFFIN_LIGHT)
-	_draw_medallion(col, row, d, off)
-	_draw_kind(d.kind, off)
+	# Raiz-mestra: frame_masters substitui o medalhão 32 (ícone em (12, 12) da célula 40).
+	var master_drawn: bool = d.kind == &"M" and _draw_master_frame(int(MASTER_COLUMN.get(d.branch, 0)), off)
+	if not master_drawn:
+		if d.kind == &"M":
+			_draw_master_ring(off, Palette.COFFIN_DARK, Palette.COFFIN_LIGHT)
+		_draw_medallion(col, row, d, off)
 	_draw_icon(d, off)
+	_draw_kind(d.kind, off)
 	if preview_only:
 		return
 	var lvl := tree.level_of(node_id)
@@ -221,9 +257,22 @@ func _draw_medallion(col: int, row: int, d: SkillNodeData, off: Vector2) -> void
 			draw_rect(Rect2(o + Vector2(k + 1, 33), Vector2.ONE), Palette.color(int(colors[1])))
 
 
-## Molduras por tipo (UI/UX §18.1, DA §10.3), desenhadas por cima do medalhão do ramo
-## enquanto `frame_at/r/d` não entram no MANIFEST.
+## Célula de frame_masters no lugar do medalhão. false = sem a arte (usa o fallback).
+func _draw_master_frame(col: int, off: Vector2) -> bool:
+	if _frame_masters == null:
+		return false
+	var cell := Vector2(MASTER_SIZE, MASTER_SIZE)
+	draw_texture_rect_region(_frame_masters, Rect2(off - MASTER_INSET, cell), Rect2(Vector2(col * MASTER_SIZE, 0), cell))
+	return true
+
+
+## Molduras por tipo (UI/UX §18.1, DA §10.3): frame_at/r/d por cima do medalhão do ramo e do
+## ícone, no mesmo canto (o quadrado do ícone é transparente). Sem a arte, desenho por código.
 func _draw_kind(kind: StringName, off: Vector2) -> void:
+	var overlay: Texture2D = _frame_kinds.get(kind, null) as Texture2D
+	if overlay != null:
+		draw_texture(overlay, off)
+		return
 	match kind:
 		&"At":
 			# Aro com 4 raios de luz 26 nas diagonais: "botão novo".
@@ -268,6 +317,9 @@ func _draw_master_ring(off: Vector2, dark: int, light: int) -> void:
 
 ## Selado (UI/UX §18.1): pedra fria 06/07, sem respirar, raiz cortada e "×" 8×8.
 func _draw_sealed(off: Vector2) -> void:
+	if _frame_sealed != null:
+		draw_texture(_frame_sealed, off)  # MANIFEST frame_sealed: no lugar do medalhão, sem ícone
+		return
 	_oct(Rect2(off, Vector2(32, 32)), Palette.OUTLINE)
 	_oct(Rect2(off + Vector2(1, 1), Vector2(30, 30)), Palette.STONE_DARK)
 	_oct(Rect2(off + Vector2(4, 4), Vector2(24, 24)), Palette.STONE)

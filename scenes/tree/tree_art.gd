@@ -13,6 +13,13 @@ const CANOPY_POS := Vector2(760, 64)
 const CANOPY_FRAME := Vector2(416, 100)
 const TRUNK_POS := Vector2(896, 100)
 const GRASS_POS := Vector2(0, 168)
+## ART-A2: fundos do mundo v2 (MANIFEST tree_sky_wide, tree_grass_wide, tree_soil_wide).
+const SKY_WIDE_FILE := "tree_sky_wide.png"
+const GRASS_WIDE_FILE := "tree_grass_wide.png"
+const SOIL_WIDE_FILE := "tree_soil_wide.png"
+const SOIL_WIDE_POS := Vector2(0, 176)
+const SKY_WIDE_MOON := Vector2(416, 58)
+const SKY_WIDE_SIZE := Vector2(1936, 176)
 
 static var _cache: Dictionary = {}
 

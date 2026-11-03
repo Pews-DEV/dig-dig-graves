@@ -13,6 +13,11 @@ const HALO_OUT := 23.0
 ## [brilho, miolo, sombra]
 const COLORS_OFF: Array[int] = [Palette.COFFIN, Palette.COFFIN_DARK, Palette.OUTLINE]
 const COLORS_ON: Array[int] = [Palette.DIRT_EDGE, Palette.COFFIN_LIGHT, Palette.COFFIN]
+const ROOT_Y_PATH := "res://assets/ui/tree/root_y.png"
+const ROOT_Y_CELL := 8
+const ROOT_Y_COL_FROM_TOP := 0
+
+var _root_y: Texture2D = AssetManifest.texture(ROOT_Y_PATH)
 
 ## key -> {points: Array[Vector2i], steep: Array[bool], bought: bool, grow: float}
 var roots: Dictionary = {}
@@ -42,6 +47,7 @@ func set_roots(list: Array[Dictionary]) -> void:
 		var path := _path(r.from as Vector2, r.to as Vector2, obstacles)
 		next[key] = {
 			"points": path[0], "steep": path[1], "bought": bool(r.bought),
+			"joint": r.get("joint", null),
 			"grow": float(old.get("grow", 1.0)),
 			"sap_t": float(old.get("sap_t", randf() * SAP_EVERY)),
 		}
@@ -102,6 +108,10 @@ func _draw() -> void:
 		_draw_root(roots[key] as Dictionary, true)
 	for key: String in roots:
 		_draw_root(roots[key] as Dictionary, false)
+	for key: String in roots:
+		var r: Dictionary = roots[key]
+		if r.get("joint") is Vector2 and float(r.grow) >= 1.0:
+			_draw_joint(r.joint as Vector2, bool(r.bought))
 	for b: Dictionary in _bits:
 		draw_rect(Rect2((b.pos as Vector2).floor(), Vector2.ONE), Palette.color(int(b.color)))
 
@@ -126,6 +136,23 @@ func _draw_root(r: Dictionary, edges: bool) -> void:
 				draw_rect(Rect2(p.x - 1, p.y, 2, 1), Palette.color(colors[1]))
 			else:
 				draw_rect(Rect2(p.x, p.y - 1, 1, 2), Palette.color(colors[1]))
+
+
+## Emenda em "Y" da encruzilhada (MANIFEST root_y): linha 0 = apagada, 1 = acesa; coluna 0 =
+## raiz-mãe entrando por cima (peça 8×4 em (0, 2) da célula). Já vem desenhada em cada
+## orientação: nada de girar aqui, para não inverter a luz NO.
+func _draw_joint(joint: Vector2, bought: bool) -> void:
+	var origin := TreeLayout.root_y_piece_origin(joint)
+	if _root_y != null:
+		var src := Rect2(ROOT_Y_COL_FROM_TOP * ROOT_Y_CELL, (1 if bought else 0) * ROOT_Y_CELL + 2, TreeLayout.ROOT_Y_PIECE.x, TreeLayout.ROOT_Y_PIECE.y)
+		draw_texture_rect_region(_root_y, Rect2(origin, TreeLayout.ROOT_Y_PIECE), src)
+		return
+	# Sem a arte: barra 8×4 (brilho, miolo, miolo, sombra) com a mãe abrindo por cima.
+	var colors: Array[int] = COLORS_ON if bought else COLORS_OFF
+	draw_rect(Rect2(origin, Vector2(8, 1)), Palette.color(colors[0]))
+	draw_rect(Rect2(origin + Vector2(0, 1), Vector2(8, 2)), Palette.color(colors[1]))
+	draw_rect(Rect2(origin + Vector2(0, 3), Vector2(8, 1)), Palette.color(colors[2]))
+	draw_rect(Rect2(origin + Vector2(3, 0), Vector2(2, 1)), Palette.color(colors[1]))
 
 
 ## Halo âmbar em xadrez em volta dos nós comprados (mais ralo para fora).

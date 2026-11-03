@@ -72,6 +72,33 @@ static func root_start(parent: Vector2, child: Vector2, parent_decor_bottom: flo
 	return parent + Vector2(signf(dx) * SIDE_EXIT.x, SIDE_EXIT.y)
 
 
+## Encruzilhada (MANIFEST root_y): o tronco desce reto do pai até a emenda J (abaixo da caixa
+## do custo, mesmo sem custo, para os filhos não nascerem dentro dela); a mãe
+## vertical tem o miolo nas colunas J.x − 1 e J.x e os filhos horizontais nas linhas J.y − 1 e
+## J.y, então a peça 8×4 (coluna 0 = mãe entrando por cima) vai com o canto em J − (4, 2).
+## Folga entre a caixa do custo do pai e a emenda (os filhos não podem nascer dentro dela).
+const ROOT_Y_GAP := 5.0
+const ROOT_Y_PIECE := Vector2(8, 4)
+
+
+static func root_y_joint(parent: Vector2) -> Vector2:
+	return (parent + Vector2(0, decor_bottom(true, true) + ROOT_Y_GAP)).round()
+
+
+static func root_y_piece_origin(joint: Vector2) -> Vector2:
+	return joint - Vector2(4, 2)
+
+
+## Onde o tronco termina: linha de cima da peça.
+static func root_y_entry(joint: Vector2) -> Vector2:
+	return joint - Vector2(0, 2)
+
+
+## Onde cada filho começa: borda esquerda ou direita da peça, na linha do miolo.
+static func root_y_exit(joint: Vector2, left: bool) -> Vector2:
+	return joint + (Vector2(-4, 0) if left else Vector2(3, 0))
+
+
 ## Enfeites de um nó revelado no estado atual do modelo (o mesmo que o medalhão desenha).
 static func decor_bottom_for(tree: SkillTreeModel, id: StringName) -> float:
 	var d := tree.get_node_data(id)

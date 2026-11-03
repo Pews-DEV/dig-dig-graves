@@ -126,14 +126,26 @@ class SkyLayer:
 	extends Node2D
 
 	const MOON := Vector2(92, 50)
+	## Estrelas que cintilam por cima do céu largo (o tree_sky_wide já traz as fixas).
+	const WIDE_TWINKLES := 48
 	var _stars: Array[Dictionary] = []
 	var _t: float = 0.0
+	## ART-A2: tree_sky_wide (1936×176, parallax 0,5 nos dois eixos); sem ele, o tree_sky antigo.
+	var _sky_wide: Texture2D = TreeArt.tex(TreeArt.SKY_WIDE_FILE)
 	var _sky: Texture2D = TreeArt.tex("tree_sky.png")
 	var _star_tex: Texture2D = TreeArt.tex("tree_stars.png")
+	var wide: bool = _sky_wide != null
 
 	func _ready() -> void:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = 33
+		if wide:
+			while _stars.size() < WIDE_TWINKLES:
+				var q := Vector2(rng.randi_range(6, int(TreeArt.SKY_WIDE_SIZE.x) - 6), rng.randi_range(6, 120))
+				if q.distance_to(TreeArt.SKY_WIDE_MOON) < 34.0:
+					continue  # longe da lua
+				_stars.append({"p": q, "row": 1 if rng.randf() < 0.25 else 0, "phase": rng.randf() * 10.0, "speed": rng.randf_range(0.12, 0.35)})
+			return
 		while _stars.size() < 26:
 			var p := Vector2(rng.randi_range(6, 634), rng.randi_range(6, 92))
 			if p.distance_to(MOON) < 34.0 or (p.x > 150 and p.x < 490 and p.y > 20):
@@ -145,7 +157,9 @@ class SkyLayer:
 		queue_redraw()
 
 	func _draw() -> void:
-		if _sky != null:
+		if wide:
+			draw_texture(_sky_wide, Vector2.ZERO)
+		elif _sky != null:
 			draw_texture(_sky, Vector2.ZERO)
 		else:
 			draw_rect(Rect2(0, 0, 640, 128), Palette.color(Palette.BG))
