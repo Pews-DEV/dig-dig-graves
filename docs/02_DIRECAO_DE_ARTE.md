@@ -404,8 +404,8 @@ Flash de dano = todas as cores por 23 por 1 frame (§9.2), igual para todos.
 | `frame_at` · `frame_r` · `frame_d` | 32×32 (sobre o medalhão do ramo) | Aro de ativo (4 raios 26), de regra (pontos 28 em 8 direções) e de desbloqueio (cadeado aberto 8×8) | A |
 | `frame_master_<ramo>` (×6) + `frame_master_shadow` | 40×40 | Medalhão grande com raízes abraçando, na cor do ramo; silhueta 02 | A |
 | `frame_sealed` | 32×32 | Pedra 06/07, raiz cortada e "×" 8×8 | A |
-| `root_y` | 8×4 tira | Raiz em "Y" da encruzilhada (mesmo estilo de `tree_roots`) | A |
-| `tree_soil_wide` · `tree_sky_wide` · `tree_grass_wide` | 1936×848 · 1936×176 · 1936×16 | Árvore v2 (mundo 1936×1024); pode ser montado por tiles de 64 px | A |
+| `root_y` | atlas 32×16, células 8×8 (4 orientações × apagada/acesa) | Raiz em "Y" da encruzilhada (mesmo estilo de `tree_roots`); cada orientação é desenhada à parte, sem rotação na engine, para não inverter a luz NO | A |
+| `tree_soil_wide` · `tree_sky_wide` · `tree_grass_wide` | 1936×848 · 1936×176 · 1936×16 | Árvore v2 (mundo 1936×1024); pode ser montado por tiles de 64 px; 6 veios verticais escuros, um em cada fronteira entre os 7 ramos | A |
 | `minimap_frame` | 104×56 | Moldura de madeira do minimapa | A |
 | `hud_stomp` · `hud_flare` | 20×20 (+ estado apagado) | Bota pisando a terra; fósforo com chama | A · B |
 | `hud_active_frame` · `hud_pips` | 28×28 · 4×4 | Plaqueta do ativo e pips de recarga | A |
