@@ -14,6 +14,7 @@ Itens combinados e ainda não feitos. Ao concluir um item, marque com ✔ e o co
   - Pátio: balão do Tião sobre o título e clique no Tião acionando a Próxima Noite.
   - Falas que cabem no balão em ja/ko/ru/de.
 - [ ] Unificar nomes no `translations.csv`: "Caixão Fujão" em alemão (ficar com *Flüchtiger Sarg*, não *Ausreißer-Sarg*) e "Campo dos Indigentes" sem tradução em italiano.
+- [ ] Revisar a coluna `ko` do `translations.csv`: algumas traduções coreanas estão em chinês (ex.: "Óleo da lanterna" → "灯笼油量", "Óleo por fogo-fátuo").
 - [ ] Abrir no Aseprite os `.aseprite` da ART-A2, que foram gravados por script, e confirmar que abrem.
 - [ ] `devlog/devlog01.md` e parada para revisão.
 
