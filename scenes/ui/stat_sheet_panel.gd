@@ -6,12 +6,12 @@ extends CanvasLayer
 ## UI/UX §22 pede ~480×280; 296 de altura deixa a Ficha base inteira sem rolagem.
 const PANEL_RECT := Rect2(80, 32, 480, 296)
 const COLUMN_GAP := 14
-const ROW_HEIGHT := 12
+const ROW_HEIGHT := 13  # 12 de texto + 1 px de folga entre valores vizinhos
 const TOOLTIP_WIDTH := 196
 const DIVIDER_COLOR := Palette.DIRT_EDGE  # UI/UX §22: linha fina 17
 const ROW_HOVER_COLOR := Palette.BONE_SHADOW
 ## As fontes pixel têm ascent de sobra (m6x11plus 18: altura 18, ascent 15). Na Ficha as linhas
-## usam variações aparadas: as duas fontes ficam com a linha de base em y = 10 e a linha em 12 px.
+## usam variações aparadas: as duas fontes ficam com a linha de base em y = 10 (texto em 12 px).
 const BODY_TRIM := Vector2i(-1, -1)  # topo, base (m5x7 16: 13 → 11 px, ascent 10)
 const TITLE_TRIM := Vector2i(-5, -1)  # m6x11plus 18: 18 → 12 px, ascent 10
 

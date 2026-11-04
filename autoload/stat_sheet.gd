@@ -120,8 +120,9 @@ const GROUP_TITLES: Dictionary = {
 	&"gains": "Ganhos",
 	&"abilities": "Habilidades",
 }
-const SHEET_LEFT: Array[StringName] = [&"strike", &"stomp"]
-const SHEET_RIGHT: Array[StringName] = [&"lantern", &"field", &"gains"]
+## Campo fica à esquerda para equilibrar as alturas das colunas.
+const SHEET_LEFT: Array[StringName] = [&"strike", &"stomp", &"field"]
+const SHEET_RIGHT: Array[StringName] = [&"lantern", &"gains"]
 ## Rótulo curto na Ficha (o completo vai no tooltip). Sem entrada = rótulo de DISPLAY.
 const SHORT_LABELS: Dictionary = {
 	&"deep_mult": "Camadas fundas",
