@@ -5,3 +5,6 @@
 # Ferramentas de áudio grandes (SoundFonts, binários)
 audio_src/_tools/
 __pycache__/
+
+# Builds exportados
+builds/
