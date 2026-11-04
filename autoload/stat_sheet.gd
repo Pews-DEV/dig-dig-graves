@@ -96,6 +96,83 @@ const HIDE_WHEN_ZERO: Array[StringName] = [
 ]
 const STOMP_STATS: Array[StringName] = [&"stomp_cd", &"stomp_mult"]
 
+## UI/UX §22: grupos da Ficha do Coveiro, na ordem de exibição dentro de cada grupo.
+## `stomp_enabled` não aparece como linha: o grupo Pisão só existe com ele comprado.
+const GROUP_STRIKE := &"strike"
+const GROUP_STOMP := &"stomp"
+const GROUP_LANTERN := &"lantern"
+const GROUP_FIELD := &"field"
+const GROUP_GAINS := &"gains"
+const GROUP_ABILITIES := &"abilities"
+const GROUPS: Dictionary = {
+	&"strike": [&"damage", &"pulse_interval", &"area_step", &"crit_chance", &"crit_mult", &"deep_mult", &"boss_damage"],
+	&"stomp": [&"stomp_cd", &"stomp_mult"],
+	&"lantern": [&"oil_max", &"oil_burn", &"wisp_oil", &"wisp_rate", &"wisp_life", &"wisp_decay", &"oil_per_grave", &"oil_grave_cap"],
+	&"field": [&"field_size", &"grave_count", &"regen_time", &"unrest_mult", &"candles", &"gold_coin", &"wanderers"],
+	&"gains": [&"copper_mult", &"bone_chance", &"soul_mult", &"all_mult", &"grave_reward", &"grave_interest", &"inheritance", &"xp_mult"],
+	&"abilities": [&"excess_carries", &"double_hit", &"stomp_ring", &"stomp_auto", &"second_wind", &"constellation", &"ossuary_layer"],
+}
+const GROUP_TITLES: Dictionary = {
+	&"strike": "Golpe",
+	&"stomp": "Pisão",
+	&"lantern": "Lanterna",
+	&"field": "Campo",
+	&"gains": "Ganhos",
+	&"abilities": "Habilidades",
+}
+const SHEET_LEFT: Array[StringName] = [&"strike", &"stomp"]
+const SHEET_RIGHT: Array[StringName] = [&"lantern", &"field", &"gains"]
+## Rótulo curto na Ficha (o completo vai no tooltip). Sem entrada = rótulo de DISPLAY.
+const SHORT_LABELS: Dictionary = {
+	&"deep_mult": "Camadas fundas",
+	&"stomp_cd": "Recarga",
+	&"stomp_mult": "Dano",
+	&"wisp_rate": "Freq. de fogo-fátuo",
+	&"field_size": "Tamanho",
+}
+## Uma frase do que cada stat faz (tooltip da Ficha, UI/UX §22).
+const DESCRIPTIONS: Dictionary = {
+	&"damage": "Dano de cada golpe da pá em cada tile da área.",
+	&"pulse_interval": "Tempo entre um golpe e outro; quanto menor, mais rápido.",
+	&"area_step": "Tamanho da área que a pá acerta a cada golpe.",
+	&"crit_chance": "Chance de um golpe sair crítico, com o dano multiplicado.",
+	&"crit_mult": "Quanto o dano do golpe crítico é multiplicado.",
+	&"deep_mult": "Multiplica o dano no Barro e nas camadas abaixo dele.",
+	&"boss_damage": "Multiplica o dano que você causa no chefe.",
+	&"stomp_cd": "Tempo de espera entre um Pisão e outro.",
+	&"stomp_mult": "Quantas vezes o dano do golpe o Pisão causa na área.",
+	&"oil_max": "Óleo com que a lanterna começa a noite; quando acaba, a noite termina.",
+	&"oil_burn": "Velocidade com que a lanterna gasta o óleo; quanto menor, mais ele dura.",
+	&"wisp_oil": "Óleo que cada fogo-fátuo devolve à lanterna.",
+	&"wisp_rate": "Com que frequência os fogos-fátuos aparecem no campo.",
+	&"wisp_life": "Quanto tempo cada fogo-fátuo fica no campo antes de sumir.",
+	&"wisp_decay": "Cada fogo-fátuo da mesma noite vale esta parte do anterior.",
+	&"oil_per_grave": "Óleo que cada cova aberta devolve à lanterna.",
+	&"oil_grave_cap": "Máximo de óleo que as covas podem devolver por noite.",
+	&"field_size": "Quantos tiles tem cada lado do campo.",
+	&"grave_count": "Quantas covas podem existir no campo ao mesmo tempo.",
+	&"regen_time": "Tempo para um buraco voltar a ter terra.",
+	&"unrest_mult": "Quanta Inquietação cada cova aberta soma; mais traz o chefe antes.",
+	&"candles": "Velas no campo; os tiles em volta regeneram mais rápido e rendem mais.",
+	&"gold_coin": "Nível da moeda de ouro que pula no campo de tempos em tempos.",
+	&"wanderers": "Alminhas vagando pelo campo; tocar nelas dá Almas.",
+	&"copper_mult": "Multiplica todo o Cobre que você ganha.",
+	&"bone_chance": "Chance extra de achar Osso ao quebrar camadas.",
+	&"soul_mult": "Multiplica todas as Almas que você ganha.",
+	&"all_mult": "Multiplica Cobre, Ossos e Almas ao mesmo tempo.",
+	&"grave_reward": "Multiplica a recompensa de cada cova aberta.",
+	&"grave_interest": "Cobre extra por cova aberta na noite, acumulando.",
+	&"inheritance": "Parte do Cobre da noite que volta como bônus no Resumo.",
+	&"xp_mult": "Multiplica a XP ganha ao quebrar camadas.",
+	&"excess_carries": "O dano que sobra numa camada continua na camada de baixo.",
+	&"double_hit": "Cada golpe bate de novo com metade do dano.",
+	&"stomp_ring": "O Pisão também acerta o anel de tiles em volta da área.",
+	&"stomp_auto": "O Pisão dispara sozinho a cada 8 golpes.",
+	&"second_wind": "Uma vez por noite, quando o óleo acaba, a lanterna volta com 5 s.",
+	&"constellation": "Pegar 3 fogos-fátuos em menos de 6 s para o gasto de óleo por 8 s.",
+	&"ossuary_layer": "Uma camada Ossada nova no fundo de todos os tiles, rica em Ossos.",
+}
+
 var base: Dictionary = {}
 var min_values: Dictionary = {}
 var max_values: Dictionary = {}
@@ -172,9 +249,51 @@ func _recompute() -> void:
 	_dirty = false
 
 
+## Valor sem nenhuma fonte (base da Pá Velha, já com min/max), para comparar na Ficha.
+func base_value(stat: StringName) -> float:
+	var v: float = float(base.get(stat, 0.0))
+	if min_values.has(stat):
+		v = maxf(v, float(min_values[stat]))
+	if max_values.has(stat):
+		v = minf(v, float(max_values[stat]))
+	return v
+
+
 static func label_of(stat: StringName) -> String:
 	var d: Array = DISPLAY.get(stat, [String(stat), "num"])
 	return String(d[0])
+
+
+## Rótulo da Ficha: curto se houver (SHORT_LABELS), senão o de DISPLAY. Sem tradução.
+static func short_label_of(stat: StringName) -> String:
+	if SHORT_LABELS.has(stat):
+		return String(SHORT_LABELS[stat])
+	return label_of(stat)
+
+
+static func description_of(stat: StringName) -> String:
+	return String(DESCRIPTIONS.get(stat, ""))
+
+
+static func group_title(group: StringName) -> String:
+	return String(GROUP_TITLES.get(group, String(group)))
+
+
+static func group_of(stat: StringName) -> StringName:
+	for g: StringName in GROUPS:
+		var stats: Array = GROUPS[g]
+		if stats.has(stat):
+			return g
+	return &""
+
+
+## Mesma regra da Ficha (GDD §18.2): esconde nós não comprados e o Pisão sem o Pisão.
+static func is_visible_on_sheet(stat: StringName, value: float, stomp_on: bool) -> bool:
+	if HIDE_WHEN_ZERO.has(stat) and value <= 0.0:
+		return false
+	if STOMP_STATS.has(stat) and not stomp_on:
+		return false
+	return true
 
 
 static func format_value(stat: StringName, v: float) -> String:
@@ -203,7 +322,7 @@ static func format_value(stat: StringName, v: float) -> String:
 		"bool":
 			return "Sim" if v > 0.0 else "Não"
 		"level":
-			return "Nv %d" % roundi(v) if v > 0.0 else "Não"
+			return TranslationServer.translate("Nv %d") % roundi(v) if v > 0.0 else "Não"
 		"field":
 			return "%d×%d" % [roundi(v), roundi(v)]
 	return NumberFormat.format(v)
